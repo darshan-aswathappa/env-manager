@@ -1,0 +1,34 @@
+[package]
+name = "dotenv-manager"
+version = "0.1.0"
+description = "A local .env file manager"
+authors = []
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "dotenv_manager_lib"
+crate-type = ["cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[patch.crates-io]
+tao = { git = "https://github.com/tauri-apps/tao", branch = "dev" }
+wry = { git = "https://github.com/tauri-apps/wry", branch = "dev" }
+objc2 = { path = "vendor/objc2" }
+tauri = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
+tauri-build = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
+tauri-runtime = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
+tauri-runtime-wry = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
+tauri-utils = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
+tauri-macros = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
+tauri-codegen = { git = "https://github.com/tauri-apps/tauri", branch = "dev" }
