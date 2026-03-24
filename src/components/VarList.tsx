@@ -1,4 +1,5 @@
-import { Search, ChevronRight, Plus, FolderOpen } from "lucide-react";
+import { useState } from "react";
+import { Search, ChevronRight, Plus, FolderOpen, Trash2 } from "lucide-react";
 import type { EnvVar, Project } from "../types";
 
 interface VarListProps {
@@ -8,6 +9,7 @@ interface VarListProps {
   onSearchChange: (q: string) => void;
   onSelectVar: (id: string) => void;
   onAddVar: () => void;
+  onDeleteVar: (id: string) => void;
 }
 
 /** Neutral indicator dot — uniform across all variable types. */
@@ -28,7 +30,10 @@ export default function VarList({
   onSearchChange,
   onSelectVar,
   onAddVar,
+  onDeleteVar,
 }: VarListProps) {
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   if (!project) {
     return (
       <div className="list-panel" style={{ justifyContent: "center", alignItems: "center", display: "flex" }}>
@@ -81,37 +86,77 @@ export default function VarList({
           </div>
         )}
 
-        {filtered.map((v, index) => (
-          <div
-            key={v.id}
-            className={`var-list-item${selectedVarId === v.id ? " active" : ""}`}
-            style={{
-              '--item-index': Math.min(index, 8),
-            } as React.CSSProperties}
-            onClick={() => onSelectVar(v.id)}
-            role="listitem"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSelectVar(v.id);
-              }
-            }}
-            aria-label={v.key || "Unnamed variable"}
-            aria-current={selectedVarId === v.id ? "true" : undefined}
-          >
-            <span
-              className="var-list-icon"
-              style={{ background: varDotColor(v.key) }}
-              aria-hidden="true"
-            />
-            <div className="var-list-body">
-              <div className="var-list-key">{v.key || <em style={{ color: "var(--text-muted)", fontStyle: "normal" }}>unnamed</em>}</div>
-              <div className="var-list-preview">{valuePreview(v)}</div>
+        {filtered.map((v, index) => {
+          const confirming = pendingDeleteId === v.id;
+          return (
+            <div
+              key={v.id}
+              className={`var-list-item${selectedVarId === v.id ? " active" : ""}${confirming ? " confirming" : ""}`}
+              style={{
+                '--item-index': Math.min(index, 8),
+              } as React.CSSProperties}
+              onClick={() => { if (!confirming) onSelectVar(v.id); }}
+              role="listitem"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (confirming) {
+                  if (e.key === "Escape") { e.preventDefault(); setPendingDeleteId(null); }
+                  return;
+                }
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectVar(v.id);
+                }
+              }}
+              aria-label={v.key || "Unnamed variable"}
+              aria-current={selectedVarId === v.id ? "true" : undefined}
+            >
+              {confirming ? (
+                <>
+                  <span className="var-list-confirm-label">Delete <strong>{v.key || "this variable"}</strong>?</span>
+                  <div className="var-list-confirm-actions">
+                    <button
+                      className="var-list-confirm-cancel"
+                      onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                      aria-label="Cancel delete"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="var-list-confirm-delete"
+                      onClick={(e) => { e.stopPropagation(); setPendingDeleteId(null); onDeleteVar(v.id); }}
+                      aria-label={`Confirm delete ${v.key || "variable"}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span
+                    className="var-list-icon"
+                    style={{ background: varDotColor(v.key) }}
+                    aria-hidden="true"
+                  />
+                  <div className="var-list-body">
+                    <div className="var-list-key">{v.key || <em style={{ color: "var(--text-muted)", fontStyle: "normal" }}>unnamed</em>}</div>
+                    <div className="var-list-preview">{valuePreview(v)}</div>
+                  </div>
+                  <button
+                    className="var-list-delete"
+                    onClick={(e) => { e.stopPropagation(); setPendingDeleteId(v.id); }}
+                    aria-label={`Delete ${v.key || "variable"}`}
+                    title="Delete variable"
+                    tabIndex={-1}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                  <ChevronRight size={13} className="var-list-chevron" aria-hidden="true" />
+                </>
+              )}
             </div>
-            <ChevronRight size={13} className="var-list-chevron" aria-hidden="true" />
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* FAB */}

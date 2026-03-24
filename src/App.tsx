@@ -320,6 +320,7 @@ export default function App() {
         onSearchChange={setSearchQuery}
         onSelectVar={setSelectedVarId}
         onAddVar={addVar}
+        onDeleteVar={deleteVar}
       />
 
       {selectedProject ? (
