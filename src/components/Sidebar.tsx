@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderOpen, Plus, Trash2, GitBranch, Terminal, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { FolderOpen, Plus, GitBranch, Terminal, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { ProjectTreeNode } from "../types";
 
 interface SidebarProps {
@@ -181,10 +181,6 @@ export default function Sidebar({
       </div>
 
       <div className="sidebar-footer">
-        <button className="sidebar-footer-btn" disabled aria-label="Trash (coming soon)">
-          <Trash2 size={14} />
-          <span>Trash</span>
-        </button>
         <button
           className="sidebar-footer-btn"
           onClick={onOpenShellIntegration}

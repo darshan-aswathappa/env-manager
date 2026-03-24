@@ -12,10 +12,7 @@ interface VarListProps {
   onDeleteVar: (id: string) => void;
 }
 
-/** Neutral indicator dot — uniform across all variable types. */
-function varDotColor(_key: string): string {
-  return "#3a3a3c";
-}
+const NEUTRAL_DOT = "#3a3a3c";
 
 function valuePreview(v: EnvVar): string {
   if (!v.val) return "";
@@ -135,7 +132,7 @@ export default function VarList({
                 <>
                   <span
                     className="var-list-icon"
-                    style={{ background: varDotColor(v.key) }}
+                    style={{ background: NEUTRAL_DOT }}
                     aria-hidden="true"
                   />
                   <div className="var-list-body">

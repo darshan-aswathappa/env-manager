@@ -205,8 +205,23 @@ a {
 
 .sidebar.collapsed .sidebar-section-label,
 .sidebar.collapsed .sidebar-list,
-.sidebar.collapsed .sidebar-footer,
 .sidebar.collapsed .app-title {
+  display: none;
+}
+
+/* Collapsed footer — icon-only, centred */
+.sidebar.collapsed .sidebar-footer {
+  padding: 8px 0;
+  align-items: center;
+}
+
+.sidebar.collapsed .sidebar-footer-btn {
+  justify-content: center;
+  padding: 8px 0;
+  width: 44px;
+}
+
+.sidebar.collapsed .sidebar-footer-btn span {
   display: none;
 }
 
@@ -258,15 +273,6 @@ a {
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
-}
-
-.app-subtitle {
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  margin-top: 1px;
-  margin-left: 36px;
 }
 
 /* Toggle button that collapses/expands the sidebar */
@@ -1044,14 +1050,6 @@ a {
   white-space: nowrap;
 }
 
-.badge-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  display: inline-block;
-}
-
 .badge-success {
   background: var(--color-success-bg);
   color: var(--color-success);
@@ -1110,32 +1108,6 @@ a {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PROGRESS / STATUS BARS
-══════════════════════════════════════════════════════════════ */
-.progress-bar {
-  height: 3px;
-  background: var(--border-subtle);
-  border-radius: 0;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width var(--t-normal);
-}
-
-.progress-bar-fill--success {
-  background: var(--color-success);
-}
-.progress-bar-fill--warning {
-  background: var(--color-warning);
-}
-.progress-bar-fill--danger {
-  background: var(--color-danger);
-}
-
-/* ══════════════════════════════════════════════════════════════
    EMPTY STATE (detail panel / no project)
 ══════════════════════════════════════════════════════════════ */
 .empty-state {
@@ -1180,6 +1152,57 @@ a {
   margin-top: 4px;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-dialog {
+  position: relative;
+  width: 640px;
+  max-width: calc(100vw - 48px);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--bg-base);
+  border: var(--panel-border);
+  border-radius: 12px;
+  padding: 24px;
+  z-index: 101;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  line-height: 1;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
 
 /* ══════════════════════════════════════════════════════════════
    SHELL INTEGRATION

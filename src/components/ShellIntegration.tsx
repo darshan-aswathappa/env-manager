@@ -31,7 +31,7 @@ function MacInstructions({ rcFile, shell }: { rcFile: string; shell: "zsh" | "ba
       <div className="si-step">
         <div className="si-step-num">3</div>
         <div className="si-step-content">
-          Copy the snippet above, paste it at the bottom of the file.
+          Copy the snippet from step 1, paste it at the bottom of the file.
           <br />
           <span className="si-secondary">
             In nano: <kbd className="si-kbd">⌃ V</kbd> or right-click → Paste.
@@ -122,7 +122,7 @@ function WindowsInstructions({ rcFile }: { rcFile: string }) {
       <div className="si-step">
         <div className="si-step-num">5</div>
         <div className="si-step-content">
-          Activate:
+          Activate in your current terminal window:
           <br />
           <kbd className="si-kbd">source {rcFile}</kbd>
           <br />
@@ -293,13 +293,13 @@ export default function ShellIntegration() {
           )}
         </div>
       ) : (
-        <div className="si-state">No shell hook available.</div>
+        <div className="si-state">Couldn't generate the shell hook. Try restarting the app.</div>
       )}
 
       {/* App data dir */}
       {appDataDir && (
         <div className="si-storage">
-          Vars stored at: <code>{appDataDir}</code>
+          Variables stored at: <code>{appDataDir}</code>
         </div>
       )}
 

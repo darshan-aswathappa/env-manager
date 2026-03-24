@@ -247,13 +247,18 @@ export default function App() {
   const deleteVar = useCallback(
     (varId: string) => {
       if (!selectedId) return;
-      setProjects((prev) =>
-        prev.map((p) =>
+      setProjects((prev) => {
+        const updated = prev.map((p) =>
           p.id !== selectedId
             ? p
             : { ...p, vars: p.vars.filter((v) => v.id !== varId) }
-        )
-      );
+        );
+        const project = updated.find((p) => p.id === selectedId);
+        if (project) {
+          saveProjectEnv(project.id, project.vars).catch(() => {});
+        }
+        return updated;
+      });
       setSelectedVarId((cur) => (cur === varId ? null : cur));
     },
     [selectedId]
@@ -357,15 +362,7 @@ export default function App() {
 
       {showShellIntegration && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.6)",
-            zIndex: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="modal-overlay"
           onClick={() => setShowShellIntegration(false)}
           aria-label="Close shell integration dialog"
         >
@@ -374,41 +371,13 @@ export default function App() {
             role="dialog"
             aria-modal="true"
             aria-label="Shell integration"
-            style={{
-              position: "relative",
-              width: "640px",
-              maxWidth: "calc(100vw - 48px)",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              background: "#0d0d0d",
-              border: "1px solid rgba(255,255,255,0.10)",
-              borderRadius: "12px",
-              padding: "24px",
-              zIndex: 101,
-              boxShadow: "0 24px 64px rgba(0,0,0,0.7)",
-            }}
+            className="modal-dialog"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowShellIntegration(false)}
               aria-label="Close"
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "28px",
-                height: "28px",
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "6px",
-                cursor: "pointer",
-                color: "var(--text-secondary)",
-                padding: 0,
-                lineHeight: 1,
-              }}
+              className="modal-close"
             >
               <X size={14} />
             </button>
