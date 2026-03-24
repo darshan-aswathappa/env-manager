@@ -150,11 +150,18 @@ export default function SettingsPanel({
         </div>
 
         <div className="sett-note">
-          When a child project shares a variable name with its parent, this controls whose value wins.
+          When a child project shares a variable name with its parent, this
+          controls whose value wins.
           <br />
-          <span className="sett-note-item"><strong>Child wins</strong> — child overrides parent.</span>
-          <span className="sett-note-item"><strong>Parent wins</strong> — parent overrides child.</span>
-          <span className="sett-note-item"><strong>Isolated</strong> — parent is ignored entirely.</span>
+          <span className="sett-note-item">
+            <strong>Child wins</strong> — child overrides parent.
+          </span>
+          <span className="sett-note-item">
+            <strong>Parent wins</strong> — parent overrides child.
+          </span>
+          <span className="sett-note-item">
+            <strong>Isolated</strong> — parent is ignored entirely.
+          </span>
         </div>
       </section>
 
@@ -329,7 +336,7 @@ export default function SettingsPanel({
         </div>
         <div className="sett-about-row">
           <span className="sett-about-name">.envVault</span>
-          <span className="sett-about-version">v0.1.0</span>
+          <span className="sett-about-version">v1.0.0</span>
         </div>
       </section>
     </div>
