@@ -26,8 +26,6 @@ dist/
 
 # Planning/working files
 init-plan.md
-package-lock.json
-
+shell-hook-plan.md
 .impeccable.md
 CLAUDE.md
-shell-hook-plan.md
