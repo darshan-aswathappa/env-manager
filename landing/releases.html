@@ -124,9 +124,12 @@
       border: none;
       cursor: pointer;
       border-radius: var(--radius-md);
-      transition: background var(--t-normal), color var(--t-normal), border-color var(--t-normal);
+      transition: background var(--t-normal), color var(--t-normal), border-color var(--t-normal), transform 130ms cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
     }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: scale(0.97) translateY(0); transition-duration: 80ms; }
 
     .btn-primary {
       background: var(--accent);
@@ -445,6 +448,100 @@
 
     .footer-link:hover { color: var(--text-secondary); }
 
+    /* ── Scroll progress bar ── */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent);
+      transform-origin: left center;
+      transform: scaleX(0);
+      z-index: 300;
+      pointer-events: none;
+      transition: transform 60ms linear;
+    }
+
+    /* ── Navbar scroll state ── */
+    .navbar {
+      transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .navbar.is-scrolled {
+      border-bottom-color: rgba(255, 255, 255, 0.13);
+    }
+
+    /* ── Timeline dot entrance ── */
+    .timeline-aside::after {
+      transition: background 300ms cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 380ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .js-motion .timeline-aside::after {
+      transform: scale(0);
+      opacity: 0;
+    }
+
+    .js-motion .timeline-entry.entered .timeline-aside::after {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    /* ── "Latest" badge one-time pulse ── */
+    @keyframes latestPulse {
+      0%   { opacity: 1; }
+      40%  { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    .release-badge.latest.pulse {
+      animation: latestPulse 700ms cubic-bezier(0.16, 1, 0.3, 1) 600ms 2 forwards;
+    }
+
+    /* ── Download button hover lift ── */
+    .btn-download {
+      transition: background var(--t-normal), transform 130ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-download:hover { transform: translateY(-1px); }
+    .btn-download:active { transform: scale(0.97); transition-duration: 80ms; }
+
+    /* ── prefers-reduced-motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
+      }
+
+      .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
+      .js-motion .timeline-aside::after {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+      }
+
+      .scroll-progress {
+        display: none;
+      }
+
+      .btn:hover,
+      .btn:active,
+      .btn-download:hover,
+      .btn-download:active {
+        transform: none !important;
+      }
+    }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .timeline {
@@ -483,14 +580,34 @@
         display: none;
       }
     }
+
+    /* ── App Logo ── */
+    .nav-logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .footer-logo {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
+
+  <div class="scroll-progress" role="progressbar" aria-hidden="true"></div>
 
   <!-- Navbar -->
   <nav class="navbar" role="banner">
     <div class="navbar-inner">
       <div class="navbar-brand">
+        <img src="appstore.png" class="nav-logo" alt=".envVault" aria-hidden="true" />
         <a href="index.html" class="wordmark">.envVault</a>
         <span class="version-badge">v1.0.0</span>
       </div>
@@ -630,6 +747,7 @@
   <footer class="footer" role="contentinfo">
     <div class="footer-inner">
       <div class="footer-left">
+        <img src="appstore.png" class="footer-logo" alt="" aria-hidden="true" />
         <a href="index.html" class="wordmark">.envVault</a>
         <span class="footer-copy">© 2026</span>
       </div>
@@ -645,30 +763,93 @@
     (function () {
       'use strict';
 
-      var observer = new IntersectionObserver(function (entries) {
+      var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (!prefersReduced) {
+        document.documentElement.classList.add('js-motion');
+      }
+
+      // ── Scroll progress ──────────────────────────────────
+      var progressBar = document.querySelector('.scroll-progress');
+      function updateProgress() {
+        if (!progressBar || prefersReduced) return;
+        var scrollTop = window.scrollY;
+        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        var pct = docHeight > 0 ? scrollTop / docHeight : 0;
+        progressBar.style.transform = 'scaleX(' + pct + ')';
+      }
+      window.addEventListener('scroll', updateProgress, { passive: true });
+
+      // ── Navbar scroll state ──────────────────────────────
+      var navbar = document.querySelector('.navbar');
+      function updateNavbar() {
+        if (!navbar) return;
+        navbar.classList.toggle('is-scrolled', window.scrollY > 8);
+      }
+      window.addEventListener('scroll', updateNavbar, { passive: true });
+
+      // ── Page header reveals ──────────────────────────────
+      var revealObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
+            revealObserver.unobserve(entry.target);
           }
         });
-      }, {
-        threshold: 0.06,
-        rootMargin: '0px 0px -24px 0px'
-      });
+      }, { threshold: 0.06, rootMargin: '0px 0px -24px 0px' });
 
-      function initReveal() {
-        document.querySelectorAll('.reveal').forEach(function (el, i) {
-          el.style.transitionDelay = (i * 30) + 'ms';
-          observer.observe(el);
+      // ── Timeline entry observer ──────────────────────────
+      var timelineObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('entered');
+          timelineObserver.unobserve(entry.target);
         });
+      }, { threshold: 0.12 });
+
+      function init() {
+        // Page header: staggered entrance
+        var headerEls = Array.from(document.querySelectorAll('.page-header .reveal'));
+        headerEls.forEach(function (el, i) {
+          el.style.transitionDelay = (i * 70) + 'ms';
+        });
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            headerEls.forEach(function (el) { el.classList.add('visible'); });
+          });
+        });
+
+        // Timeline entries: stagger via IO
+        var entries = Array.from(document.querySelectorAll('.timeline-entry'));
+        entries.forEach(function (entry, i) {
+          if (prefersReduced) {
+            entry.classList.add('entered');
+          } else {
+            entry.style.transitionDelay = (i * 60) + 'ms';
+            timelineObserver.observe(entry);
+          }
+        });
+
+        // Remaining reveals
+        document.querySelectorAll('.reveal').forEach(function (el) {
+          revealObserver.observe(el);
+        });
+
+        // "Latest" badge: one-time pulse after page settles
+        if (!prefersReduced) {
+          var latestBadge = document.querySelector('.release-badge.latest');
+          if (latestBadge) {
+            setTimeout(function () { latestBadge.classList.add('pulse'); }, 400);
+          }
+        }
       }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initReveal);
+        document.addEventListener('DOMContentLoaded', init);
       } else {
-        initReveal();
+        init();
       }
+
     })();
   </script>
 

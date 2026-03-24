@@ -3,11 +3,11 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Terminal,
   ArrowLeft,
 } from "lucide-react";
 import ShellIntegration from "./ShellIntegration";
 import { checkShellIntegration } from "../lib/envFile";
+import logo from "../assets/logo.png";
 
 type Step = "welcome" | "install" | "verify";
 type VerifyStatus = "idle" | "checking" | "found" | "not_found";
@@ -139,7 +139,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             {renderedStep === "welcome" && (
               <>
                 <div className="ob-step-icon">
-                  <Terminal size={28} />
+                  <img src={logo} alt=".envVault" style={{ width: 64, height: 64, borderRadius: 14, objectFit: "cover" }} />
                 </div>
                 <h1 className="ob-title">Welcome to .envVault</h1>
                 <p className="ob-subtitle">

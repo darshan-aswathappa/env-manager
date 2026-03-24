@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { FolderOpen, Plus, GitBranch, Terminal, Settings, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Plus, GitBranch, Terminal, Settings, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { ProjectTreeNode } from "../types";
+import logo from "../assets/logo.png";
 
 interface SidebarProps {
   projectTree: ProjectTreeNode[];
@@ -148,7 +149,7 @@ export default function Sidebar({
         ) : (
           <>
             <div className="app-logo" style={{ flex: 1 }}>
-              <FolderOpen size={15} className="app-logo-icon-flat" aria-hidden="true" />
+              <img src={logo} alt="" aria-hidden="true" className="app-logo-icon-flat" style={{ width: 18, height: 18, borderRadius: 4, objectFit: "cover", flexShrink: 0 }} />
               <span className="app-title">.envVault</span>
             </div>
             <button
