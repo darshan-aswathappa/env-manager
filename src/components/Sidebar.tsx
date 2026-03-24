@@ -14,38 +14,48 @@ interface SidebarProps {
   onOpenSettings: () => void;
 }
 
-const NEUTRAL_DOT = "#3a3a3c";
-
 function ProjectNodeItem({
   node,
   selectedId,
+  pendingDeleteId,
   onSelect,
   onDelete,
+  onRequestDelete,
+  onCancelDelete,
   onAddSubProject,
 }: {
   node: ProjectTreeNode;
   selectedId: string | null;
+  pendingDeleteId: string | null;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onRequestDelete: (id: string) => void;
+  onCancelDelete: () => void;
   onAddSubProject: (parentId: string) => void;
 }) {
   const { project, depth, children } = node;
   const paddingLeft = depth * 16;
   const hasChildren = children.length > 0;
   const [collapsed, setCollapsed] = useState(false);
+  const confirming = pendingDeleteId === project.id;
 
   return (
     <>
       <div
-        className={`project-item${selectedId === project.id ? " active" : ""}`}
+        className={`project-item${selectedId === project.id ? " active" : ""}${confirming ? " confirming" : ""}`}
         style={{ paddingLeft: `${8 + paddingLeft}px` }}
-        onClick={() => onSelect(project.id)}
+        onClick={() => { if (!confirming) onSelect(project.id); }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
+          if (e.key === "Escape" && confirming) {
+            e.preventDefault();
+            onCancelDelete();
+            return;
+          }
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onSelect(project.id);
+            if (!confirming) onSelect(project.id);
           }
         }}
         aria-current={selectedId === project.id ? "true" : undefined}
@@ -72,7 +82,6 @@ function ProjectNodeItem({
         ) : (
           <span
             className="project-dot"
-            style={{ background: NEUTRAL_DOT }}
             aria-hidden="true"
           />
         )}
@@ -94,17 +103,36 @@ function ProjectNodeItem({
         >
           <GitBranch size={11} />
         </button>
-        <button
-          className="project-delete"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(project.id);
-          }}
-          aria-label={`Remove project ${project.name}`}
-          title="Remove project"
-        >
-          ×
-        </button>
+        {confirming ? (
+          <div className="project-confirm-row" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="project-confirm-yes"
+              onClick={(e) => { e.stopPropagation(); onCancelDelete(); onDelete(project.id); }}
+              aria-label={`Confirm remove ${project.name}`}
+            >
+              Remove
+            </button>
+            <button
+              className="project-confirm-no"
+              onClick={(e) => { e.stopPropagation(); onCancelDelete(); }}
+              aria-label="Cancel remove"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            className="project-delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRequestDelete(project.id);
+            }}
+            aria-label={`Remove project ${project.name}`}
+            title="Remove project"
+          >
+            ×
+          </button>
+        )}
       </div>
       {!collapsed &&
         children.map((child) => (
@@ -112,8 +140,11 @@ function ProjectNodeItem({
             key={child.project.id}
             node={child}
             selectedId={selectedId}
+            pendingDeleteId={pendingDeleteId}
             onSelect={onSelect}
             onDelete={onDelete}
+            onRequestDelete={onRequestDelete}
+            onCancelDelete={onCancelDelete}
             onAddSubProject={onAddSubProject}
           />
         ))}
@@ -133,6 +164,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const totalProjects = countNodes(projectTree);
   const [collapsed, setCollapsed] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   return (
     <aside className={`sidebar${collapsed ? " collapsed" : ""}`}>
@@ -149,7 +181,7 @@ export default function Sidebar({
         ) : (
           <>
             <div className="app-logo" style={{ flex: 1 }}>
-              <img src={logo} alt="" aria-hidden="true" className="app-logo-icon-flat" style={{ width: 18, height: 18, borderRadius: 4, objectFit: "cover", flexShrink: 0 }} />
+              <img src={logo} alt="" aria-hidden="true" className="app-logo-img" />
               <span className="app-title">.envVault</span>
             </div>
             <button
@@ -176,8 +208,11 @@ export default function Sidebar({
             key={node.project.id}
             node={node}
             selectedId={selectedId}
+            pendingDeleteId={pendingDeleteId}
             onSelect={onSelect}
             onDelete={onDelete}
+            onRequestDelete={setPendingDeleteId}
+            onCancelDelete={() => setPendingDeleteId(null)}
             onAddSubProject={onAddSubProject}
           />
         ))}

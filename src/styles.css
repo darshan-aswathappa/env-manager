@@ -57,6 +57,7 @@
   --radius-sm: 2px;
   --radius-md: 3px;
   --radius-lg: 4px;
+  --radius-xl: 8px;
 
   /* Transitions — short, purposeful */
   --t-fast: 110ms cubic-bezier(0.25, 0, 0.4, 1);
@@ -432,6 +433,41 @@ a {
   color: var(--color-danger);
 }
 
+/* Inline delete confirmation */
+.project-confirm-row {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.project-confirm-yes {
+  font-size: 0.6875rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-weight: 500;
+  transition: background var(--t-fast);
+}
+
+.project-confirm-yes:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.project-confirm-no {
+  font-size: 0.6875rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: color var(--t-fast);
+}
+
+.project-confirm-no:hover {
+  color: var(--text-primary);
+}
+
 /* ── Sidebar Footer ────────────────────────────────────────── */
 .sidebar-footer {
   padding: 8px 6px;
@@ -639,7 +675,7 @@ a {
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-lg);
   color: var(--text-tertiary);
   cursor: pointer;
   opacity: 0;
@@ -652,19 +688,19 @@ a {
 }
 
 .var-list-delete:hover {
-  color: #ff453a;
-  background: rgba(255, 69, 58, 0.12);
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
 
 /* ── Inline delete confirmation ────────────────────────────── */
 .var-list-item.confirming {
-  background: rgba(255, 69, 58, 0.07);
+  background: var(--color-danger-bg);
   cursor: default;
 }
 
 .var-list-confirm-label {
   flex: 1;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -685,8 +721,8 @@ a {
 .var-list-confirm-cancel,
 .var-list-confirm-delete {
   padding: 2px 10px;
-  border-radius: 4px;
-  font-size: 11px;
+  border-radius: var(--radius-lg);
+  font-size: 0.6875rem;
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
@@ -705,13 +741,13 @@ a {
 }
 
 .var-list-confirm-delete {
-  background: rgba(255, 69, 58, 0.18);
-  color: #ff453a;
-  border-color: rgba(255, 69, 58, 0.3);
+  background: rgba(229, 72, 77, 0.18);
+  color: var(--color-danger);
+  border-color: rgba(229, 72, 77, 0.3);
 }
 
 .var-list-confirm-delete:hover {
-  background: rgba(255, 69, 58, 0.28);
+  background: rgba(229, 72, 77, 0.28);
 }
 
 /* ── Empty states in list ──────────────────────────────────── */
@@ -1191,7 +1227,7 @@ a {
   overflow-y: auto;
   background: var(--bg-base);
   border: var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 24px;
   z-index: 101;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
@@ -1209,7 +1245,7 @@ a {
   height: 28px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   color: var(--text-secondary);
   padding: 0;
@@ -1468,7 +1504,7 @@ a {
   overflow: hidden;
   background: var(--bg-sidebar);
   border: var(--panel-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   animation: scaleIn var(--t-entrance) both;
@@ -1934,8 +1970,8 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
   font-weight: 400;
   padding: 7px 24px 7px 10px;
   height: 32px;
@@ -2136,7 +2172,7 @@ a {
 }
 
 .sett-danger-btn--confirm:hover {
-  background: #cc3f44;
+  background: rgba(229, 72, 77, 0.85);
 }
 
 .sett-danger-btn:disabled {
@@ -2203,6 +2239,38 @@ a {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 1px 6px;
+}
+
+/* ── Tokenized dot colors (replaces inline NEUTRAL_DOT constant) ── */
+.project-dot {
+  background: var(--text-muted);
+}
+
+.var-list-icon {
+  background: var(--text-muted);
+}
+
+/* ── Utility: inline code ─────────────────────────────────── */
+.inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* ── Logo image in sidebar ────────────────────────────────── */
+.app-logo-img {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* ── Onboarding logo ──────────────────────────────────────── */
+.ob-logo-img {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-xl);
+  object-fit: cover;
 }
 
 /* ══════════════════════════════════════════════════════════════

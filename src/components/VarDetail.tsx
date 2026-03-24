@@ -192,10 +192,15 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             type="text"
             value={v.key}
             placeholder="VARIABLE_NAME"
-            onChange={(e) => onUpdate(v.id, "key", e.target.value)}
+            onChange={(e) => {
+              // Sanitize: only allow valid .env key characters (letters, digits, underscores)
+              const sanitized = e.target.value.replace(/[^A-Za-z0-9_]/g, "_");
+              onUpdate(v.id, "key", sanitized);
+            }}
             spellCheck={false}
             autoComplete="off"
             aria-label="Variable key"
+            maxLength={256}
           />
           <CopyButton text={v.key} label="Copy key" clearAfterSecs={clipboardClearSeconds} />
           <button
@@ -249,7 +254,7 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
 /* ── Nothing selected ────────────────────────────────────── */
 function NoVarSelected() {
   return (
-    <div className="empty-state" style={{ minHeight: 200 }}>
+    <div className="empty-state">
       <div className="empty-state-icon">
         <KeyRound size={24} />
       </div>

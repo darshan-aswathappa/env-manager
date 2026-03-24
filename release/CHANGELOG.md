@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-24
+
+### Added
+
+- Multi-environment support — manage `.env`, `.env.local`, `.env.production`, and other variants per project.
+- Environment toggle dropdown in the variable detail view for switching between environments.
+- New `EnvironmentToggle` component with environment-aware variable counts.
+- Rust backend support for reading/writing multiple `.env.*` files per project.
+
+### Changed
+
+- Variable detail view now scopes variables to the active environment.
+- Env file parser updated to handle environment suffixes.
+- UI refinements across sidebar, variable list, and detail views.
+
+### Fixed
+
+- UI layout and styling fixes in sidebar and variable views.
+
 ## [1.0.0] - 2026-03-24
 
 ### Added

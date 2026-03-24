@@ -1,59 +1,30 @@
-# .envVault v1.0.0 — Initial Release
+# .envVault v1.0.1 — Multi-Environment Support
 
 **March 24, 2026**
 
-.envVault is a desktop utility for managing `.env` files and secrets across multiple projects. It runs locally on macOS, stores values on disk via Tauri's app data directory, and never touches localStorage or the network.
+This patch release adds support for managing multiple environment files per project — `.env`, `.env.local`, `.env.production`, and any other `.env.*` variant.
 
 ---
 
-## What's included
+## What's new
 
-### Project Management
+### Multi-Environment Support
 
-- Add project folders from your filesystem. Existing `.env` files are auto-imported on add.
-- Sub-project support with parent-child hierarchy and configurable inheritance modes.
-- Collapsible project tree in the sidebar for navigating large workspaces.
-- Gitignore status indicator per project — see at a glance whether your `.env` is tracked.
+- Each project now detects and manages all `.env.*` files (`.env`, `.env.local`, `.env.production`, `.env.staging`, etc.).
+- New environment toggle dropdown in the variable detail view lets you switch between environments without leaving the project.
+- Variable counts are displayed per environment in the dropdown for quick orientation.
+- The Rust backend now reads and writes to the correct `.env.*` file based on the active environment selection.
 
-### Environment Variables
+### UI Improvements
 
-- Create, read, update, and delete variables per project.
-- Save changes back to the `.env` file on disk.
-- Secret masking enabled by default. Toggle visibility per variable.
-- Copy values to clipboard with an optional auto-clear timer.
-
-### Shell Integration
-
-- Generate shell export snippets for zsh, bash, and fish.
-- Default shell is configurable in settings.
-
-### Onboarding
-
-- First-run flow that walks through core concepts: adding projects, managing variables, and understanding inheritance.
-- Can be reset from settings at any time.
-
-### Settings
-
-- Default shell selection (zsh, bash, fish).
-- Inheritance mode: `merge-child-wins`, `parent-wins`, or `child-only`.
-- Auto-mask timeout (minutes).
-- Clipboard auto-clear duration (seconds).
-- Reset onboarding and clear all data options.
+- Sidebar and variable list layout refinements.
+- Variable detail view updated to scope variables to the selected environment.
 
 ---
 
-## Security model
+## Upgrading from v1.0.0
 
-- Variable values are stored in Tauri's app data directory on disk. They are never written to localStorage or transmitted over the network.
-- Values are masked by default in the UI. Revealing a value requires an explicit toggle.
-- Delete operations require confirmation.
-- There is no encryption-at-rest beyond OS-level file permissions. If your disk is unencrypted, your secrets are unencrypted.
-
----
-
-## Installation
-
-> Installation instructions will be published with the first distributable build. For now, clone the repository and run `npm run tauri dev`.
+No data migration required. Existing projects will automatically detect additional `.env.*` files on next load. Your existing `.env` data is untouched.
 
 ---
 
@@ -63,7 +34,6 @@
 - **No cloud sync.** All data is local to your machine.
 - **No team sharing.** There is no mechanism for sharing secrets across team members.
 - **No encryption-at-rest.** Values are stored as plaintext in the Tauri app data directory.
-- **No multi-file support.** Each project manages a single `.env` file. `.env.local`, `.env.production`, etc. are not yet supported.
 
 ---
 

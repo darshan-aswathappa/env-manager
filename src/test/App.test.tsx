@@ -161,6 +161,8 @@ describe('App', () => {
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
     const deleteBtn = screen.getByRole('button', { name: /Remove project MyProject/i })
     await act(async () => { deleteBtn.click() })
+    const confirmBtn = screen.getByRole('button', { name: /Confirm remove MyProject/i })
+    await act(async () => { confirmBtn.click() })
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('unregister_project', { projectId: 'p1' })
     })

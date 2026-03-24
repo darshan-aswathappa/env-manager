@@ -115,7 +115,7 @@ To remove the hook, delete the lines added by .envVault from your shell config f
 
 ## Known Limitations
 
-- macOS only — Windows and Linux are not supported in v1.0.0.
+- macOS only — Windows and Linux are not supported in v1.0.1.
 - No encryption at rest — values are stored as plaintext in the app data directory.
 - No cloud sync and no team sharing — all data is local to the machine.
 - Single `.env` file per project — `.env.local`, `.env.production`, and similar variants are not supported yet.

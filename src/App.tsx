@@ -532,7 +532,7 @@ export default function App() {
             <h2 className="empty-state-title">No project selected</h2>
             <p className="empty-state-desc">
               Choose a project folder that contains a{" "}
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.85em" }}>.env</code>{" "}
+              <code className="inline-code">.env</code>{" "}
               file. Your variables will appear here.
             </p>
             <button className="btn-primary" onClick={addProject}>
@@ -547,6 +547,7 @@ export default function App() {
         <div
           className="modal-overlay"
           onClick={() => setShowShellIntegration(false)}
+          onKeyDown={(e) => { if (e.key === "Escape") setShowShellIntegration(false); }}
           aria-label="Close shell integration dialog"
         >
           <div
@@ -573,6 +574,7 @@ export default function App() {
         <div
           className="modal-overlay"
           onClick={() => setShowSettings(false)}
+          onKeyDown={(e) => { if (e.key === "Escape") setShowSettings(false); }}
           aria-label="Close settings dialog"
         >
           <div

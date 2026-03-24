@@ -325,7 +325,7 @@ export default function SettingsPanel({
         </div>
         <div className="sett-about-row">
           <span className="sett-about-name">.envVault</span>
-          <span className="sett-about-version">v1.0.0</span>
+          <span className="sett-about-version">v1.0.1</span>
         </div>
       </section>
     </div>

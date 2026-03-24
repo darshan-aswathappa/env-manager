@@ -46,11 +46,12 @@ describe('Sidebar', () => {
     expect(item?.className).toContain('active')
   })
 
-  it('calls onDelete when remove button is clicked', () => {
+  it('calls onDelete when remove button is clicked and confirmed', async () => {
     const onDelete = vi.fn()
     const tree = [makeNode('p1', 'my-project')]
     render(<Sidebar projectTree={tree} selectedId={null} onSelect={vi.fn()} onDelete={onDelete} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} onOpenSettings={vi.fn()} />)
-    screen.getByRole('button', { name: /Remove project my-project/i }).click()
+    await act(async () => { screen.getByRole('button', { name: /Remove project my-project/i }).click() })
+    await act(async () => { screen.getByRole('button', { name: /Confirm remove my-project/i }).click() })
     expect(onDelete).toHaveBeenCalledWith('p1')
   })
 
