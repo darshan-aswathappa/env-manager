@@ -148,6 +148,14 @@ export default function SettingsPanel({
             <option value="isolated">Isolated</option>
           </select>
         </div>
+
+        <div className="sett-note">
+          When a child project shares a variable name with its parent, this controls whose value wins.
+          <br />
+          <span className="sett-note-item"><strong>Child wins</strong> — child overrides parent.</span>
+          <span className="sett-note-item"><strong>Parent wins</strong> — parent overrides child.</span>
+          <span className="sett-note-item"><strong>Isolated</strong> — parent is ignored entirely.</span>
+        </div>
       </section>
 
       {/* ── Security ───────────────────────────────────────── */}

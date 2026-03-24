@@ -1917,6 +1917,31 @@ a {
   color: #fff;
 }
 
+/* ── Inline note ─────────────────────────────────────────── */
+.sett-note {
+  padding: 9px 14px 10px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  border-top: 1px solid var(--border-separator);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sett-note-item {
+  display: block;
+  padding-left: 10px;
+  position: relative;
+}
+
+.sett-note-item::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+  color: var(--text-muted);
+}
+
 /* ── Select dropdown ─────────────────────────────────────── */
 .sett-select {
   appearance: none;
