@@ -1,12 +1,43 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { invoke } from '@tauri-apps/api/core'
-import { saveProjectEnv, loadProjectEnv, importEnvFromProject, shellQuote, serializeVars } from '../lib/envFile'
+import { saveProjectEnv, loadProjectEnv, importEnvFromProject, shellQuote, serializeVars, unquoteEnvValue } from '../lib/envFile'
 import type { EnvVar } from '../types'
 
 const mockInvoke = vi.mocked(invoke)
 
 const makeVar = (key: string, val: string): EnvVar => ({
   id: crypto.randomUUID(), key, val, revealed: false, sourceProjectId: 'p1'
+})
+
+describe('unquoteEnvValue', () => {
+  it('strips double quotes from .env import format', () => {
+    expect(unquoteEnvValue('"https://example.supabase.co"')).toBe('https://example.supabase.co')
+  })
+  it('strips single quotes from shellQuote output', () => {
+    expect(unquoteEnvValue("'http://localhost:8001'")).toBe('http://localhost:8001')
+  })
+  it('unescapes \\x27 single-quote inside single-quoted value', () => {
+    expect(unquoteEnvValue("'it'\\''s'")).toBe("it's")
+  })
+  it('returns bare value unchanged', () => {
+    expect(unquoteEnvValue('simple123')).toBe('simple123')
+  })
+  it('returns empty string unchanged', () => {
+    expect(unquoteEnvValue('')).toBe('')
+  })
+})
+
+describe('loadProjectEnv round-trip (no double-escaping)', () => {
+  it('double-quoted import value survives load→save→load without growing', async () => {
+    // Simulates: user imports .env with SUPABASE_URL="https://..."
+    // After fix, val should be the bare URL, not '"https://..."'
+    const { loadProjectEnv } = await import('../lib/envFile')
+    const { invoke } = await import('@tauri-apps/api/core')
+    const mockInvoke = vi.mocked(invoke)
+    mockInvoke.mockResolvedValue('SUPABASE_URL=\'https://example.supabase.co\'')
+    const vars = await loadProjectEnv('p')
+    expect(vars[0].val).toBe('https://example.supabase.co')
+  })
 })
 
 describe('shellQuote', () => {

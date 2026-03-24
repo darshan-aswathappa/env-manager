@@ -42,7 +42,7 @@ const secondary: React.CSSProperties = {
   fontSize: "0.75rem",
 };
 
-function MacInstructions({ rcFile }: { rcFile: string }) {
+function MacInstructions({ rcFile, shell }: { rcFile: string; shell: "zsh" | "bash" }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
       <div style={step}>
@@ -91,10 +91,41 @@ function MacInstructions({ rcFile }: { rcFile: string }) {
           <span style={kbd}>source {rcFile}</span>
           <br />
           <span style={secondary}>
-            Or just open a new terminal tab — it loads automatically.
+            {shell === "zsh"
+              ? "Or just open a new terminal tab — it loads automatically."
+              : "Then open a new terminal tab to confirm it loads automatically."}
           </span>
         </div>
       </div>
+      {shell === "bash" && (
+        <div
+          style={{
+            ...secondary,
+            padding: "8px 10px",
+            background: "rgba(251,191,36,0.08)",
+            border: "1px solid rgba(251,191,36,0.2)",
+            borderRadius: "6px",
+          }}
+        >
+          <strong>bash note:</strong> New terminal tabs source{" "}
+          <code style={{ fontFamily: "var(--font-mono, monospace)" }}>
+            ~/.bash_profile
+          </code>
+          , not{" "}
+          <code style={{ fontFamily: "var(--font-mono, monospace)" }}>
+            ~/.bashrc
+          </code>
+          . Make sure{" "}
+          <code style={{ fontFamily: "var(--font-mono, monospace)" }}>
+            ~/.bash_profile
+          </code>{" "}
+          contains:
+          <br />
+          <span style={kbd}>
+            {"[ -f ~/.bashrc ] && source ~/.bashrc"}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -371,7 +402,7 @@ export default function ShellIntegration() {
           2. Paste it into your shell config:
         </div>
         {platform === "mac" ? (
-          <MacInstructions rcFile={rcFile} />
+          <MacInstructions rcFile={rcFile} shell={shell} />
         ) : (
           <WindowsInstructions rcFile="~/.bashrc" />
         )}

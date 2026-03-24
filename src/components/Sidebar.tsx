@@ -1,4 +1,5 @@
-import { FolderOpen, Plus, Trash2, GitBranch, Terminal } from "lucide-react";
+import { useState } from "react";
+import { FolderOpen, Plus, Trash2, GitBranch, Terminal, ChevronRight } from "lucide-react";
 import type { ProjectTreeNode } from "../types";
 
 interface SidebarProps {
@@ -41,6 +42,8 @@ function ProjectNodeItem({
 }) {
   const { project, depth, children } = node;
   const paddingLeft = depth * 16;
+  const hasChildren = children.length > 0;
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <>
@@ -58,11 +61,32 @@ function ProjectNodeItem({
         }}
         aria-current={selectedId === project.id ? "true" : undefined}
       >
-        <span
-          className="project-dot"
-          style={{ background: dotColor(index) }}
-          aria-hidden="true"
-        />
+        {hasChildren ? (
+          <button
+            className="project-delete"
+            style={{ marginLeft: 0, marginRight: "2px", padding: "2px" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setCollapsed((c) => !c);
+            }}
+            aria-label={collapsed ? `Expand ${project.name}` : `Collapse ${project.name}`}
+            title={collapsed ? "Expand" : "Collapse"}
+          >
+            <ChevronRight
+              size={11}
+              style={{
+                transform: collapsed ? "rotate(0deg)" : "rotate(90deg)",
+                transition: "transform 150ms ease",
+              }}
+            />
+          </button>
+        ) : (
+          <span
+            className="project-dot"
+            style={{ background: dotColor(index) }}
+            aria-hidden="true"
+          />
+        )}
         <div className="project-info">
           <div className="project-name">{project.name}</div>
           <div className="project-count">
@@ -93,7 +117,7 @@ function ProjectNodeItem({
           ×
         </button>
       </div>
-      {children.map((child, childIdx) => (
+      {!collapsed && children.map((child, childIdx) => (
         <ProjectNodeItem
           key={child.project.id}
           node={child}

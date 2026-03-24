@@ -14,6 +14,20 @@ export function serializeVars(vars: EnvVar[]): string {
     .join('\n')
 }
 
+// Strips surrounding quotes from .env values (both double-quoted "v" and single-quoted 'v').
+// Also unescapes shellQuote's '\'' sequence for literal single quotes.
+export function unquoteEnvValue(raw: string): string {
+  const v = raw.trim()
+  if (v.length < 2) return v
+  if (v.startsWith('"') && v.endsWith('"')) {
+    return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+  }
+  if (v.startsWith("'") && v.endsWith("'")) {
+    return v.slice(1, -1).replace(/'\\''/g, "'")
+  }
+  return v
+}
+
 function parseEnvContent(content: string, projectId = ''): EnvVar[] {
   const vars: EnvVar[] = []
   for (const line of content.split('\n')) {
@@ -23,7 +37,7 @@ function parseEnvContent(content: string, projectId = ''): EnvVar[] {
     vars.push({
       id: crypto.randomUUID(),
       key: line.slice(0, eqIndex).trim(),
-      val: line.slice(eqIndex + 1).trim(),
+      val: unquoteEnvValue(line.slice(eqIndex + 1)),
       revealed: false,
       sourceProjectId: projectId,
     })
