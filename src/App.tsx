@@ -14,6 +14,7 @@ import Sidebar from "./components/Sidebar";
 import VarList from "./components/VarList";
 import VarDetail from "./components/VarDetail";
 import ShellIntegration from "./components/ShellIntegration";
+import SettingsModal from "./components/SettingsModal";
 import { FolderOpen, Plus, X } from "lucide-react";
 
 const STORAGE_KEY = "dotenv_mgr_projects";
@@ -61,6 +62,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [gitignoreStatus, setGitignoreStatus] = useState<GitignoreStatus>('no_gitignore');
   const [showShellIntegration, setShowShellIntegration] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   /* Sync to localStorage */
@@ -311,6 +313,7 @@ export default function App() {
         onAdd={addProject}
         onAddSubProject={addSubProject}
         onOpenShellIntegration={() => setShowShellIntegration(true)}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       <VarList
@@ -412,6 +415,63 @@ export default function App() {
               <X size={14} />
             </button>
             <ShellIntegration />
+          </div>
+        </div>
+      )}
+      {showSettings && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setShowSettings(false)}
+          aria-label="Close settings dialog"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Settings"
+            style={{
+              position: "relative",
+              width: "480px",
+              maxWidth: "calc(100vw - 48px)",
+              background: "#0d0d0d",
+              border: "1px solid rgba(255,255,255,0.10)",
+              borderRadius: "12px",
+              padding: "24px",
+              zIndex: 101,
+              boxShadow: "0 24px 64px rgba(0,0,0,0.7)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowSettings(false)}
+              aria-label="Close"
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "28px",
+                height: "28px",
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "6px",
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+                padding: 0,
+              }}
+            >
+              <X size={14} />
+            </button>
+            <SettingsModal onClose={() => setShowSettings(false)} />
           </div>
         </div>
       )}
