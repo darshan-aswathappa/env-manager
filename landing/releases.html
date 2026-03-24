@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>.envVault — Release Notes</title>
+  <meta name="description" content="Release notes and changelog for .envVault — environment variable manager for macOS." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-base: #161618;
+      --bg-sidebar: #1e1e20;
+      --bg-row-rest: #1e1e20;
+      --bg-row-hover: rgba(255,255,255,0.04);
+      --border-subtle: rgba(255,255,255,0.08);
+      --border-moderate: rgba(255,255,255,0.10);
+      --border-active: rgba(255,255,255,0.18);
+      --accent: #3063b8;
+      --accent-hover: #3a72cc;
+      --accent-press: #254e96;
+      --accent-dim: rgba(48,99,184,0.10);
+      --accent-text: #7aa3d4;
+      --text-primary: #f0f0f0;
+      --text-secondary: #8e8e93;
+      --text-tertiary: #48484a;
+      --color-success: #30d158;
+      --color-warning: #f5a524;
+      --color-danger: #e5484d;
+      --font-ui: "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+      --radius-sm: 2px;
+      --radius-md: 3px;
+      --radius-lg: 4px;
+      --t-normal: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+      --t-entrance: 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border-subtle);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .navbar-inner {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wordmark {
+      font-family: var(--font-ui);
+      font-weight: 500;
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      text-decoration: none;
+    }
+
+    .version-badge {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+      background: var(--bg-row-rest);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 1px 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-ui);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      line-height: 1;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: background var(--t-normal), color var(--t-normal), border-color var(--t-normal);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 7px 14px;
+      height: 32px;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:active { background: var(--accent-press); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 7px 12px;
+      height: 32px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      border-color: var(--border-moderate);
+      background: var(--bg-row-hover);
+    }
+
+    /* ── Page header ── */
+    .page-header {
+      padding: 64px 24px 48px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .page-header-inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .page-label {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .page-sub {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ── Changelog ── */
+    .releases-body {
+      padding: 48px 24px 96px;
+    }
+
+    .releases-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Timeline layout */
+    .timeline {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0;
+    }
+
+    .timeline-aside {
+      padding-top: 30px;
+      padding-right: 28px;
+      text-align: right;
+      border-right: 1px solid var(--border-subtle);
+      position: relative;
+    }
+
+    .timeline-aside::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      top: 37px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--bg-base);
+      border: 1px solid var(--border-moderate);
+    }
+
+    .timeline-entry:first-child .timeline-aside::after {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .timeline-date {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+      line-height: 1;
+    }
+
+    .timeline-content {
+      padding: 24px 0 48px 28px;
+    }
+
+    .timeline-entry:last-child .timeline-content {
+      padding-bottom: 0;
+    }
+
+    /* ── Release entry ── */
+    .release-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .release-version {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .release-badge {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      border-radius: var(--radius-sm);
+      padding: 2px 7px;
+    }
+
+    .release-badge.latest {
+      color: var(--color-success);
+      background: rgba(48, 209, 88, 0.08);
+      border: 1px solid rgba(48, 209, 88, 0.15);
+    }
+
+    .release-badge.beta {
+      color: var(--color-warning);
+      background: rgba(245, 165, 36, 0.08);
+      border: 1px solid rgba(245, 165, 36, 0.15);
+    }
+
+    .release-badge.alpha {
+      color: var(--text-tertiary);
+      background: rgba(72, 72, 74, 0.20);
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Category groups within a release */
+    .release-group {
+      margin-bottom: 20px;
+    }
+
+    .release-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .release-group-label {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 10px;
+    }
+
+    .release-notes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .release-notes li {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      line-height: 1.55;
+    }
+
+    .release-notes li::before {
+      content: "—";
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.8em;
+      color: var(--accent-text);
+    }
+
+    /* Download strip at top of latest release */
+    .release-download {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-row-rest);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+    }
+
+    .release-download-meta {
+      flex: 1;
+    }
+
+    .release-download-title {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .release-download-sub {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      color: var(--text-tertiary);
+    }
+
+    .btn-download {
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 14px;
+      height: 30px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: background var(--t-normal);
+      white-space: nowrap;
+    }
+
+    .btn-download:hover { background: var(--accent-hover); }
+
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity var(--t-entrance), transform var(--t-entrance);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: var(--bg-base);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+    }
+
+    .footer-inner {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-copy {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .footer-link {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      transition: color var(--t-normal);
+    }
+
+    .footer-link:hover { color: var(--text-secondary); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .timeline {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-aside {
+        border-right: none;
+        border-left: 1px solid var(--border-subtle);
+        text-align: left;
+        padding: 0 0 0 16px;
+        padding-top: 0;
+        margin-bottom: 12px;
+      }
+
+      .timeline-aside::after {
+        left: -5px;
+        right: auto;
+        top: 4px;
+      }
+
+      .timeline-content {
+        padding: 0 0 40px 16px;
+        border-left: 1px solid var(--border-subtle);
+      }
+
+      .page-header {
+        padding: 40px 20px 32px;
+      }
+
+      .releases-body {
+        padding: 32px 20px 64px;
+      }
+
+      .navbar-actions .btn-ghost:not(:last-child) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" role="banner">
+    <div class="navbar-inner">
+      <div class="navbar-brand">
+        <a href="index.html" class="wordmark">.envVault</a>
+        <span class="version-badge">v1.0.0</span>
+      </div>
+      <div class="navbar-actions">
+        <a href="index.html" class="btn btn-ghost">← Back</a>
+        <a href="https://github.com" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
+        <a href="#download" class="btn btn-primary">Download for macOS</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header-inner">
+      <span class="page-label reveal">Changelog</span>
+      <h1 class="page-title reveal">Release notes</h1>
+      <p class="page-sub reveal">
+        All releases ship as signed macOS app bundles for Apple Silicon and Intel.
+        Changes to the vault storage format are always backwards-compatible.
+      </p>
+    </div>
+  </header>
+
+  <!-- Releases -->
+  <main class="releases-body">
+    <div class="releases-inner">
+
+      <!-- v1.0.0 -->
+      <div class="timeline-entry reveal">
+        <div class="timeline">
+          <div class="timeline-aside">
+            <span class="timeline-date">Mar 2026</span>
+          </div>
+          <div class="timeline-content">
+            <div class="release-header">
+              <span class="release-version">v1.0.0</span>
+              <span class="release-badge latest">Latest</span>
+            </div>
+
+            <div class="release-download">
+              <div class="release-download-meta">
+                <div class="release-download-title">.envVault 1.0.0</div>
+                <div class="release-download-sub">macOS 13+&nbsp; · &nbsp;Apple Silicon &amp; Intel&nbsp; · &nbsp;~6 MB</div>
+              </div>
+              <a href="#download" class="btn-download">Download</a>
+            </div>
+
+            <div class="release-group">
+              <div class="release-group-label">New</div>
+              <ul class="release-notes">
+                <li>Initial public release — macOS desktop app built with Tauri</li>
+                <li>Vault storage in app data directory — keys are never written to project folders</li>
+                <li>Multi-project sidebar with collapsible tree structure</li>
+                <li>Shell hook integration for <code>zsh</code> and <code>bash</code> — auto-loads vars on <code>cd</code></li>
+                <li>Variable inheritance across sub-projects with merge-child-wins mode</li>
+                <li>Onboarding flow with shell hook verification step</li>
+                <li>Settings panel with data management and export</li>
+              </ul>
+            </div>
+
+            <div class="release-group">
+              <div class="release-group-label">Security</div>
+              <ul class="release-notes">
+                <li>Values stored outside the file tree — invisible to AI coding agents and file indexers</li>
+                <li>Auto-masking with configurable inactivity timeout</li>
+                <li>Clipboard auto-clear after copy — configurable delay</li>
+                <li>Gitignore status detection with inline warnings</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- v0.9.0 -->
+      <div class="timeline-entry reveal">
+        <div class="timeline">
+          <div class="timeline-aside">
+            <span class="timeline-date">Feb 2026</span>
+          </div>
+          <div class="timeline-content">
+            <div class="release-header">
+              <span class="release-version">v0.9.0</span>
+              <span class="release-badge beta">Beta</span>
+            </div>
+
+            <div class="release-group">
+              <div class="release-group-label">New</div>
+              <ul class="release-notes">
+                <li>Core vault functionality — encrypted storage per project</li>
+                <li>Single-project env management UI</li>
+                <li>Basic shell hook integration — <code>zsh</code> only</li>
+                <li><code>.env</code> file import and export</li>
+                <li>Masked value display with per-variable reveal</li>
+              </ul>
+            </div>
+
+            <div class="release-group">
+              <div class="release-group-label">Fixed</div>
+              <ul class="release-notes">
+                <li>Shell hook not sourced when <code>.zshrc</code> contained conditional blocks</li>
+                <li>Import silently ignored lines with inline comments</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- v0.8.0 -->
+      <div class="timeline-entry reveal">
+        <div class="timeline">
+          <div class="timeline-aside">
+            <span class="timeline-date">Jan 2026</span>
+          </div>
+          <div class="timeline-content">
+            <div class="release-header">
+              <span class="release-version">v0.8.0</span>
+              <span class="release-badge alpha">Alpha</span>
+            </div>
+
+            <div class="release-group">
+              <div class="release-group-label">New</div>
+              <ul class="release-notes">
+                <li>Proof of concept — Tauri + React scaffold</li>
+                <li>File-based env storage (unencrypted, single project)</li>
+                <li>Initial three-column UI layout — sidebar, variable list, detail panel</li>
+                <li>Add, edit, delete variables</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a href="index.html" class="wordmark">.envVault</a>
+        <span class="footer-copy">© 2026</span>
+      </div>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="index.html" class="footer-link">Home</a>
+        <a href="https://github.com" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com" class="footer-link" target="_blank" rel="noopener">Issues</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.06,
+        rootMargin: '0px 0px -24px 0px'
+      });
+
+      function initReveal() {
+        document.querySelectorAll('.reveal').forEach(function (el, i) {
+          el.style.transitionDelay = (i * 30) + 'ms';
+          observer.observe(el);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initReveal);
+      } else {
+        initReveal();
+      }
+    })();
+  </script>
+
+</body>
+</html>
