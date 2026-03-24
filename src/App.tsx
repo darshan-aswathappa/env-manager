@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   saveProjectEnv,
@@ -13,7 +13,8 @@ import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus } from "./types"
 import Sidebar from "./components/Sidebar";
 import VarList from "./components/VarList";
 import VarDetail from "./components/VarDetail";
-import { FolderOpen, Plus } from "lucide-react";
+import ShellIntegration from "./components/ShellIntegration";
+import { FolderOpen, Plus, X } from "lucide-react";
 
 const STORAGE_KEY = "dotenv_mgr_projects";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -59,6 +60,8 @@ export default function App() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [searchQuery, setSearchQuery] = useState("");
   const [gitignoreStatus, setGitignoreStatus] = useState<GitignoreStatus>('no_gitignore');
+  const [showShellIntegration, setShowShellIntegration] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   /* Sync to localStorage */
   useEffect(() => {
@@ -307,6 +310,7 @@ export default function App() {
         onDelete={deleteProject}
         onAdd={addProject}
         onAddSubProject={addSubProject}
+        onOpenShellIntegration={() => setShowShellIntegration(true)}
       />
 
       <VarList
@@ -346,6 +350,68 @@ export default function App() {
               <Plus size={14} />
               Add project folder
             </button>
+          </div>
+        </div>
+      )}
+
+      {showShellIntegration && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setShowShellIntegration(false)}
+          aria-label="Close shell integration dialog"
+        >
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Shell integration"
+            style={{
+              position: "relative",
+              width: "640px",
+              maxWidth: "calc(100vw - 48px)",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              background: "#0d0d0d",
+              border: "1px solid rgba(255,255,255,0.10)",
+              borderRadius: "12px",
+              padding: "24px",
+              zIndex: 101,
+              boxShadow: "0 24px 64px rgba(0,0,0,0.7)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowShellIntegration(false)}
+              aria-label="Close"
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "28px",
+                height: "28px",
+                background: "transparent",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "6px",
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              <X size={14} />
+            </button>
+            <ShellIntegration />
           </div>
         </div>
       )}

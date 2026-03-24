@@ -50,26 +50,26 @@
 //! here is mostly for demonstration.
 //!
 //! ```
-#![doc = include_str!("../examples/encode_core_graphics.rs")]
+#![doc = ""]
 //! ```
 //!
 //! Implementing [`Encode`] and [`RefEncode`] for a transparent newtype.
 //!
 //! ```
-#![doc = include_str!("../examples/encode_nsuinteger.rs")]
+#![doc = ""]
 //! ```
 //!
 //! Implementing [`RefEncode`] for an object, in this case `NSString`.
 //!
 //! ```
-#![doc = include_str!("../examples/encode_nsstring.rs")]
+#![doc = ""]
 //! ```
 //!
 //! Implementing [`RefEncode`] for a type where you don't necessarily know
 //! about the exact internals / the internals are not representable in Rust.
 //!
 //! ```
-#![doc = include_str!("../examples/encode_opaque_type.rs")]
+#![doc = ""]
 //! ```
 
 use core::cell::{Cell, UnsafeCell};

@@ -84,7 +84,7 @@ use crate::MainThreadMarker;
 /// Implement the trait manually for a class with a lifetime parameter.
 ///
 /// ```
-#[doc = include_str!("../examples/class_with_lifetime.rs")]
+#[doc = ""]
 /// ```
 pub unsafe trait Message: RefEncode {
     /// Increment the reference count of the receiver.

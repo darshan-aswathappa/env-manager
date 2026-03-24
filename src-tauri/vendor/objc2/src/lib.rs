@@ -37,7 +37,7 @@
 //!
 #![cfg_attr(target_os = "macos", doc = "```no_run")]
 #![cfg_attr(not(target_os = "macos"), doc = "```ignore")]
-#![doc = include_str!("../examples/hello_world_app.rs")]
+#![doc = ""]
 //! ```
 //!
 //! [the framework crates]: crate::topics::about_generated

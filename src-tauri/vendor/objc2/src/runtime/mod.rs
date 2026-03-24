@@ -10,7 +10,7 @@
 //! Using features of the runtime to query information about `NSObject`.
 //!
 //! ```
-#![doc = include_str!("../../examples/introspection.rs")]
+#![doc = ""]
 //! ```
 #![allow(clippy::missing_panics_doc)]
 

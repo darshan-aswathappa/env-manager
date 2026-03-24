@@ -1,4 +1,4 @@
-import { FolderOpen, Plus, Trash2, GitBranch } from "lucide-react";
+import { FolderOpen, Plus, Trash2, GitBranch, Terminal } from "lucide-react";
 import type { ProjectTreeNode } from "../types";
 
 interface SidebarProps {
@@ -8,6 +8,7 @@ interface SidebarProps {
   onDelete: (id: string) => void;
   onAdd: () => void;
   onAddSubProject: (parentId: string) => void;
+  onOpenShellIntegration: () => void;
 }
 
 const PROJECT_COLORS = [
@@ -22,7 +23,6 @@ function dotColor(index: number): string {
   return PROJECT_COLORS[index % PROJECT_COLORS.length];
 }
 
-let colorIndex = 0;
 
 function ProjectNodeItem({
   node,
@@ -115,6 +115,7 @@ export default function Sidebar({
   onDelete,
   onAdd,
   onAddSubProject,
+  onOpenShellIntegration,
 }: SidebarProps) {
   const totalProjects = countNodes(projectTree);
 
@@ -156,6 +157,15 @@ export default function Sidebar({
         <button className="sidebar-footer-btn" disabled aria-label="Trash (coming soon)">
           <Trash2 size={14} />
           <span>Trash</span>
+        </button>
+        <button
+          className="sidebar-footer-btn"
+          onClick={onOpenShellIntegration}
+          aria-label="Open shell integration"
+          title="Shell integration"
+        >
+          <Terminal size={14} />
+          <span>Shell</span>
         </button>
         <button
           className="sidebar-footer-btn add-project"
