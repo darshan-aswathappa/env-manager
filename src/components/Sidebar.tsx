@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderOpen, Plus, Trash2, GitBranch, Terminal, ChevronRight } from "lucide-react";
+import { FolderOpen, Plus, Trash2, GitBranch, Terminal, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { ProjectTreeNode } from "../types";
 
 interface SidebarProps {
@@ -129,14 +129,36 @@ export default function Sidebar({
   onOpenShellIntegration,
 }: SidebarProps) {
   const totalProjects = countNodes(projectTree);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${collapsed ? " collapsed" : ""}`}>
       <div className="sidebar-header">
-        <div className="app-logo">
-          <FolderOpen size={15} className="app-logo-icon-flat" aria-hidden="true" />
-          <span className="app-title">dotenv Manager</span>
-        </div>
+        {collapsed ? (
+          <button
+            className="sidebar-toggle"
+            onClick={() => setCollapsed(false)}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+          >
+            <PanelLeftOpen size={15} />
+          </button>
+        ) : (
+          <>
+            <div className="app-logo" style={{ flex: 1 }}>
+              <FolderOpen size={15} className="app-logo-icon-flat" aria-hidden="true" />
+              <span className="app-title">dotenv Manager</span>
+            </div>
+            <button
+              className="sidebar-toggle"
+              onClick={() => setCollapsed(true)}
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+            >
+              <PanelLeftClose size={15} />
+            </button>
+          </>
+        )}
       </div>
 
       <div className="sidebar-section-label">Projects</div>

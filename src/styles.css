@@ -24,12 +24,12 @@
   --border-active:    rgba(255, 255, 255, 0.18);
   --border-separator: rgba(255, 255, 255, 0.06);
 
-  /* Accent — calm blue, not electric */
-  --accent:           #3b82f6;
-  --accent-hover:     #5091f7;
-  --accent-press:     #2563eb;
-  --accent-dim:       rgba(59, 130, 246, 0.10);
-  --accent-text:      #60a5fa;
+  /* Accent — muted slate-blue */
+  --accent:           #3063b8;
+  --accent-hover:     #3a72cc;
+  --accent-press:     #254e96;
+  --accent-dim:       rgba(48, 99, 184, 0.10);
+  --accent-text:      #7aa3d4;
 
   /* Text hierarchy */
   --text-primary:     #f0f0f0;
@@ -53,9 +53,9 @@
 
   /* Structural */
   --panel-border:     1px solid rgba(255, 255, 255, 0.08);
-  --radius-sm:        4px;
-  --radius-md:        6px;
-  --radius-lg:        8px;
+  --radius-sm:        2px;
+  --radius-md:        3px;
+  --radius-lg:        4px;
 
   /* Transitions — short, purposeful */
   --t-fast:   120ms ease;
@@ -167,13 +167,38 @@ a {
   background: var(--bg-sidebar);
   border-right: var(--panel-border);
   overflow: hidden;
+  transition: width 180ms ease, min-width 180ms ease;
+}
+
+/* ── Collapsed sidebar ─────────────────────────────────────── */
+.sidebar.collapsed {
+  width: 44px;
+  min-width: 44px;
+}
+
+.sidebar.collapsed .sidebar-section-label,
+.sidebar.collapsed .sidebar-list,
+.sidebar.collapsed .sidebar-footer,
+.sidebar.collapsed .app-title {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 14px 0;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-bottom: var(--panel-border);
 }
 
 /* ── Sidebar Header ────────────────────────────────────────── */
 .sidebar-header {
-  padding: 18px 14px 12px;
+  padding: 12px 10px 10px;
   border-bottom: var(--panel-border);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .app-logo {
@@ -215,6 +240,27 @@ a {
   text-transform: uppercase;
   margin-top: 1px;
   margin-left: 36px;
+}
+
+/* Toggle button that collapses/expands the sidebar */
+.sidebar-toggle {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.sidebar-toggle:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Sidebar Section Label ─────────────────────────────────── */
@@ -568,13 +614,10 @@ a {
 
 .fab-add:hover {
   background: var(--accent-hover);
-  transform: scale(1.05);
 }
 
 .fab-add:active {
   background: var(--accent-press);
-  transform: scale(0.93);
-  transition-duration: 60ms;
 }
 
 .fab-add:focus-visible {
@@ -784,58 +827,54 @@ a {
    BUTTONS
 ══════════════════════════════════════════════════════════════ */
 
-/* Icon-only button — flat, no shadow, no glow */
+/* Icon-only button — flat, no shadow, no glow, no scale */
 .icon-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   background: transparent;
-  border: 1px solid transparent;
-  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
+  border: none;
+  transition: color var(--t-fast), background var(--t-fast);
   flex-shrink: 0;
 }
 
 .icon-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-row-hover);
-  border-color: var(--border-subtle);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .icon-btn:active {
-  background: var(--bg-row-active);
-  transform: scale(0.92);
-  transition-duration: 60ms;
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .icon-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 1px solid var(--accent);
   outline-offset: 1px;
 }
 
 .icon-btn.danger:hover {
   background: var(--color-danger-bg);
-  border-color: rgba(229, 72, 77, 0.18);
   color: var(--color-danger);
 }
 
-/* Primary CTA — flat background, no gradient, no glow, no shadow */
+/* Primary CTA — flat, muted, no gradient, no glow, no scale */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 14px;
+  padding: 5px 13px;
   border-radius: var(--radius-md);
   font-size: 0.8125rem;
   font-weight: 500;
   background: var(--accent);
-  color: #fff;
+  color: rgba(255, 255, 255, 0.92);
   border: none;
-  transition: background var(--t-fast), transform var(--t-fast);
+  transition: background var(--t-fast);
   white-space: nowrap;
 }
 
@@ -845,17 +884,15 @@ a {
 
 .btn-primary:active {
   background: var(--accent-press);
-  transform: scale(0.96);
-  transition-duration: 60ms;
 }
 
 .btn-primary:focus-visible {
-  outline: 2px solid var(--accent-text);
+  outline: 1px solid var(--accent-text);
   outline-offset: 2px;
 }
 
 .btn-primary:disabled {
-  opacity: 0.40;
+  opacity: 0.38;
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -1019,14 +1056,8 @@ a {
     animation: none;
   }
 
-  .fab-add:hover,
-  .fab-add:active {
-    transform: none;
-  }
-
-  .icon-btn:active,
-  .btn-primary:active {
-    transform: none;
+  .sidebar {
+    transition: none;
   }
 
   * {
