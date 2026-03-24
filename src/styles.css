@@ -1,69 +1,72 @@
 /* ============================================================
-   dotenv Manager — Flat Minimal macOS Dark Design System
+   .envVault — Flat Minimal macOS Dark Design System
    Transmission-style: no gloss, no glow, no gradients
    ============================================================ */
 
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
   /* Column backgrounds */
-  --bg-base:          #161618;
-  --bg-sidebar:       #1e1e20;
-  --bg-list:          #161618;
-  --bg-detail:        #161618;
+  --bg-base: #161618;
+  --bg-sidebar: #1e1e20;
+  --bg-list: #161618;
+  --bg-detail: #161618;
 
   /* Surface lifts */
-  --bg-row-rest:      #1e1e20;
-  --bg-row-hover:     rgba(255, 255, 255, 0.04);
-  --bg-row-active:    rgba(255, 255, 255, 0.06);
-  --bg-input:         rgba(255, 255, 255, 0.04);
-  --bg-input-focus:   rgba(255, 255, 255, 0.06);
+  --bg-row-rest: #1e1e20;
+  --bg-row-hover: rgba(255, 255, 255, 0.04);
+  --bg-row-active: rgba(255, 255, 255, 0.06);
+  --bg-input: rgba(255, 255, 255, 0.04);
+  --bg-input-focus: rgba(255, 255, 255, 0.06);
 
   /* Borders */
-  --border-subtle:    rgba(255, 255, 255, 0.08);
-  --border-moderate:  rgba(255, 255, 255, 0.10);
-  --border-active:    rgba(255, 255, 255, 0.18);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-moderate: rgba(255, 255, 255, 0.1);
+  --border-active: rgba(255, 255, 255, 0.18);
   --border-separator: rgba(255, 255, 255, 0.06);
 
   /* Accent — muted slate-blue */
-  --accent:           #3063b8;
-  --accent-hover:     #3a72cc;
-  --accent-press:     #254e96;
-  --accent-dim:       rgba(48, 99, 184, 0.10);
-  --accent-text:      #7aa3d4;
+  --accent: #3063b8;
+  --accent-hover: #3a72cc;
+  --accent-press: #254e96;
+  --accent-dim: rgba(48, 99, 184, 0.1);
+  --accent-text: #7aa3d4;
 
   /* Text hierarchy */
-  --text-primary:     #f0f0f0;
-  --text-secondary:   #8e8e93;
-  --text-tertiary:    #48484a;
-  --text-muted:       #3a3a3c;
+  --text-primary: #f0f0f0;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #48484a;
+  --text-muted: #3a3a3c;
 
   /* Status */
-  --color-success:    #30d158;
+  --color-success: #30d158;
   --color-success-bg: rgba(48, 209, 88, 0.08);
-  --color-warning:    #f5a524;
+  --color-warning: #f5a524;
   --color-warning-bg: rgba(245, 165, 36, 0.08);
-  --color-danger:     #e5484d;
-  --color-danger-bg:  rgba(229, 72, 77, 0.08);
-  --color-info:       #3b82f6;
+  --color-danger: #e5484d;
+  --color-danger-bg: rgba(229, 72, 77, 0.08);
+  --color-info: #3b82f6;
 
   /* Typography */
-  --font-ui:   "Aptos", "Aptos Display", system-ui, -apple-system,
-               BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui:
+    "Aptos", "Aptos Display", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 
   /* Structural */
-  --panel-border:     1px solid rgba(255, 255, 255, 0.08);
-  --radius-sm:        2px;
-  --radius-md:        3px;
-  --radius-lg:        4px;
+  --panel-border: 1px solid rgba(255, 255, 255, 0.08);
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
 
   /* Transitions — short, purposeful */
-  --t-fast:   120ms ease;
+  --t-fast: 120ms ease;
   --t-normal: 200ms ease;
 }
 
 /* ── Reset ─────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -92,7 +95,9 @@ body {
   flex-direction: column;
 }
 
-input, textarea, button {
+input,
+textarea,
+button {
   font-family: inherit;
   font-size: inherit;
 }
@@ -120,7 +125,7 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
 }
 
@@ -130,23 +135,43 @@ a {
 
 /* ── Animations — subtle only, no breathing/glow ──────────── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInX {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── App Shell ─────────────────────────────────────────────── */
@@ -167,7 +192,9 @@ a {
   background: var(--bg-sidebar);
   border-right: var(--panel-border);
   overflow: hidden;
-  transition: width 180ms ease, min-width 180ms ease;
+  transition:
+    width 180ms ease,
+    min-width 180ms ease;
 }
 
 /* ── Collapsed sidebar ─────────────────────────────────────── */
@@ -212,7 +239,7 @@ a {
   height: 28px;
   border-radius: var(--radius-md);
   background: var(--accent-dim);
-  border: 1px solid rgba(59, 130, 246, 0.20);
+  border: 1px solid rgba(59, 130, 246, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -255,7 +282,9 @@ a {
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: color var(--t-fast), background var(--t-fast);
+  transition:
+    color var(--t-fast),
+    background var(--t-fast);
 }
 
 .sidebar-toggle:hover {
@@ -300,7 +329,9 @@ a {
   padding: 6px 10px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast);
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
   position: relative;
   min-width: 0;
 }
@@ -368,7 +399,10 @@ a {
   font-size: 15px;
   line-height: 1;
   flex-shrink: 0;
-  transition: opacity var(--t-fast), background var(--t-fast), color var(--t-fast);
+  transition:
+    opacity var(--t-fast),
+    background var(--t-fast),
+    color var(--t-fast);
 }
 
 .project-item:hover .project-delete {
@@ -399,7 +433,9 @@ a {
   font-size: 0.8125rem;
   font-weight: 400;
   color: var(--text-secondary);
-  transition: background var(--t-fast), color var(--t-fast);
+  transition:
+    background var(--t-fast),
+    color var(--t-fast);
   width: 100%;
   text-align: left;
 }
@@ -474,7 +510,9 @@ a {
   color: var(--text-primary);
   font-size: 0.8125rem;
   outline: none;
-  transition: border-color var(--t-fast), background var(--t-fast);
+  transition:
+    border-color var(--t-fast),
+    background var(--t-fast);
   -webkit-appearance: none;
 }
 
@@ -608,7 +646,9 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background var(--t-fast), transform var(--t-fast);
+  transition:
+    background var(--t-fast),
+    transform var(--t-fast);
   z-index: 2;
 }
 
@@ -736,7 +776,9 @@ a {
   color: var(--text-primary);
   outline: none;
   min-width: 0;
-  transition: border-color var(--t-fast), background var(--t-fast);
+  transition:
+    border-color var(--t-fast),
+    background var(--t-fast);
   -webkit-appearance: none;
 }
 
@@ -804,7 +846,10 @@ a {
   color: var(--text-secondary);
   background: transparent;
   border: 1px solid var(--border-subtle);
-  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast);
 }
 
 .detail-add-btn:hover {
@@ -838,7 +883,9 @@ a {
   color: var(--text-tertiary);
   background: transparent;
   border: none;
-  transition: color var(--t-fast), background var(--t-fast);
+  transition:
+    color var(--t-fast),
+    background var(--t-fast);
   flex-shrink: 0;
 }
 
@@ -994,9 +1041,15 @@ a {
   transition: width var(--t-normal);
 }
 
-.progress-bar-fill--success { background: var(--color-success); }
-.progress-bar-fill--warning { background: var(--color-warning); }
-.progress-bar-fill--danger  { background: var(--color-danger); }
+.progress-bar-fill--success {
+  background: var(--color-success);
+}
+.progress-bar-fill--warning {
+  background: var(--color-warning);
+}
+.progress-bar-fill--danger {
+  background: var(--color-danger);
+}
 
 /* ══════════════════════════════════════════════════════════════
    EMPTY STATE (detail panel / no project)

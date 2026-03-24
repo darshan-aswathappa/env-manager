@@ -1,6 +1,8 @@
 import type { Project, ProjectTreeNode, EnvVar } from '../types'
 
 export function buildProjectTree(projects: Project[]): ProjectTreeNode[] {
+  const projectIds = new Set(projects.map(p => p.id))
+
   function buildNode(project: Project, depth: number, ancestorChain: Project[]): ProjectTreeNode {
     const children = projects
       .filter(p => p.parentId === project.id)
@@ -9,8 +11,9 @@ export function buildProjectTree(projects: Project[]): ProjectTreeNode[] {
     return { project, depth, children, ancestorChain }
   }
 
+  // Treat projects as root if parentId is null OR if parent no longer exists (orphan recovery)
   return projects
-    .filter(p => p.parentId === null)
+    .filter(p => p.parentId === null || !projectIds.has(p.parentId))
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(p => buildNode(p, 0, []))
 }

@@ -147,7 +147,7 @@ export default function Sidebar({
           <>
             <div className="app-logo" style={{ flex: 1 }}>
               <FolderOpen size={15} className="app-logo-icon-flat" aria-hidden="true" />
-              <span className="app-title">dotenv Manager</span>
+              <span className="app-title">.envVault</span>
             </div>
             <button
               className="sidebar-toggle"
