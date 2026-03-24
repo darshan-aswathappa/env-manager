@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar'
 import type { ProjectTreeNode } from '../types'
 
 const makeNode = (id: string, name: string, depth = 0, children: ProjectTreeNode[] = []): ProjectTreeNode => ({
-  project: { id, name, path: `/${id}`, parentId: null, vars: [], inheritanceMode: 'merge-child-wins', sortOrder: 0 },
+  project: { id, name, path: `/${id}`, parentId: null, vars: [], environments: [{ suffix: '', vars: [] }], activeEnv: '', inheritanceMode: 'merge-child-wins', sortOrder: 0 },
   depth,
   children,
   ancestorChain: [],
@@ -46,11 +46,12 @@ describe('Sidebar', () => {
     expect(item?.className).toContain('active')
   })
 
-  it('calls onDelete when remove button is clicked', () => {
+  it('calls onDelete when remove button is clicked and confirmed', async () => {
     const onDelete = vi.fn()
     const tree = [makeNode('p1', 'my-project')]
     render(<Sidebar projectTree={tree} selectedId={null} onSelect={vi.fn()} onDelete={onDelete} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} onOpenSettings={vi.fn()} />)
-    screen.getByRole('button', { name: /Remove project my-project/i }).click()
+    await act(async () => { screen.getByRole('button', { name: /Remove project my-project/i }).click() })
+    await act(async () => { screen.getByRole('button', { name: /Confirm remove my-project/i }).click() })
     expect(onDelete).toHaveBeenCalledWith('p1')
   })
 

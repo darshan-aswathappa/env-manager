@@ -264,15 +264,16 @@
       transform: translateX(-50%);
     }
 
-    /* ── App Mockup ── */
+    /* ── Interactive App Demo ── */
     .app-mockup {
       width: 100%;
-      max-width: 720px;
+      max-width: 780px;
       margin: 0 auto;
       background: #1e1e20;
       border: 1px solid var(--border-subtle);
       border-radius: 6px;
       overflow: hidden;
+      user-select: none;
     }
 
     .mockup-titlebar {
@@ -304,13 +305,15 @@
 
     .mockup-body {
       display: grid;
-      grid-template-columns: 180px 1fr 200px;
-      min-height: 240px;
+      grid-template-columns: 160px 1fr 220px;
+      min-height: 280px;
     }
 
     .mock-sidebar {
       border-right: 1px solid var(--border-subtle);
       padding: 10px 0;
+      display: flex;
+      flex-direction: column;
     }
 
     .mock-sidebar-label {
@@ -329,7 +332,12 @@
       padding: 6px 14px;
       font-size: 0.75rem;
       color: var(--text-secondary);
-      transition: background var(--t-normal);
+      cursor: pointer;
+      transition: background var(--t-normal), color var(--t-normal);
+    }
+
+    .mock-project:hover {
+      background: var(--bg-row-hover);
     }
 
     .mock-project.active {
@@ -343,6 +351,7 @@
       border-radius: 50%;
       background: var(--text-tertiary);
       flex-shrink: 0;
+      transition: background var(--t-normal);
     }
 
     .mock-project.active .mock-project-dot {
@@ -356,6 +365,9 @@
     .mock-vars {
       padding: 10px 0;
       border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
 
     .mock-vars-header {
@@ -365,6 +377,9 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       padding: 4px 14px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .mock-var-row {
@@ -372,7 +387,12 @@
       align-items: center;
       padding: 6px 14px;
       gap: 8px;
+      cursor: pointer;
       transition: background var(--t-normal);
+    }
+
+    .mock-var-row:hover {
+      background: var(--bg-row-hover);
     }
 
     .mock-var-row.active {
@@ -384,6 +404,19 @@
       font-size: 0.6875rem;
       color: var(--accent-text);
       flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mock-var-preview {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      color: var(--text-tertiary);
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .mock-var-dot {
@@ -391,14 +424,20 @@
       height: 4px;
       border-radius: 50%;
       background: var(--text-tertiary);
+      flex-shrink: 0;
+      transition: background var(--t-normal);
     }
 
     .mock-var-row.active .mock-var-dot {
       background: var(--color-success);
     }
 
+    /* Detail panel */
     .mock-detail {
       padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
 
     .mock-detail-label {
@@ -427,6 +466,36 @@
       color: var(--text-tertiary);
       letter-spacing: 0.08em;
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .mock-detail-value-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mock-reveal-btn {
+      background: none;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: color var(--t-normal), border-color var(--t-normal);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .mock-reveal-btn:hover {
+      color: var(--text-secondary);
+      border-color: var(--border-moderate);
     }
 
     .mock-detail-badge {
@@ -438,6 +507,75 @@
       border: 1px solid rgba(48, 209, 88, 0.15);
       border-radius: var(--radius-sm);
       padding: 2px 6px;
+    }
+
+    .mock-detail-badge.revealed {
+      color: var(--color-warning);
+      background: rgba(245, 165, 36, 0.08);
+      border-color: rgba(245, 165, 36, 0.15);
+    }
+
+    .mock-detail-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+      text-align: center;
+      padding: 20px 12px;
+      line-height: 1.5;
+    }
+
+    /* Env dropdown in demo */
+    .mock-env-select {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      color: var(--text-tertiary);
+      background: #161618;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 2px 4px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--t-normal);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .mock-env-select:hover,
+    .mock-env-select:focus {
+      border-color: var(--border-moderate);
+    }
+
+    .mock-env-select option {
+      background: #1e1e20;
+      color: var(--text-secondary);
+    }
+
+    .mock-detail-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 0;
+    }
+
+    .mock-detail-field-label {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      color: var(--text-tertiary);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .mock-hint {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      color: var(--text-tertiary);
+      text-align: center;
+      padding: 8px 14px 4px;
+      margin-top: auto;
+      opacity: 0.6;
     }
 
     /* ── Section wrapper ── */
@@ -745,15 +883,8 @@
       border-bottom-color: rgba(255, 255, 255, 0.13);
     }
 
-    /* ── Mockup row entrance (JS-gated) ── */
-    .js-motion .mock-var-row {
-      opacity: 0;
-      transform: translateX(-5px);
-      transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .js-motion .mock-var-row.entered {
+    /* ── Var row transitions ── */
+    .mock-var-row {
       opacity: 1;
       transform: translateX(0);
     }
@@ -788,7 +919,7 @@
         transform: none !important;
       }
 
-      .js-motion .mock-var-row {
+      .mock-var-row {
         opacity: 1 !important;
         transform: none !important;
       }
@@ -810,7 +941,7 @@
       }
 
       .mockup-body {
-        grid-template-columns: 150px 1fr;
+        grid-template-columns: 140px 1fr;
       }
 
       .mock-detail {
@@ -919,12 +1050,12 @@
       <div class="navbar-brand">
         <img src="appstore.png" class="nav-logo" alt=".envVault" aria-hidden="true" />
         <a href="/" class="wordmark">.envVault</a>
-        <span class="version-badge">v1.0.0</span>
+        <span class="version-badge">v1.0.1</span>
       </div>
       <div class="navbar-actions">
         <a href="releases.html" class="btn btn-ghost">Release notes</a>
         <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.0/envVault_1.0.0_aarch64.dmg" class="btn btn-primary">Download for macOS</a>
+        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary">Download for macOS</a>
       </div>
     </div>
   </nav>
@@ -941,7 +1072,7 @@
         And managing env across a dozen microservices finally makes sense.
       </p>
       <div class="hero-ctas reveal">
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.0/envVault_1.0.0_aarch64.dmg" class="btn btn-primary btn-large">Download for macOS — v1.0.0</a>
+        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download for macOS — v1.0.1</a>
         <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost btn-large" target="_blank" rel="noopener">View on GitHub</a>
       </div>
       <div class="hero-pills reveal">
@@ -950,8 +1081,8 @@
         <span class="hero-pill">Open source</span>
       </div>
 
-      <!-- App mockup -->
-      <div class="app-mockup reveal" role="img" aria-label="Screenshot of .envVault application interface showing project sidebar, variable list, and detail panel">
+      <!-- Interactive App Demo -->
+      <div class="app-mockup reveal" id="app-demo" role="application" aria-label="Interactive demo of .envVault — click projects, variables, and toggle environments">
         <div class="mockup-titlebar">
           <span class="titlebar-dot dot-red" aria-hidden="true"></span>
           <span class="titlebar-dot dot-yellow" aria-hidden="true"></span>
@@ -959,53 +1090,19 @@
           <span class="titlebar-label">.envVault</span>
         </div>
         <div class="mockup-body">
-          <div class="mock-sidebar">
+          <div class="mock-sidebar" id="demo-sidebar">
             <div class="mock-sidebar-label">Projects</div>
-            <div class="mock-project">
-              <span class="mock-project-dot"></span>
-              api-service
-            </div>
-            <div class="mock-project active">
-              <span class="mock-project-dot"></span>
-              web-app
-            </div>
-            <div class="mock-project mock-project-indent">
-              <span class="mock-project-dot"></span>
-              staging
-            </div>
-            <div class="mock-project">
-              <span class="mock-project-dot"></span>
-              mobile
-            </div>
+            <!-- Rendered by JS -->
           </div>
-          <div class="mock-vars">
-            <div class="mock-vars-header">Variables — web-app</div>
-            <div class="mock-var-row active">
-              <span class="mock-var-key">API_KEY</span>
-              <span class="mock-var-dot"></span>
+          <div class="mock-vars" id="demo-vars">
+            <div class="mock-vars-header">
+              <span id="demo-vars-title">Variables</span>
+              <select class="mock-env-select" id="demo-env-select" aria-label="Switch environment"></select>
             </div>
-            <div class="mock-var-row">
-              <span class="mock-var-key">DATABASE_URL</span>
-              <span class="mock-var-dot"></span>
-            </div>
-            <div class="mock-var-row">
-              <span class="mock-var-key">NODE_ENV</span>
-              <span class="mock-var-dot"></span>
-            </div>
-            <div class="mock-var-row">
-              <span class="mock-var-key">NEXT_PUBLIC_URL</span>
-              <span class="mock-var-dot"></span>
-            </div>
-            <div class="mock-var-row">
-              <span class="mock-var-key">STRIPE_SECRET</span>
-              <span class="mock-var-dot"></span>
-            </div>
+            <div id="demo-var-list"></div>
           </div>
-          <div class="mock-detail">
-            <div class="mock-detail-label">Variable</div>
-            <div class="mock-detail-key">API_KEY</div>
-            <div class="mock-detail-value">● ● ● ● ● ● ● ● ● ●</div>
-            <span class="mock-detail-badge">masked</span>
+          <div class="mock-detail" id="demo-detail">
+            <div class="mock-detail-empty">Select a variable<br/>to view details</div>
           </div>
         </div>
       </div>
@@ -1017,7 +1114,7 @@
     <div class="section-inner">
       <div class="section-header reveal">
         <h2 class="section-title" id="features-heading">The problems it actually solves</h2>
-        <p class="section-sub">Three things that keep happening to developers. .envVault stops all of them.</p>
+        <p class="section-sub">Four things that keep happening to developers. .envVault stops all of them.</p>
       </div>
       <div class="features-grid">
         <div class="feature-card reveal">
@@ -1035,26 +1132,26 @@
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
           <span class="feature-num">03</span>
+          <h3 class="feature-title">Multi-environment support</h3>
+          <p class="feature-desc">Switch between <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.local</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.production</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.staging</code>, and more — per project. Each environment has its own set of variables. No more juggling files or copy-pasting between configs.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-accent-bar" aria-hidden="true"></div>
+          <span class="feature-num">04</span>
           <h3 class="feature-title">Microservices without the mess</h3>
           <p class="feature-desc">Manage env across dozens of services in one place. Sub-projects inherit from parents — shared infra vars live once, services override only what differs. No copy-paste drift.</p>
         </div>
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
-          <span class="feature-num">04</span>
+          <span class="feature-num">05</span>
           <h3 class="feature-title">Shell auto-load</h3>
           <p class="feature-desc">A one-time hook in your shell config auto-injects the right vars when you <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">cd</code> into a project. No manual sourcing, no forgotten exports, no wrong environment.</p>
         </div>
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
-          <span class="feature-num">05</span>
+          <span class="feature-num">06</span>
           <h3 class="feature-title">Masked by default</h3>
           <p class="feature-desc">Values are hidden at rest, revealed individually on demand. Configurable inactivity timeout re-masks after a period of no interaction. Safe for screen sharing.</p>
-        </div>
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <span class="feature-num">06</span>
-          <h3 class="feature-title">Gitignore as a second guard</h3>
-          <p class="feature-desc">If you do keep a local <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code> alongside the vault, .envVault detects whether it's properly gitignored and warns you before you push.</p>
         </div>
       </div>
     </div>
@@ -1065,7 +1162,7 @@
     <h2 class="download-title reveal" id="download-heading">Ready to manage your environment?</h2>
     <p class="download-sub reveal">Download for macOS. No account required.</p>
     <div class="reveal">
-      <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.0/envVault_1.0.0_aarch64.dmg" class="btn btn-primary btn-large">Download .envVault — v1.0.0</a>
+      <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download .envVault — v1.0.1</a>
     </div>
     <p class="download-meta reveal">macOS 13+ &nbsp;·&nbsp; Apple Silicon &amp; Intel &nbsp;·&nbsp; ~6 MB</p>
   </section>
@@ -1092,12 +1189,10 @@
 
       var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      // Gate JS-only motion styles
       if (!prefersReduced) {
         document.documentElement.classList.add('js-motion');
       }
 
-      // ── Scroll progress bar ──────────────────────────────
       var progressBar = document.querySelector('.scroll-progress');
       function updateProgress() {
         if (!progressBar || prefersReduced) return;
@@ -1108,15 +1203,13 @@
       }
       window.addEventListener('scroll', updateProgress, { passive: true });
 
-      // ── Navbar scroll state ──────────────────────────────
-      var navbar = document.querySelector('.navbar');
+      var navbarEl = document.querySelector('.navbar');
       function updateNavbar() {
-        if (!navbar) return;
-        navbar.classList.toggle('is-scrolled', window.scrollY > 8);
+        if (!navbarEl) return;
+        navbarEl.classList.toggle('is-scrolled', window.scrollY > 8);
       }
       window.addEventListener('scroll', updateNavbar, { passive: true });
 
-      // ── Scroll reveal observer ───────────────────────────
       var revealObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
@@ -1126,33 +1219,213 @@
         });
       }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
 
-      // ── Mockup row stagger observer ──────────────────────
-      var mockupObserver = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          var rows = entry.target.querySelectorAll('.mock-var-row');
-          rows.forEach(function (row, i) {
-            // 300ms after mockup starts fading in, then 60ms per row
-            setTimeout(function () { row.classList.add('entered'); }, 300 + i * 65);
-          });
-          mockupObserver.unobserve(entry.target);
+      /* ── Interactive Demo Data (all hardcoded, no user input) ── */
+
+      var DEMO_DATA = {
+        'api-service': {
+          name: 'api-service', indent: false,
+          envs: {
+            '.env':            [{ key: 'PORT',         val: '3001' },
+                                { key: 'DATABASE_URL', val: 'postgres://localhost:5432/api' },
+                                { key: 'JWT_SECRET',   val: 'sk_jwt_a8f2c9e1d4b7' },
+                                { key: 'REDIS_URL',    val: 'redis://localhost:6379' }],
+            '.env.production': [{ key: 'PORT',         val: '443' },
+                                { key: 'DATABASE_URL', val: 'postgres://prod-rds.aws:5432/api' },
+                                { key: 'JWT_SECRET',   val: 'sk_jwt_prod_7x9m2k' },
+                                { key: 'REDIS_URL',    val: 'redis://prod-cache.aws:6379' }],
+            '.env.staging':    [{ key: 'PORT',         val: '3001' },
+                                { key: 'DATABASE_URL', val: 'postgres://staging-rds:5432/api' },
+                                { key: 'JWT_SECRET',   val: 'sk_jwt_stg_demo' },
+                                { key: 'REDIS_URL',    val: 'redis://staging-cache:6379' }]
+          }
+        },
+        'web-app': {
+          name: 'web-app', indent: false,
+          envs: {
+            '.env':            [{ key: 'API_KEY',         val: 'sk_live_a1b2c3d4e5f6' },
+                                { key: 'DATABASE_URL',    val: 'postgres://localhost:5432/webapp' },
+                                { key: 'NODE_ENV',        val: 'development' },
+                                { key: 'NEXT_PUBLIC_URL', val: 'http://localhost:3000' },
+                                { key: 'STRIPE_SECRET',   val: 'sk_test_51HxYz' }],
+            '.env.local':      [{ key: 'API_KEY',         val: 'sk_test_local_debug' },
+                                { key: 'DATABASE_URL',    val: 'postgres://localhost:5432/webapp_dev' },
+                                { key: 'NODE_ENV',        val: 'development' },
+                                { key: 'NEXT_PUBLIC_URL', val: 'http://localhost:3000' },
+                                { key: 'STRIPE_SECRET',   val: 'sk_test_local_51H' },
+                                { key: 'DEBUG',           val: 'true' }],
+            '.env.production': [{ key: 'API_KEY',         val: 'sk_live_prod_x9y8z7' },
+                                { key: 'DATABASE_URL',    val: 'postgres://prod-rds.aws:5432/webapp' },
+                                { key: 'NODE_ENV',        val: 'production' },
+                                { key: 'NEXT_PUBLIC_URL', val: 'https://myapp.com' },
+                                { key: 'STRIPE_SECRET',   val: 'sk_live_51HxYz' }]
+          }
+        },
+        'staging': {
+          name: 'staging', indent: true,
+          envs: {
+            '.env':            [{ key: 'API_KEY',         val: 'sk_test_staging_abc' },
+                                { key: 'DATABASE_URL',    val: 'postgres://staging:5432/webapp' },
+                                { key: 'NODE_ENV',        val: 'staging' },
+                                { key: 'NEXT_PUBLIC_URL', val: 'https://staging.myapp.com' }]
+          }
+        },
+        'mobile': {
+          name: 'mobile', indent: false,
+          envs: {
+            '.env':            [{ key: 'API_BASE_URL', val: 'http://localhost:3001' },
+                                { key: 'PUSH_KEY',     val: 'pk_mobile_f7g8h9' },
+                                { key: 'SENTRY_DSN',   val: 'https://abc@sentry.io/123' }],
+            '.env.production': [{ key: 'API_BASE_URL', val: 'https://api.myapp.com' },
+                                { key: 'PUSH_KEY',     val: 'pk_mobile_prod_a1b2' },
+                                { key: 'SENTRY_DSN',   val: 'https://xyz@sentry.io/456' }]
+          }
+        }
+      };
+
+      var PROJECT_ORDER = ['api-service', 'web-app', 'staging', 'mobile'];
+
+      var demoState = {
+        project: 'web-app',
+        env: '.env',
+        varIdx: null,
+        revealed: {}
+      };
+
+      /* Helpers that build DOM without innerHTML to avoid XSS patterns */
+      function el(tag, attrs, children) {
+        var node = document.createElement(tag);
+        if (attrs) Object.keys(attrs).forEach(function (k) {
+          if (k === 'textContent') { node.textContent = attrs[k]; }
+          else if (k === 'className') { node.className = attrs[k]; }
+          else if (k.indexOf('on') === 0) { node.addEventListener(k.slice(2).toLowerCase(), attrs[k]); }
+          else { node.setAttribute(k, attrs[k]); }
         });
-      }, { threshold: 0.15 });
+        if (children) children.forEach(function (c) { if (c) node.appendChild(c); });
+        return node;
+      }
+
+      function renderSidebar() {
+        var container = document.getElementById('demo-sidebar');
+        if (!container) return;
+        container.textContent = '';
+        container.appendChild(el('div', { className: 'mock-sidebar-label', textContent: 'Projects' }));
+        PROJECT_ORDER.forEach(function (id) {
+          var p = DEMO_DATA[id];
+          var cls = 'mock-project' + (demoState.project === id ? ' active' : '') + (p.indent ? ' mock-project-indent' : '');
+          var row = el('div', { className: cls, onClick: function () {
+            if (id === demoState.project) return;
+            demoState.project = id;
+            var envs = Object.keys(DEMO_DATA[id].envs);
+            demoState.env = envs[0];
+            demoState.varIdx = null;
+            demoState.revealed = {};
+            renderAll();
+          }}, [
+            el('span', { className: 'mock-project-dot' }),
+            document.createTextNode(p.name)
+          ]);
+          container.appendChild(row);
+        });
+      }
+
+      function renderEnvSelect() {
+        var select = document.getElementById('demo-env-select');
+        var title = document.getElementById('demo-vars-title');
+        if (!select) return;
+        var project = DEMO_DATA[demoState.project];
+        var envs = Object.keys(project.envs);
+        select.textContent = '';
+        envs.forEach(function (env) {
+          var opt = el('option', { value: env, textContent: env });
+          if (env === demoState.env) opt.selected = true;
+          select.appendChild(opt);
+        });
+        if (title) title.textContent = project.name + ' \u2014 ' + demoState.env;
+        select.onchange = function () {
+          demoState.env = select.value;
+          demoState.varIdx = null;
+          demoState.revealed = {};
+          renderVarList();
+          renderDetail();
+          if (title) title.textContent = project.name + ' \u2014 ' + demoState.env;
+        };
+      }
+
+      function renderVarList() {
+        var list = document.getElementById('demo-var-list');
+        if (!list) return;
+        list.textContent = '';
+        var project = DEMO_DATA[demoState.project];
+        var vars = project.envs[demoState.env] || [];
+        vars.forEach(function (v, i) {
+          var isActive = demoState.varIdx === i;
+          var cls = 'mock-var-row entered' + (isActive ? ' active' : '');
+          var preview = demoState.revealed[i] ? v.val.slice(0, 12) : '\u2022\u2022\u2022\u2022\u2022\u2022';
+          var row = el('div', { className: cls, onClick: function () {
+            demoState.varIdx = i;
+            renderVarList();
+            renderDetail();
+          }}, [
+            el('span', { className: 'mock-var-key', textContent: v.key }),
+            el('span', { className: 'mock-var-preview', textContent: preview }),
+            el('span', { className: 'mock-var-dot' })
+          ]);
+          list.appendChild(row);
+        });
+      }
+
+      function renderDetail() {
+        var detail = document.getElementById('demo-detail');
+        if (!detail) return;
+        detail.textContent = '';
+        if (demoState.varIdx === null) {
+          detail.appendChild(el('div', { className: 'mock-detail-empty', textContent: 'Select a variable to view details' }));
+          return;
+        }
+        var project = DEMO_DATA[demoState.project];
+        var vars = project.envs[demoState.env] || [];
+        var v = vars[demoState.varIdx];
+        if (!v) { detail.appendChild(el('div', { className: 'mock-detail-empty', textContent: 'Select a variable to view details' })); return; }
+
+        var isRevealed = !!demoState.revealed[demoState.varIdx];
+        var displayVal = isRevealed ? v.val : '\u25CF \u25CF \u25CF \u25CF \u25CF \u25CF \u25CF \u25CF';
+
+        detail.appendChild(el('div', { className: 'mock-detail-field-label', textContent: 'Key' }));
+        detail.appendChild(el('div', { className: 'mock-detail-key', textContent: v.key }));
+        detail.appendChild(el('div', { className: 'mock-detail-divider' }));
+        detail.appendChild(el('div', { className: 'mock-detail-field-label', textContent: 'Value' }));
+        detail.appendChild(el('div', { className: 'mock-detail-value' }, [
+          el('span', { className: 'mock-detail-value-text', textContent: displayVal }),
+          el('button', { className: 'mock-reveal-btn', textContent: isRevealed ? 'hide' : 'reveal', onClick: function () {
+            demoState.revealed[demoState.varIdx] = !demoState.revealed[demoState.varIdx];
+            renderVarList();
+            renderDetail();
+          }})
+        ]));
+        detail.appendChild(el('span', {
+          className: 'mock-detail-badge' + (isRevealed ? ' revealed' : ''),
+          textContent: isRevealed ? 'revealed' : 'masked'
+        }));
+      }
+
+      function renderAll() {
+        renderSidebar();
+        renderEnvSelect();
+        renderVarList();
+        renderDetail();
+      }
+
+      /* ── Init ── */
 
       function init() {
-        // Hero: orchestrated page-load stagger (fires immediately, no IO wait)
         var heroEls = Array.from(document.querySelectorAll('.hero .reveal'));
-        heroEls.forEach(function (el, i) {
-          el.style.transitionDelay = (i * 75) + 'ms';
-        });
-        // Double rAF ensures transition picks up the initial opacity:0 state
+        heroEls.forEach(function (el, i) { el.style.transitionDelay = (i * 75) + 'ms'; });
         requestAnimationFrame(function () {
           requestAnimationFrame(function () {
             heroEls.forEach(function (el) { el.classList.add('visible'); });
           });
         });
 
-        // Features grid: stagger cards
         var grid = document.querySelector('.features-grid');
         if (grid) {
           Array.from(grid.querySelectorAll('.reveal')).forEach(function (card, i) {
@@ -1160,22 +1433,11 @@
           });
         }
 
-        // Mockup rows (only when JS motion is active)
-        var mockup = document.querySelector('.app-mockup');
-        if (mockup) {
-          if (prefersReduced) {
-            mockup.querySelectorAll('.mock-var-row').forEach(function (r) {
-              r.classList.add('entered');
-            });
-          } else {
-            mockupObserver.observe(mockup);
-          }
-        }
-
-        // Observe all .reveal elements (hero elements already .visible — IO is a no-op for them)
         document.querySelectorAll('.reveal').forEach(function (el) {
           revealObserver.observe(el);
         });
+
+        renderAll();
       }
 
       if (document.readyState === 'loading') {
@@ -1184,7 +1446,6 @@
         init();
       }
 
-      // ── Smooth scroll ────────────────────────────────────
       document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
         anchor.addEventListener('click', function (e) {
           var id = anchor.getAttribute('href').slice(1);

@@ -5,7 +5,8 @@ import type { Project, EnvVar } from '../types'
 
 const makeProject = (): Project => ({
   id: 'p1', name: 'My Project', path: '/myproject', parentId: null,
-  vars: [], inheritanceMode: 'merge-child-wins', sortOrder: 0,
+  vars: [], environments: [{ suffix: '', vars: [] }], activeEnv: '',
+  inheritanceMode: 'merge-child-wins', sortOrder: 0,
 })
 
 const makeVar = (key = 'API_KEY', val = 'secret'): EnvVar => ({
@@ -17,11 +18,21 @@ const defaultProps = {
   selectedVar: null,
   gitignoreStatus: 'no_gitignore' as const,
   saveStatus: 'idle' as const,
+  environments: [
+    { suffix: '', vars: [] },
+    { suffix: 'local', vars: [] },
+    { suffix: 'development', vars: [] },
+    { suffix: 'production', vars: [] },
+    { suffix: 'testing', vars: [] },
+    { suffix: 'staging', vars: [] },
+  ],
+  activeEnv: '',
   onUpdateVar: vi.fn(),
   onDeleteVar: vi.fn(),
   onToggleReveal: vi.fn(),
   onAddVar: vi.fn(),
   onSave: vi.fn(),
+  onSwitchEnvironment: vi.fn(),
 }
 
 describe('VarDetail', () => {
@@ -35,19 +46,25 @@ describe('VarDetail', () => {
     expect(screen.getByText(/No variable selected/i)).toBeInTheDocument()
   })
 
-  it('shows no gitignore badge when status is no_gitignore', () => {
+  it('shows warning icon with tooltip when no gitignore exists', () => {
     render(<VarDetail {...defaultProps} gitignoreStatus="no_gitignore" />)
-    expect(screen.getByText(/No .gitignore/i)).toBeInTheDocument()
+    const badge = screen.getByTitle(/No .gitignore found/i)
+    expect(badge).toBeInTheDocument()
+    expect(badge.querySelector('svg')).toBeTruthy()
   })
 
-  it('shows warning badge when .env is not listed', () => {
+  it('shows warning icon with tooltip when .env is not listed', () => {
     render(<VarDetail {...defaultProps} gitignoreStatus="not_listed" />)
-    expect(screen.getByText(/.env not in .gitignore/i)).toBeInTheDocument()
+    const badge = screen.getByTitle(/.env is NOT listed/i)
+    expect(badge).toBeInTheDocument()
+    expect(badge.querySelector('svg')).toBeTruthy()
   })
 
-  it('shows success badge when .env is listed', () => {
+  it('shows success icon with tooltip when .env is listed', () => {
     render(<VarDetail {...defaultProps} gitignoreStatus="listed" />)
-    expect(screen.getByText(/.env in .gitignore/i)).toBeInTheDocument()
+    const badge = screen.getByTitle(/.env is listed in .gitignore/i)
+    expect(badge).toBeInTheDocument()
+    expect(badge.querySelector('svg')).toBeTruthy()
   })
 
   it('renders var fields when selectedVar is provided', () => {
@@ -95,6 +112,29 @@ describe('VarDetail', () => {
     expect(onSave).toHaveBeenCalled()
   })
 
+  it('renders environment dropdown', () => {
+    render(<VarDetail {...defaultProps} />)
+    expect(screen.getByRole('combobox', { name: /Environment/i })).toBeInTheDocument()
+  })
+
+  it('calls onSwitchEnvironment when dropdown selection changes', () => {
+    const onSwitchEnvironment = vi.fn()
+    render(<VarDetail {...defaultProps} onSwitchEnvironment={onSwitchEnvironment} />)
+    const select = screen.getByRole('combobox', { name: /Environment/i })
+    fireEvent.change(select, { target: { value: 'local' } })
+    expect(onSwitchEnvironment).toHaveBeenCalledWith('local')
+  })
+
+  it('shows active env name in subtitle', () => {
+    render(<VarDetail {...defaultProps} activeEnv="production" />)
+    expect(screen.getByText('/myproject/.env.production')).toBeInTheDocument()
+  })
+
+  it('shows base env name in subtitle when activeEnv is empty', () => {
+    render(<VarDetail {...defaultProps} activeEnv="" />)
+    expect(screen.getByText('/myproject/.env')).toBeInTheDocument()
+  })
+
   it('shows saving status', () => {
     render(<VarDetail {...defaultProps} saveStatus="saving" />)
     expect(screen.getByText(/Saving/i)).toBeInTheDocument()
@@ -114,6 +154,12 @@ describe('VarDetail', () => {
     render(<VarDetail {...defaultProps} saveStatus="saving" />)
     const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
     expect(saveBtn).toBeDisabled()
+  })
+
+  it('shows active env in save button label', () => {
+    render(<VarDetail {...defaultProps} activeEnv="production" />)
+    expect(screen.getByRole('button', { name: /Save .env.production file to disk/i })).toBeInTheDocument()
+    expect(screen.getByText('Save .env.production')).toBeInTheDocument()
   })
 
   it('shows reveal button when var has a value', () => {
@@ -150,7 +196,6 @@ describe('VarDetail', () => {
   })
 
   it('copy button handles clipboard write without crashing', async () => {
-    // Ensure clipboard API is available (mocked in jsdom)
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
       writable: true,
@@ -160,7 +205,24 @@ describe('VarDetail', () => {
     render(<VarDetail {...defaultProps} selectedVar={v} />)
     const copyKeyBtn = screen.getByRole('button', { name: /Copy key/i })
     await act(async () => { copyKeyBtn.click() })
-    // After clicking, component should still be rendered (no crash)
     expect(document.body).toBeTruthy()
+  })
+
+  it('copy button with clipboardClearSeconds schedules clear', async () => {
+    vi.useFakeTimers()
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    })
+    const v = makeVar('MY_KEY', 'my_val')
+    render(<VarDetail {...defaultProps} selectedVar={v} clipboardClearSeconds={10} />)
+    const copyValueBtn = screen.getByRole('button', { name: /Copy value/i })
+    await act(async () => { copyValueBtn.click() })
+    expect(writeText).toHaveBeenCalledWith('my_val')
+    await act(async () => { vi.advanceTimersByTime(10000) })
+    expect(writeText).toHaveBeenCalledWith('')
+    vi.useRealTimers()
   })
 })

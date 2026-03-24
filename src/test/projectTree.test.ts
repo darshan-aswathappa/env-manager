@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { buildProjectTree, getAncestorChain, computeEffectiveVars } from '../lib/projectTree'
+import { buildProjectTree, getAncestorChain, computeEffectiveVars, getActiveVars } from '../lib/projectTree'
 import type { Project, EnvVar } from '../types'
 
 const makeProject = (id: string, path: string, parentId: string | null = null): Project => ({
   id, name: id, path, parentId,
-  vars: [], inheritanceMode: 'merge-child-wins', sortOrder: 0,
+  vars: [], environments: [{ suffix: '', vars: [] }], activeEnv: '',
+  inheritanceMode: 'merge-child-wins', sortOrder: 0,
 })
 
 const makeVar = (key: string, val: string, projectId: string): EnvVar => ({
@@ -120,5 +121,50 @@ describe('computeEffectiveVars', () => {
     const projects = [makeProject('a', '/a')]
     const result = computeEffectiveVars('unknown', projects)
     expect(result).toEqual([])
+  })
+})
+
+describe('getActiveVars', () => {
+  it('returns vars for the active environment', () => {
+    const project: Project = {
+      id: 'p1', name: 'Test', path: '/test', parentId: null,
+      vars: [],
+      environments: [
+        { suffix: '', vars: [{ id: '1', key: 'BASE', val: 'base', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'local', vars: [{ id: '2', key: 'LOCAL', val: 'local', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'production', vars: [{ id: '3', key: 'PROD', val: 'prod', revealed: false, sourceProjectId: 'p1' }] },
+      ],
+      activeEnv: 'local',
+      inheritanceMode: 'merge-child-wins', sortOrder: 0,
+    }
+    const vars = getActiveVars(project)
+    expect(vars).toHaveLength(1)
+    expect(vars[0].key).toBe('LOCAL')
+  })
+
+  it('returns base env vars when activeEnv is empty string', () => {
+    const project: Project = {
+      id: 'p1', name: 'Test', path: '/test', parentId: null,
+      vars: [],
+      environments: [
+        { suffix: '', vars: [{ id: '1', key: 'BASE', val: 'base', revealed: false, sourceProjectId: 'p1' }] },
+      ],
+      activeEnv: '',
+      inheritanceMode: 'merge-child-wins', sortOrder: 0,
+    }
+    const vars = getActiveVars(project)
+    expect(vars).toHaveLength(1)
+    expect(vars[0].key).toBe('BASE')
+  })
+
+  it('returns empty array if activeEnv suffix not found', () => {
+    const project: Project = {
+      id: 'p1', name: 'Test', path: '/test', parentId: null,
+      vars: [],
+      environments: [{ suffix: '', vars: [] }],
+      activeEnv: 'staging',
+      inheritanceMode: 'merge-child-wins', sortOrder: 0,
+    }
+    expect(getActiveVars(project)).toEqual([])
   })
 })

@@ -12,7 +12,9 @@ import {
   ShieldAlert,
   ShieldOff,
 } from "lucide-react";
-import type { EnvVar, Project, GitignoreStatus } from "../types";
+import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
+import { envDisplayName } from "../types";
+import EnvironmentToggle from "./EnvironmentToggle";
 
 interface VarDetailProps {
   project: Project;
@@ -20,11 +22,14 @@ interface VarDetailProps {
   gitignoreStatus: GitignoreStatus;
   saveStatus: "idle" | "saving" | "saved" | "error";
   clipboardClearSeconds?: number;
+  environments: Environment[];
+  activeEnv: string;
   onUpdateVar: (varId: string, field: keyof EnvVar, value: string | boolean) => void;
   onDeleteVar: (varId: string) => void;
   onToggleReveal: (varId: string) => void;
   onAddVar: () => void;
   onSave: () => void;
+  onSwitchEnvironment: (suffix: string) => void;
 }
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -63,11 +68,14 @@ export default function VarDetail({
   gitignoreStatus,
   saveStatus,
   clipboardClearSeconds = 0,
+  environments,
+  activeEnv,
   onUpdateVar,
   onDeleteVar,
   onToggleReveal,
   onAddVar,
   onSave,
+  onSwitchEnvironment,
 }: VarDetailProps) {
   return (
     <div className="detail-panel">
@@ -78,25 +86,27 @@ export default function VarDetail({
         </div>
         <div className="detail-header-info">
           <div className="detail-header-title">{project.name}</div>
-          <div className="detail-header-sub">{project.path}/.env</div>
+          <div className="detail-header-sub">{project.path}/{envDisplayName(activeEnv)}</div>
         </div>
+        <EnvironmentToggle
+          environments={environments}
+          activeEnv={activeEnv}
+          onSwitch={onSwitchEnvironment}
+        />
         <div className="detail-header-actions">
           {gitignoreStatus === 'listed' && (
             <span className="badge badge-success" title=".env is listed in .gitignore — it won't be committed to git">
               <ShieldCheck size={11} />
-              .env in .gitignore
             </span>
           )}
           {gitignoreStatus === 'not_listed' && (
             <span className="badge badge-warning" title=".env is NOT listed in .gitignore — add it to avoid committing secrets">
               <ShieldAlert size={11} />
-              .env not in .gitignore
             </span>
           )}
           {gitignoreStatus === 'no_gitignore' && (
             <span className="badge badge-warning" title="No .gitignore found in this project folder — create one to protect your secrets">
               <ShieldOff size={11} />
-              No .gitignore
             </span>
           )}
         </div>
@@ -150,10 +160,10 @@ export default function VarDetail({
           className="btn-primary"
           onClick={onSave}
           disabled={saveStatus === "saving"}
-          aria-label="Save .env file to disk"
+          aria-label={`Save ${envDisplayName(activeEnv)} file to disk`}
         >
           <Save size={13} />
-          Save to disk
+          Save {envDisplayName(activeEnv)}
         </button>
       </div>
     </div>
@@ -182,10 +192,15 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             type="text"
             value={v.key}
             placeholder="VARIABLE_NAME"
-            onChange={(e) => onUpdate(v.id, "key", e.target.value)}
+            onChange={(e) => {
+              // Sanitize: only allow valid .env key characters (letters, digits, underscores)
+              const sanitized = e.target.value.replace(/[^A-Za-z0-9_]/g, "_");
+              onUpdate(v.id, "key", sanitized);
+            }}
             spellCheck={false}
             autoComplete="off"
             aria-label="Variable key"
+            maxLength={256}
           />
           <CopyButton text={v.key} label="Copy key" clearAfterSecs={clipboardClearSeconds} />
           <button
@@ -239,7 +254,7 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
 /* ── Nothing selected ────────────────────────────────────── */
 function NoVarSelected() {
   return (
-    <div className="empty-state" style={{ minHeight: 200 }}>
+    <div className="empty-state">
       <div className="empty-state-icon">
         <KeyRound size={24} />
       </div>

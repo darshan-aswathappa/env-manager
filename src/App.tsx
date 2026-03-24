@@ -3,13 +3,15 @@ import { open } from "@tauri-apps/plugin-dialog";
 import {
   saveProjectEnv,
   loadProjectEnv,
-  importEnvFromProject,
+  importAllEnvsFromProject,
   registerProject,
   unregisterProject,
   checkGitignoreStatus,
+  writeEnvSignal,
 } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
-import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings } from "./types";
+import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment } from "./types";
+import { ENV_SUFFIXES } from "./types";
 import Sidebar from "./components/Sidebar";
 import VarList from "./components/VarList";
 import VarDetail from "./components/VarDetail";
@@ -44,6 +46,16 @@ function isOnboardingComplete(): boolean {
 }
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+function ensureAllEnvironments(envs: Environment[] | undefined, fallbackVars: EnvVar[]): Environment[] {
+  const existing = envs ?? [];
+  return ENV_SUFFIXES.map((suffix) => {
+    const found = existing.find((e) => e.suffix === suffix);
+    if (found) return found;
+    // For base env, use fallback vars from legacy format
+    return { suffix, vars: suffix === '' ? fallbackVars : [] };
+  });
+}
+
 function loadProjects(): Project[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -61,6 +73,8 @@ function loadProjects(): Project[] {
         val: "", // val is never stored in localStorage
         revealed: false,
       })),
+      environments: ensureAllEnvironments(p.environments, p.vars || []),
+      activeEnv: p.activeEnv ?? '',
     }));
   } catch {
     return [];
@@ -72,6 +86,10 @@ function persistProjects(projects: Project[]): void {
   const sanitized = projects.map((p) => ({
     ...p,
     vars: p.vars.map((v) => ({ ...v, val: "", revealed: false })),
+    environments: p.environments.map((env) => ({
+      ...env,
+      vars: env.vars.map((v) => ({ ...v, val: "", revealed: false })),
+    })),
   }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
 }
@@ -114,6 +132,10 @@ export default function App() {
           prev.map((p) => ({
             ...p,
             vars: p.vars.map((v) => ({ ...v, revealed: false })),
+            environments: p.environments.map((env) => ({
+              ...env,
+              vars: env.vars.map((v) => ({ ...v, revealed: false })),
+            })),
           }))
         );
       }, delay);
@@ -137,13 +159,16 @@ export default function App() {
       for (const project of projects) {
         if (cancelled) break;
         try {
-          const vars = await loadProjectEnv(project.id);
-          if (cancelled) break;
-          if (vars.length > 0) {
-            setProjects((prev) =>
-              prev.map((p) => (p.id === project.id ? { ...p, vars } : p))
-            );
+          const updatedEnvs: Environment[] = [];
+          for (const env of project.environments) {
+            const vars = await loadProjectEnv(project.id, env.suffix);
+            updatedEnvs.push({ suffix: env.suffix, vars: vars.length > 0 ? vars : env.vars });
           }
+          if (cancelled) break;
+          const activeVars = updatedEnvs.find(e => e.suffix === project.activeEnv)?.vars ?? [];
+          setProjects((prev) =>
+            prev.map((p) => (p.id === project.id ? { ...p, environments: updatedEnvs, vars: activeVars } : p))
+          );
         } catch {
           // Silently ignore — project has no saved env yet
         }
@@ -182,13 +207,22 @@ export default function App() {
       const dirPath = selected as string;
       const segments = dirPath.replace(/\\/g, "/").split("/");
       const name = segments[segments.length - 1] || "Project";
+      // Import all env files from the project directory
+      const imported = await importAllEnvsFromProject(dirPath).catch(() => []);
+      const environments: Environment[] = ENV_SUFFIXES.map((suffix) => {
+        const found = imported.find((e) => e.suffix === suffix);
+        return { suffix, vars: found?.vars ?? [] };
+      });
+      const activeVars = environments[0]?.vars ?? [];
       const newProject: Project = {
         id: crypto.randomUUID(),
         name,
         path: dirPath,
         parentId: null,
-        vars: [],
-        inheritanceMode: "merge-child-wins",
+        vars: activeVars,
+        environments,
+        activeEnv: '',
+        inheritanceMode: appSettings.defaultInheritanceMode,
         sortOrder: 0,
       };
       // Register in Tauri app data registry
@@ -197,12 +231,13 @@ export default function App() {
         name: newProject.name,
         path: dirPath,
         parentId: null,
+        activeEnv: '',
       }).catch(() => {});
-      // Import existing .env vars from project folder
-      const vars = await importEnvFromProject(dirPath).catch(() => []);
-      if (vars.length > 0) {
-        newProject.vars = vars;
-        await saveProjectEnv(newProject.id, vars).catch(() => {});
+      // Save each environment to app data
+      for (const env of environments) {
+        if (env.vars.length > 0) {
+          await saveProjectEnv(newProject.id, env.suffix, env.vars).catch(() => {});
+        }
       }
       setProjects((prev) => [...prev, newProject]);
       setSelectedId(newProject.id);
@@ -224,13 +259,22 @@ export default function App() {
         const segments = dirPath.replace(/\\/g, "/").split("/");
         const name = segments[segments.length - 1] || "Project";
         const parent = projects.find((p) => p.id === parentId);
+        // Import all env files from the sub-project directory
+        const imported = await importAllEnvsFromProject(dirPath).catch(() => []);
+        const environments: Environment[] = ENV_SUFFIXES.map((suffix) => {
+          const found = imported.find((e) => e.suffix === suffix);
+          return { suffix, vars: found?.vars ?? [] };
+        });
+        const activeVars = environments[0]?.vars ?? [];
         const newProject: Project = {
           id: crypto.randomUUID(),
           name,
           path: dirPath,
           parentId,
-          vars: [],
-          inheritanceMode: "merge-child-wins",
+          vars: activeVars,
+          environments,
+          activeEnv: '',
+          inheritanceMode: appSettings.defaultInheritanceMode,
           sortOrder: (parent?.vars?.length ?? 0),
         };
         await registerProject({
@@ -238,11 +282,13 @@ export default function App() {
           name: newProject.name,
           path: dirPath,
           parentId,
+          activeEnv: '',
         }).catch(() => {});
-        const vars = await importEnvFromProject(dirPath).catch(() => []);
-        if (vars.length > 0) {
-          newProject.vars = vars;
-          await saveProjectEnv(newProject.id, vars).catch(() => {});
+        // Save each environment to app data
+        for (const env of environments) {
+          if (env.vars.length > 0) {
+            await saveProjectEnv(newProject.id, env.suffix, env.vars).catch(() => {});
+          }
         }
         setProjects((prev) => [...prev, newProject]);
         setSelectedId(newProject.id);
@@ -274,16 +320,19 @@ export default function App() {
     (varId: string, field: keyof EnvVar, value: string | boolean) => {
       if (!selectedId) return;
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id !== selectedId
-            ? p
-            : {
-                ...p,
-                vars: p.vars.map((v) =>
-                  v.id !== varId ? v : { ...v, [field]: value }
-                ),
-              }
-        )
+        prev.map((p) => {
+          if (p.id !== selectedId) return p;
+          const newVars = p.vars.map((v) =>
+            v.id !== varId ? v : { ...v, [field]: value }
+          );
+          return {
+            ...p,
+            vars: newVars,
+            environments: p.environments.map((env) =>
+              env.suffix === p.activeEnv ? { ...env, vars: newVars } : env
+            ),
+          };
+        })
       );
     },
     [selectedId]
@@ -299,9 +348,17 @@ export default function App() {
       sourceProjectId: selectedId,
     };
     setProjects((prev) =>
-      prev.map((p) =>
-        p.id !== selectedId ? p : { ...p, vars: [...p.vars, newVar] }
-      )
+      prev.map((p) => {
+        if (p.id !== selectedId) return p;
+        const newVars = [...p.vars, newVar];
+        return {
+          ...p,
+          vars: newVars,
+          environments: p.environments.map((env) =>
+            env.suffix === p.activeEnv ? { ...env, vars: newVars } : env
+          ),
+        };
+      })
     );
     setSelectedVarId(newVar.id);
   }, [selectedId]);
@@ -310,14 +367,20 @@ export default function App() {
     (varId: string) => {
       if (!selectedId) return;
       setProjects((prev) => {
-        const updated = prev.map((p) =>
-          p.id !== selectedId
-            ? p
-            : { ...p, vars: p.vars.filter((v) => v.id !== varId) }
-        );
+        const updated = prev.map((p) => {
+          if (p.id !== selectedId) return p;
+          const newVars = p.vars.filter((v) => v.id !== varId);
+          return {
+            ...p,
+            vars: newVars,
+            environments: p.environments.map((env) =>
+              env.suffix === p.activeEnv ? { ...env, vars: newVars } : env
+            ),
+          };
+        });
         const project = updated.find((p) => p.id === selectedId);
         if (project) {
-          saveProjectEnv(project.id, project.vars).catch(() => {});
+          saveProjectEnv(project.id, project.activeEnv, project.vars).catch(() => {});
         }
         return updated;
       });
@@ -330,20 +393,56 @@ export default function App() {
     (varId: string) => {
       if (!selectedId) return;
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id !== selectedId
-            ? p
-            : {
-                ...p,
-                vars: p.vars.map((v) =>
-                  v.id !== varId ? v : { ...v, revealed: !v.revealed }
-                ),
-              }
-        )
+        prev.map((p) => {
+          if (p.id !== selectedId) return p;
+          const newVars = p.vars.map((v) =>
+            v.id !== varId ? v : { ...v, revealed: !v.revealed }
+          );
+          return {
+            ...p,
+            vars: newVars,
+            environments: p.environments.map((env) =>
+              env.suffix === p.activeEnv ? { ...env, vars: newVars } : env
+            ),
+          };
+        })
       );
     },
     [selectedId]
   );
+
+  const switchEnvironment = useCallback(async (suffix: string) => {
+    const project = projects.find((p) => p.id === selectedId);
+    if (!project || project.activeEnv === suffix) return;
+    // Auto-save current env
+    setSaveStatus("saving");
+    await saveProjectEnv(project.id, project.activeEnv, project.vars).catch(() => {});
+    // Load new env vars
+    const newVars = await loadProjectEnv(project.id, suffix).catch(() => []);
+    // Update project immutably
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id !== selectedId ? p : {
+          ...p,
+          activeEnv: suffix,
+          vars: newVars,
+          environments: p.environments.map((env) =>
+            env.suffix === p.activeEnv ? { ...env, vars: p.vars } : env
+          ),
+        }
+      )
+    );
+    // Update registry for shell hook
+    if (project) {
+      await registerProject({
+        id: project.id, name: project.name, path: project.path, parentId: project.parentId, activeEnv: suffix,
+      }).catch(() => {});
+    }
+    // Signal terminal to reload env vars
+    await writeEnvSignal().catch(() => {});
+    setSelectedVarId(null);
+    setSaveStatus("idle");
+  }, [projects, selectedId]);
 
   /* ── Settings actions ───────────────────────────────── */
   const resetOnboarding = useCallback(() => {
@@ -364,7 +463,7 @@ export default function App() {
     if (!project) return;
     setSaveStatus("saving");
     try {
-      await saveProjectEnv(project.id, project.vars);
+      await saveProjectEnv(project.id, project.activeEnv, project.vars);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
@@ -415,6 +514,9 @@ export default function App() {
           gitignoreStatus={gitignoreStatus}
           saveStatus={saveStatus}
           clipboardClearSeconds={appSettings.clipboardClearSeconds}
+          environments={selectedProject.environments}
+          activeEnv={selectedProject.activeEnv}
+          onSwitchEnvironment={switchEnvironment}
           onUpdateVar={updateVar}
           onDeleteVar={deleteVar}
           onToggleReveal={toggleReveal}
@@ -430,7 +532,7 @@ export default function App() {
             <h2 className="empty-state-title">No project selected</h2>
             <p className="empty-state-desc">
               Choose a project folder that contains a{" "}
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.85em" }}>.env</code>{" "}
+              <code className="inline-code">.env</code>{" "}
               file. Your variables will appear here.
             </p>
             <button className="btn-primary" onClick={addProject}>
@@ -445,6 +547,7 @@ export default function App() {
         <div
           className="modal-overlay"
           onClick={() => setShowShellIntegration(false)}
+          onKeyDown={(e) => { if (e.key === "Escape") setShowShellIntegration(false); }}
           aria-label="Close shell integration dialog"
         >
           <div
@@ -471,6 +574,7 @@ export default function App() {
         <div
           className="modal-overlay"
           onClick={() => setShowSettings(false)}
+          onKeyDown={(e) => { if (e.key === "Escape") setShowSettings(false); }}
           aria-label="Close settings dialog"
         >
           <div

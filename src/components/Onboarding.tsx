@@ -139,7 +139,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             {renderedStep === "welcome" && (
               <>
                 <div className="ob-step-icon">
-                  <img src={logo} alt=".envVault" style={{ width: 64, height: 64, borderRadius: 14, objectFit: "cover" }} />
+                  <img src={logo} alt=".envVault" className="ob-logo-img" />
                 </div>
                 <h1 className="ob-title">Welcome to .envVault</h1>
                 <p className="ob-subtitle">

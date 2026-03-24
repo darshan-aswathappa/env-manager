@@ -31,6 +31,10 @@ export function getAncestorChain(projectId: string, projects: Project[]): Projec
   return chain
 }
 
+export function getActiveVars(project: Project): EnvVar[] {
+  return project.environments.find(e => e.suffix === project.activeEnv)?.vars ?? []
+}
+
 export function computeEffectiveVars(projectId: string, projects: Project[]): EnvVar[] {
   const byId = new Map(projects.map(p => [p.id, p]))
   const project = byId.get(projectId)

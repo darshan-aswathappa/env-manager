@@ -10,6 +10,7 @@ pub struct RegistryEntry {
     pub name: String,
     pub path: String,
     pub parent_id: Option<String>,
+    pub active_env: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,10 +30,20 @@ fn registry_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(app_data_path(app)?.join("registry.json"))
 }
 
-fn env_file_path(app: &tauri::AppHandle, project_id: &str) -> Result<PathBuf, String> {
+fn env_filename(project_id: &str, suffix: &str) -> Result<String, String> {
     let safe_id = sanitize_project_id(project_id);
     if safe_id.is_empty() { return Err("Invalid project_id".to_string()); }
-    Ok(app_data_path(app)?.join(format!("{safe_id}.env")))
+    if suffix.is_empty() {
+        Ok(format!("{safe_id}.env"))
+    } else {
+        let safe_suffix = suffix.replace(['/', '\\', '.', ' '], "");
+        Ok(format!("{safe_id}.env.{safe_suffix}"))
+    }
+}
+
+fn env_file_path(app: &tauri::AppHandle, project_id: &str, suffix: &str) -> Result<PathBuf, String> {
+    let filename = env_filename(project_id, suffix)?;
+    Ok(app_data_path(app)?.join(filename))
 }
 
 fn read_registry_from_path(path: &Path) -> Result<Registry, String> {
@@ -50,8 +61,8 @@ fn write_registry_to_path(path: &Path, registry: &Registry) -> Result<(), String
 }
 
 #[tauri::command]
-fn save_project_env(app: tauri::AppHandle, project_id: String, content: String) -> Result<(), String> {
-    let path = env_file_path(&app, &project_id)?;
+fn save_project_env(app: tauri::AppHandle, project_id: String, suffix: String, content: String) -> Result<(), String> {
+    let path = env_file_path(&app, &project_id, &suffix)?;
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| format!("Failed to create dir: {e}"))?;
     }
@@ -59,8 +70,8 @@ fn save_project_env(app: tauri::AppHandle, project_id: String, content: String) 
 }
 
 #[tauri::command]
-fn load_project_env(app: tauri::AppHandle, project_id: String) -> Result<String, String> {
-    let path = env_file_path(&app, &project_id)?;
+fn load_project_env(app: tauri::AppHandle, project_id: String, suffix: String) -> Result<String, String> {
+    let path = env_file_path(&app, &project_id, &suffix)?;
     if !path.exists() { return Ok(String::new()); }
     fs::read_to_string(&path).map_err(|e| format!("Failed to read env file: {e}"))
 }
@@ -120,10 +131,11 @@ for p in data.get("projects", []):
     proj_parts = p["path"].rstrip("/").split("/")
     depth = len(proj_parts)
     if cwd_parts[:depth] == proj_parts:
-        matched.append((depth, p.get("parentId") or "null", p["id"]))
+        suffix = p.get("activeEnv") or ""
+        matched.append((depth, p.get("parentId") or "null", p["id"], suffix))
 matched.sort(key=lambda x: x[0])
-for depth, parent_id, pid in matched:
-    print(f"{{depth}}:{{parent_id}}:{{pid}}")
+for depth, parent_id, pid, suffix in matched:
+    print(f"{{depth}}:{{parent_id}}:{{pid}}:{{suffix}}")
 PYEOF
   )
   [ ${{#matches[@]}} -eq 0 ] && return 0
@@ -131,7 +143,9 @@ PYEOF
   for entry in "${{matches[@]}}"; do
     local rest="${{entry#*:}}"
     local parent_id="${{rest%%:*}}"
-    local project_id="${{rest#*:}}"
+    local rest2="${{rest#*:}}"
+    local project_id="${{rest2%%:*}}"
+    local suffix="${{rest2#*:}}"
     if [ "$parent_id" != "null" ]; then
       local parent_file="$data_dir/${{parent_id}}.env"
       local already=0
@@ -141,7 +155,12 @@ PYEOF
         loaded+=("$parent_id")
       fi
     fi
-    local env_file="$data_dir/${{project_id}}.env"
+    local env_file
+    if [ -n "$suffix" ]; then
+      env_file="$data_dir/${{project_id}}.env.${{suffix}}"
+    else
+      env_file="$data_dir/${{project_id}}.env"
+    fi
     local already=0
     for lid in "${{loaded[@]}}"; do [ "$lid" = "$project_id" ] && already=1 && break; done
     if [ $already -eq 0 ] && [ -f "$env_file" ]; then
@@ -151,15 +170,45 @@ PYEOF
   done
 }}
 
+_dotenv_manager_signal_file="{data_dir}/env_signal"
+_dotenv_manager_last_signal=""
+
+_dotenv_manager_check() {{
+  local current_signal=""
+  if [ -f "$_dotenv_manager_signal_file" ]; then
+    current_signal=$(cat "$_dotenv_manager_signal_file" 2>/dev/null)
+  fi
+  if [ "$current_signal" != "$_dotenv_manager_last_signal" ]; then
+    _dotenv_manager_last_signal="$current_signal"
+    _dotenv_manager_load
+  fi
+}}
+
 _dotenv_manager_load
+_dotenv_manager_last_signal=$(cat "$_dotenv_manager_signal_file" 2>/dev/null)
 if [[ -n "$ZSH_VERSION" ]]; then
   autoload -Uz add-zsh-hook
   add-zsh-hook chpwd _dotenv_manager_load
+  add-zsh-hook precmd _dotenv_manager_check
 elif [[ -n "$BASH_VERSION" ]]; then
-  PROMPT_COMMAND="_dotenv_manager_load${{PROMPT_COMMAND:+; $PROMPT_COMMAND}}"
+  PROMPT_COMMAND="_dotenv_manager_check${{PROMPT_COMMAND:+; $PROMPT_COMMAND}}"
 fi
 # ── end dotenv-manager shell hook ─────────────────────────────────────────
 "#, data_dir = data_dir))
+}
+
+#[tauri::command]
+fn write_env_signal(app: tauri::AppHandle) -> Result<(), String> {
+    let signal_path = app_data_path(&app)?.join("env_signal");
+    if let Some(parent) = signal_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create dir: {e}"))?;
+    }
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| format!("Clock error: {e}"))?
+        .as_millis()
+        .to_string();
+    fs::write(&signal_path, &timestamp).map_err(|e| format!("Failed to write env_signal: {e}"))
 }
 
 #[tauri::command]
@@ -212,6 +261,37 @@ fn check_shell_integration() -> Result<String, String> {
     Ok(result.to_string())
 }
 
+#[tauri::command]
+fn import_all_envs_from_project(project_path: String) -> Result<Vec<(String, String)>, String> {
+    let base = Path::new(&project_path);
+    let mut results = Vec::new();
+    for (suffix, filename) in [
+        ("", ".env"),
+        ("local", ".env.local"),
+        ("development", ".env.development"),
+        ("production", ".env.production"),
+        ("testing", ".env.testing"),
+        ("staging", ".env.staging"),
+    ] {
+        let path = base.join(filename);
+        if path.exists() {
+            let content = fs::read_to_string(&path)
+                .map_err(|e| format!("Failed to read {filename}: {e}"))?;
+            results.push((suffix.to_string(), content));
+        }
+    }
+    Ok(results)
+}
+
+#[tauri::command]
+fn delete_project_env(app: tauri::AppHandle, project_id: String, suffix: String) -> Result<(), String> {
+    let path = env_file_path(&app, &project_id, &suffix)?;
+    if path.exists() {
+        fs::remove_file(&path).map_err(|e| format!("Failed to delete env file: {e}"))?;
+    }
+    Ok(())
+}
+
 // ── Legacy commands (keep during migration) ───────────────────────────────
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
@@ -238,7 +318,8 @@ pub fn run() {
             save_project_env, load_project_env,
             register_project, unregister_project,
             get_app_data_dir, generate_shell_hook,
-            import_env_from_project, check_gitignore_status, check_shell_integration,
+            import_env_from_project, import_all_envs_from_project,
+            delete_project_env, write_env_signal, check_gitignore_status, check_shell_integration,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -287,6 +368,7 @@ mod tests {
             name: "my-project".to_string(),
             path: "/home/user/project".to_string(),
             parent_id: None,
+            active_env: None,
         };
         let registry = Registry { projects: vec![entry.clone()] };
         write_registry_to_path(&path, &registry).unwrap();
@@ -312,5 +394,101 @@ mod tests {
         let path = temp_registry(&dir);
         fs::write(&path, "not valid json").unwrap();
         assert!(read_registry_from_path(&path).is_err());
+    }
+
+    #[test]
+    fn env_filename_default_suffix() {
+        assert_eq!(env_filename("abc-123", "").unwrap(), "abc-123.env");
+    }
+
+    #[test]
+    fn env_filename_local_suffix() {
+        assert_eq!(env_filename("abc-123", "local").unwrap(), "abc-123.env.local");
+    }
+
+    #[test]
+    fn env_filename_production_suffix() {
+        assert_eq!(env_filename("abc-123", "production").unwrap(), "abc-123.env.production");
+    }
+
+    #[test]
+    fn env_filename_sanitizes_suffix() {
+        assert_eq!(env_filename("abc-123", "lo/cal").unwrap(), "abc-123.env.local");
+        assert_eq!(env_filename("abc-123", "pro..duction").unwrap(), "abc-123.env.production");
+    }
+
+    #[test]
+    fn env_filename_empty_id_errors() {
+        assert!(env_filename("", "local").is_err());
+    }
+
+    #[test]
+    fn import_all_envs_scans_correctly() {
+        let dir = TempDir::new().unwrap();
+        let base = dir.path();
+
+        fs::write(base.join(".env"), "KEY=val").unwrap();
+        fs::write(base.join(".env.local"), "LOCAL_KEY=local_val").unwrap();
+        fs::write(base.join(".env.development"), "DEV_KEY=dev_val").unwrap();
+
+        let result = import_all_envs_from_project(base.to_string_lossy().into_owned()).unwrap();
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].0, "");
+        assert!(result[0].1.contains("KEY=val"));
+        assert_eq!(result[1].0, "local");
+        assert!(result[1].1.contains("LOCAL_KEY=local_val"));
+        assert_eq!(result[2].0, "development");
+        assert!(result[2].1.contains("DEV_KEY=dev_val"));
+    }
+
+    #[test]
+    fn write_env_signal_creates_signal_file() {
+        let dir = TempDir::new().unwrap();
+        let signal_path = dir.path().join("env_signal");
+        assert!(!signal_path.exists());
+        // Simulate what write_env_signal does
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string();
+        fs::write(&signal_path, &timestamp).unwrap();
+        assert!(signal_path.exists());
+        let content = fs::read_to_string(&signal_path).unwrap();
+        assert!(!content.is_empty());
+        // Content should be a numeric timestamp
+        assert!(content.parse::<u128>().is_ok());
+    }
+
+    #[test]
+    fn write_env_signal_overwrites_previous() {
+        let dir = TempDir::new().unwrap();
+        let signal_path = dir.path().join("env_signal");
+        fs::write(&signal_path, "111").unwrap();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string();
+        fs::write(&signal_path, &timestamp).unwrap();
+        let content = fs::read_to_string(&signal_path).unwrap();
+        assert_ne!(content, "111");
+    }
+
+    #[test]
+    fn registry_entry_with_active_env_roundtrip() {
+        let dir = TempDir::new().unwrap();
+        let path = temp_registry(&dir);
+        let entry = RegistryEntry {
+            id: "abc-123".to_string(),
+            name: "my-project".to_string(),
+            path: "/home/user/project".to_string(),
+            parent_id: None,
+            active_env: Some("local".to_string()),
+        };
+        let registry = Registry { projects: vec![entry] };
+        write_registry_to_path(&path, &registry).unwrap();
+        let loaded = read_registry_from_path(&path).unwrap();
+        assert_eq!(loaded.projects[0].active_env, Some("local".to_string()));
     }
 }

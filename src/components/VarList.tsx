@@ -12,8 +12,6 @@ interface VarListProps {
   onDeleteVar: (id: string) => void;
 }
 
-const NEUTRAL_DOT = "#3a3a3c";
-
 function valuePreview(v: EnvVar): string {
   if (!v.val) return "";
   if (!v.revealed) return "••••••••";
@@ -71,7 +69,7 @@ export default function VarList({
       <div className="var-list" role="list">
         {filtered.length === 0 && searchQuery && (
           <div className="list-empty">
-            <span>No results for "{searchQuery}"</span>
+            <span>No results for "{searchQuery.length > 40 ? searchQuery.slice(0, 40) + "…" : searchQuery}"</span>
           </div>
         )}
 
@@ -132,7 +130,6 @@ export default function VarList({
                 <>
                   <span
                     className="var-list-icon"
-                    style={{ background: NEUTRAL_DOT }}
                     aria-hidden="true"
                   />
                   <div className="var-list-body">
