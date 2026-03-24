@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Settings,
-  Terminal,
   Shield,
   Database,
   AlertTriangle,
@@ -9,7 +8,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { getAppDataDir, checkShellIntegration } from "../lib/envFile";
+import { getAppDataDir } from "../lib/envFile";
 import type { AppSettings, InheritanceMode } from "../types";
 
 interface SettingsProps {
@@ -25,10 +24,8 @@ export default function SettingsPanel({
   onChange,
   onResetOnboarding,
   onClearAllData,
-  onOpenShellIntegration,
 }: SettingsProps) {
   const [appDataDir, setAppDataDir] = useState<string | null>(null);
-  const [shellStatus, setShellStatus] = useState<string>("Checking…");
   const [copiedPath, setCopiedPath] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -38,14 +35,6 @@ export default function SettingsPanel({
     getAppDataDir()
       .then(setAppDataDir)
       .catch(() => {});
-    checkShellIntegration()
-      .then((status) => {
-        if (status === "not_found") setShellStatus("Not installed");
-        else if (status === "zsh") setShellStatus("Installed — zsh");
-        else if (status === "bash") setShellStatus("Installed — bash");
-        else if (status === "both") setShellStatus("Installed — zsh + bash");
-      })
-      .catch(() => setShellStatus("Unknown"));
   }, []);
 
   function update(partial: Partial<AppSettings>) {
