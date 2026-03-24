@@ -56,6 +56,14 @@ describe('buildProjectTree', () => {
   it('returns empty array for empty input', () => {
     expect(buildProjectTree([])).toEqual([])
   })
+
+  it('treats orphaned projects as root when parent no longer exists', () => {
+    const projects = [makeProject('orphan', '/orphan', 'nonexistent-parent')]
+    const tree = buildProjectTree(projects)
+    expect(tree).toHaveLength(1)
+    expect(tree[0].project.id).toBe('orphan')
+    expect(tree[0].depth).toBe(0)
+  })
 })
 
 describe('getAncestorChain', () => {

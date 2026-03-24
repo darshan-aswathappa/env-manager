@@ -298,6 +298,48 @@ describe('App', () => {
     })
   })
 
+  it('opens shell integration modal when Shell button is clicked', async () => {
+    render(<App />)
+    const shellBtn = screen.getByRole('button', { name: /Open shell integration/i })
+    await act(async () => { shellBtn.click() })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: /Shell integration/i })).toBeInTheDocument())
+  })
+
+  it('closes shell integration modal when close button is clicked', async () => {
+    render(<App />)
+    const shellBtn = screen.getByRole('button', { name: /Open shell integration/i })
+    await act(async () => { shellBtn.click() })
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+    const closeBtn = screen.getByRole('button', { name: /^Close$/i })
+    await act(async () => { closeBtn.click() })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('handles gitignore check failure gracefully', async () => {
+    setupProjects([baseProject])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'check_gitignore_status') return Promise.reject(new Error('not found'))
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    // Select project by clicking in sidebar (triggers gitignore check which fails)
+    const sidebarItem = screen.getAllByText('MyProject')[0].closest('[role="button"]')
+    if (sidebarItem) await act(async () => { sidebarItem.dispatchEvent(new MouseEvent('click', { bubbles: true })) })
+    // App should not crash
+    expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0)
+  })
+
+  it('addSubProject: handles exception gracefully without crashing', async () => {
+    setupProjects([baseProject])
+    mockOpen.mockRejectedValue(new Error('dialog error'))
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const addSubBtn = screen.getByRole('button', { name: /Add sub-project under MyProject/i })
+    await act(async () => { addSubBtn.click() })
+    expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0)
+  })
+
   it('selectProject: switches selected project when clicked in sidebar', async () => {
     setupProjects([
       baseProject,

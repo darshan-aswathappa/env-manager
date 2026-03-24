@@ -98,6 +98,49 @@ describe('ShellIntegration', () => {
     expect(document.body).toBeTruthy()
   })
 
+  it('copy button shows Copied after successful clipboard write', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      writable: true,
+      configurable: true,
+    })
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'generate_shell_hook') return Promise.resolve('# hook content')
+      if (cmd === 'get_app_data_dir') return Promise.resolve('/tmp')
+      return Promise.resolve(null)
+    })
+    render(<ShellIntegration />)
+    await waitFor(() => expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument())
+    await act(async () => { screen.getByRole('button', { name: /copy/i }).click() })
+    await waitFor(() => expect(screen.getByRole('button', { name: /Copied/i })).toBeInTheDocument())
+  })
+
+  it('switches to Windows platform tab', async () => {
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'generate_shell_hook') return Promise.resolve('# hook')
+      if (cmd === 'get_app_data_dir') return Promise.resolve('/tmp')
+      return Promise.resolve(null)
+    })
+    render(<ShellIntegration />)
+    await waitFor(() => expect(screen.getByRole('button', { name: /Windows/i })).toBeInTheDocument())
+    await act(async () => { screen.getByRole('button', { name: /Windows/i }).click() })
+    // Shell tabs (zsh/bash) should no longer appear (windows only shows bash)
+    expect(screen.queryByRole('button', { name: /zsh/i })).not.toBeInTheDocument()
+  })
+
+  it('switches to bash shell tab on mac', async () => {
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'generate_shell_hook') return Promise.resolve('# hook')
+      if (cmd === 'get_app_data_dir') return Promise.resolve('/tmp')
+      return Promise.resolve(null)
+    })
+    render(<ShellIntegration />)
+    await waitFor(() => expect(screen.getByRole('button', { name: /bash$/ })).toBeInTheDocument())
+    await act(async () => { screen.getByRole('button', { name: /bash$/ }).click() })
+    const bodyText = document.body.textContent || ''
+    expect(bodyText).toMatch(/\.bashrc/)
+  })
+
   it('shows loading initially before data loads', async () => {
     let resolveHook: (v: string) => void = () => {}
     let resolveDir: (v: string) => void = () => {}

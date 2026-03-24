@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import Sidebar from '../components/Sidebar'
 import type { ProjectTreeNode } from '../types'
 
@@ -85,6 +85,41 @@ describe('Sidebar', () => {
     const item = screen.getByText('my-api').closest('[role="button"]')!
     fireEvent.keyDown(item, { key: 'Enter' })
     expect(onSelect).toHaveBeenCalledWith('p1')
+  })
+
+  it('collapses and expands sidebar', async () => {
+    render(<Sidebar projectTree={[]} selectedId={null} onSelect={vi.fn()} onDelete={vi.fn()} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} />)
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Collapse sidebar/i })) })
+    expect(screen.getByRole('button', { name: /Expand sidebar/i })).toBeInTheDocument()
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Expand sidebar/i })) })
+    expect(screen.getByRole('button', { name: /Collapse sidebar/i })).toBeInTheDocument()
+  })
+
+  it('collapses and expands child projects', async () => {
+    const child = makeNode('child', 'auth-service', 1)
+    const tree = [makeNode('root', 'main-app', 0, [child])]
+    render(<Sidebar projectTree={tree} selectedId={null} onSelect={vi.fn()} onDelete={vi.fn()} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} />)
+    expect(screen.getByText('auth-service')).toBeInTheDocument()
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Collapse main-app/i })) })
+    expect(screen.queryByText('auth-service')).not.toBeInTheDocument()
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Expand main-app/i })) })
+    expect(screen.getByText('auth-service')).toBeInTheDocument()
+  })
+
+  it('shows var count correctly for plural', () => {
+    const child = makeNode('p1', 'proj', 0)
+    const nodeWithVars = {
+      ...child,
+      project: {
+        ...child.project,
+        vars: [
+          { id: 'v1', key: 'K1', val: 'v1', revealed: false, sourceProjectId: 'p1' },
+          { id: 'v2', key: 'K2', val: 'v2', revealed: false, sourceProjectId: 'p1' },
+        ]
+      }
+    }
+    render(<Sidebar projectTree={[nodeWithVars]} selectedId={null} onSelect={vi.fn()} onDelete={vi.fn()} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} />)
+    expect(screen.getByText('2 vars')).toBeInTheDocument()
   })
 
   it('shows var count correctly for singular', () => {

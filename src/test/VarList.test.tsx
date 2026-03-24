@@ -99,6 +99,16 @@ describe('VarList', () => {
     expect(onSelectVar).toHaveBeenCalledWith(v.id)
   })
 
+  it('calls onSelectVar with keyboard Space key', () => {
+    const onSelectVar = vi.fn()
+    const v = makeVar('ENV_KEY', 'val')
+    const project = makeProject([v])
+    render(<VarList project={project} selectedVarId={null} searchQuery="" onSearchChange={vi.fn()} onSelectVar={onSelectVar} onAddVar={vi.fn()} />)
+    const item = screen.getByText('ENV_KEY').closest('[role="listitem"]')!
+    fireEvent.keyDown(item, { key: ' ' })
+    expect(onSelectVar).toHaveBeenCalledWith(v.id)
+  })
+
   it('shows var color classification for secret keys', () => {
     const project = makeProject([makeVar('API_SECRET', 'val')])
     render(<VarList project={project} selectedVarId={null} searchQuery="" onSearchChange={vi.fn()} onSelectVar={vi.fn()} onAddVar={vi.fn()} />)

@@ -119,6 +119,12 @@ describe('loadProjectEnv', () => {
     const vars = await loadProjectEnv('project-id')
     expect(vars[0].val).toBe('postgres://user:pass@host/db?ssl=true')
   })
+  it('skips lines without = sign', async () => {
+    mockInvoke.mockResolvedValue('INVALID_LINE_NO_EQUALS\nKEY=val')
+    const vars = await loadProjectEnv('project-id')
+    expect(vars).toHaveLength(1)
+    expect(vars[0].key).toBe('KEY')
+  })
 })
 
 describe('importEnvFromProject', () => {

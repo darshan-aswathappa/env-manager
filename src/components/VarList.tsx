@@ -15,10 +15,10 @@ function varDotColor(_key: string): string {
   return "#3a3a3c";
 }
 
-/** Always show masked dots in the list — values are only revealed in the detail panel. */
 function valuePreview(v: EnvVar): string {
   if (!v.val) return "";
-  return "••••••••";
+  if (!v.revealed) return "••••••••";
+  return v.val.length > 28 ? v.val.slice(0, 28) + "…" : v.val;
 }
 
 export default function VarList({

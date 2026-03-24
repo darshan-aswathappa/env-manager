@@ -78,7 +78,7 @@ function ProjectNodeItem({
           <div className="project-name">{project.name}</div>
         </div>
         <span className="project-count" aria-label={`${project.vars.length} variables`}>
-          {project.vars.length}
+          {project.vars.length === 1 ? "1 var" : project.vars.length > 0 ? `${project.vars.length} vars` : ""}
         </span>
         <button
           className="project-delete"
