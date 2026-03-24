@@ -1180,6 +1180,234 @@ a {
   margin-top: 4px;
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   SHELL INTEGRATION
+══════════════════════════════════════════════════════════════ */
+.si-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.si-state {
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.si-state--error {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-danger);
+}
+
+.si-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.si-header-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.si-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.si-shell-tabs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.si-shell-label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+.si-tab {
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition:
+    background var(--t-fast),
+    color var(--t-fast),
+    border-color var(--t-fast);
+}
+
+.si-tab.active {
+  font-weight: 600;
+  background: var(--bg-row-rest);
+  border-color: var(--border-active);
+  color: var(--text-primary);
+}
+
+.si-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.si-section-label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  margin-bottom: 6px;
+}
+
+.si-code-block {
+  position: relative;
+}
+
+.si-code-pre {
+  margin: 0;
+  padding: 12px 72px 12px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-lg);
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 180px;
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+.si-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  background: var(--bg-row-rest);
+  border: 1px solid var(--border-moderate);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background var(--t-fast);
+}
+
+.si-copy-btn:hover {
+  background: var(--bg-row-hover);
+}
+
+.si-copy-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.si-storage {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.si-storage code {
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.si-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.si-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.si-step-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.si-step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.si-kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-moderate);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.si-secondary {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.si-note {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 8px 10px;
+  background: var(--color-warning-bg);
+  border: 1px solid rgba(245, 165, 36, 0.18);
+  border-radius: var(--radius-lg);
+}
+
+.si-retry-btn {
+  align-self: flex-start;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  background: var(--bg-row-rest);
+  border: 1px solid var(--border-moderate);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.si-retry-btn:hover {
+  background: var(--bg-row-hover);
+}
+
+.si-retry-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.si-copy-error {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--color-danger);
+}
+
 /* ══════════════════════════════════════════════════════════════
    REDUCED MOTION
 ══════════════════════════════════════════════════════════════ */

@@ -4,93 +4,55 @@ import { Copy, CheckCheck, Terminal } from "lucide-react";
 
 type Platform = "mac" | "windows";
 
-const step: React.CSSProperties = {
-  display: "flex",
-  gap: "10px",
-  alignItems: "flex-start",
-  fontSize: "0.8rem",
-  lineHeight: 1.6,
-  color: "var(--text-primary)",
-};
-
-const stepNum: React.CSSProperties = {
-  flexShrink: 0,
-  width: "20px",
-  height: "20px",
-  borderRadius: "50%",
-  background: "rgba(255,255,255,0.08)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "0.7rem",
-  fontWeight: 700,
-  marginTop: "2px",
-};
-
-const kbd: React.CSSProperties = {
-  display: "inline-block",
-  padding: "1px 6px",
-  background: "rgba(255,255,255,0.08)",
-  border: "1px solid rgba(255,255,255,0.15)",
-  borderRadius: "4px",
-  fontFamily: "var(--font-mono, monospace)",
-  fontSize: "0.75rem",
-};
-
-const secondary: React.CSSProperties = {
-  color: "var(--text-secondary)",
-  fontSize: "0.75rem",
-};
-
 function MacInstructions({ rcFile, shell }: { rcFile: string; shell: "zsh" | "bash" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <div style={step}>
-        <div style={stepNum}>1</div>
-        <div>
+    <div className="si-steps">
+      <div className="si-step">
+        <div className="si-step-num">1</div>
+        <div className="si-step-content">
           Open <strong>Terminal</strong> — press{" "}
-          <span style={kbd}>⌘ Space</span>, type <em>Terminal</em>, hit{" "}
-          <span style={kbd}>Return</span>. Or use <strong>iTerm2</strong> if you
+          <kbd className="si-kbd">⌘ Space</kbd>, type <em>Terminal</em>, hit{" "}
+          <kbd className="si-kbd">Return</kbd>. Or use <strong>iTerm2</strong> if you
           have it.
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>2</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">2</div>
+        <div className="si-step-content">
           Open your shell config file:
           <br />
-          <span style={kbd}>nano {rcFile}</span>
+          <kbd className="si-kbd">nano {rcFile}</kbd>
           <br />
-          <span style={secondary}>
+          <span className="si-secondary">
             Use arrow keys to scroll to the bottom of the file.
           </span>
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>3</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">3</div>
+        <div className="si-step-content">
           Copy the snippet above, paste it at the bottom of the file.
           <br />
-          <span style={secondary}>
-            In nano: <span style={kbd}>⌃ V</span> or right-click → Paste.
+          <span className="si-secondary">
+            In nano: <kbd className="si-kbd">⌃ V</kbd> or right-click → Paste.
           </span>
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>4</div>
-        <div>
-          Save and exit: <span style={kbd}>⌃ X</span> →{" "}
-          <span style={kbd}>Y</span> → <span style={kbd}>Return</span>
+      <div className="si-step">
+        <div className="si-step-num">4</div>
+        <div className="si-step-content">
+          Save and exit: <kbd className="si-kbd">⌃ X</kbd> →{" "}
+          <kbd className="si-kbd">Y</kbd> → <kbd className="si-kbd">Return</kbd>
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>5</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">5</div>
+        <div className="si-step-content">
           Activate in your current terminal window:
           <br />
-          <span style={kbd}>source {rcFile}</span>
+          <kbd className="si-kbd">source {rcFile}</kbd>
           <br />
-          <span style={secondary}>
+          <span className="si-secondary">
             {shell === "zsh"
               ? "Or just open a new terminal tab — it loads automatically."
               : "Then open a new terminal tab to confirm it loads automatically."}
@@ -98,32 +60,12 @@ function MacInstructions({ rcFile, shell }: { rcFile: string; shell: "zsh" | "ba
         </div>
       </div>
       {shell === "bash" && (
-        <div
-          style={{
-            ...secondary,
-            padding: "8px 10px",
-            background: "rgba(251,191,36,0.08)",
-            border: "1px solid rgba(251,191,36,0.2)",
-            borderRadius: "6px",
-          }}
-        >
+        <div className="si-note">
           <strong>bash note:</strong> New terminal tabs source{" "}
-          <code style={{ fontFamily: "var(--font-mono, monospace)" }}>
-            ~/.bash_profile
-          </code>
-          , not{" "}
-          <code style={{ fontFamily: "var(--font-mono, monospace)" }}>
-            ~/.bashrc
-          </code>
-          . Make sure{" "}
-          <code style={{ fontFamily: "var(--font-mono, monospace)" }}>
-            ~/.bash_profile
-          </code>{" "}
-          contains:
+          <code>~/.bash_profile</code>, not <code>~/.bashrc</code>. Make sure{" "}
+          <code>~/.bash_profile</code> contains:
           <br />
-          <span style={kbd}>
-            {"[ -f ~/.bashrc ] && source ~/.bashrc"}
-          </span>
+          <kbd className="si-kbd">{"[ -f ~/.bashrc ] && source ~/.bashrc"}</kbd>
         </div>
       )}
     </div>
@@ -132,67 +74,59 @@ function MacInstructions({ rcFile, shell }: { rcFile: string; shell: "zsh" | "ba
 
 function WindowsInstructions({ rcFile }: { rcFile: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <div
-        style={{
-          ...secondary,
-          padding: "8px 10px",
-          background: "rgba(251,191,36,0.08)",
-          border: "1px solid rgba(251,191,36,0.2)",
-          borderRadius: "6px",
-        }}
-      >
+    <div className="si-steps">
+      <div className="si-note">
         This snippet requires <strong>Git Bash</strong> or <strong>WSL</strong>{" "}
         — it does not work in PowerShell or Command Prompt.
       </div>
-      <div style={step}>
-        <div style={stepNum}>1</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">1</div>
+        <div className="si-step-content">
           <strong>Git Bash:</strong> right-click your Desktop or any folder →{" "}
           <em>Git Bash Here</em>.
           <br />
-          <strong>WSL:</strong> press <span style={kbd}>Win</span>, type{" "}
-          <em>Ubuntu</em> (or your distro), hit <span style={kbd}>Enter</span>.
+          <strong>WSL:</strong> press <kbd className="si-kbd">Win</kbd>, type{" "}
+          <em>Ubuntu</em> (or your distro), hit <kbd className="si-kbd">Enter</kbd>.
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>2</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">2</div>
+        <div className="si-step-content">
           Open your shell config file:
           <br />
-          <span style={kbd}>nano {rcFile}</span>
+          <kbd className="si-kbd">nano {rcFile}</kbd>
           <br />
-          <span style={secondary}>
+          <span className="si-secondary">
             If the file doesn't exist yet, nano will create it.
           </span>
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>3</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">3</div>
+        <div className="si-step-content">
           Copy the snippet above, paste it at the bottom.
           <br />
-          <span style={secondary}>
+          <span className="si-secondary">
             In Git Bash / WSL terminal: right-click → Paste, or{" "}
-            <span style={kbd}>Shift Insert</span>.
+            <kbd className="si-kbd">Shift Insert</kbd>.
           </span>
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>4</div>
-        <div>
-          Save and exit: <span style={kbd}>Ctrl X</span> →{" "}
-          <span style={kbd}>Y</span> → <span style={kbd}>Enter</span>
+      <div className="si-step">
+        <div className="si-step-num">4</div>
+        <div className="si-step-content">
+          Save and exit: <kbd className="si-kbd">Ctrl X</kbd> →{" "}
+          <kbd className="si-kbd">Y</kbd> → <kbd className="si-kbd">Enter</kbd>
         </div>
       </div>
-      <div style={step}>
-        <div style={stepNum}>5</div>
-        <div>
+      <div className="si-step">
+        <div className="si-step-num">5</div>
+        <div className="si-step-content">
           Activate:
           <br />
-          <span style={kbd}>source {rcFile}</span>
+          <kbd className="si-kbd">source {rcFile}</kbd>
           <br />
-          <span style={secondary}>Or open a new Git Bash / WSL window.</span>
+          <span className="si-secondary">Or open a new Git Bash / WSL window.</span>
         </div>
       </div>
     </div>
@@ -205,6 +139,8 @@ export default function ShellIntegration() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const [loadKey, setLoadKey] = useState(0);
   const [platform, setPlatform] = useState<Platform>("mac");
   const [shell, setShell] = useState<"zsh" | "bash">("zsh");
 
@@ -242,71 +178,66 @@ export default function ShellIntegration() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadKey]);
+
+  function handleRetry() {
+    setError(null);
+    setLoading(true);
+    setLoadKey((k) => k + 1);
+  }
 
   async function handleCopy() {
     if (!hookSnippet) return;
     try {
       await navigator.clipboard.writeText(hookSnippet);
       setCopied(true);
+      setCopyFailed(false);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard API not available in test environments
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 2000);
     }
   }
 
   const rcFile = shell === "zsh" ? "~/.zshrc" : "~/.bashrc";
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    padding: "5px 14px",
-    fontSize: "0.78rem",
-    fontWeight: active ? 600 : 400,
-    background: active ? "rgba(255,255,255,0.1)" : "transparent",
-    border: "1px solid",
-    borderColor: active ? "rgba(255,255,255,0.2)" : "transparent",
-    borderRadius: "6px",
-    cursor: "pointer",
-    color: active ? "var(--text-primary)" : "var(--text-secondary)",
-  });
-
   if (loading) {
-    return (
-      <div style={{ padding: "16px" }}>
-        <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-          Loading shell hook...
-        </p>
-      </div>
-    );
+    return <div className="si-state">Loading shell hook...</div>;
   }
 
   if (error) {
     return (
-      <div style={{ padding: "16px" }}>
-        <p style={{ color: "#f87171", fontSize: "0.85rem" }}>Error: {error}</p>
+      <div className="si-state si-state--error">
+        <div>Error: {error}</div>
+        <button className="si-retry-btn" onClick={handleRetry}>
+          Try again
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <div className="si-root">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <Terminal size={16} />
-        <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600 }}>
-          Shell Integration
-        </h3>
+      <div className="si-header">
+        <Terminal size={16} aria-hidden="true" />
+        <h3 className="si-header-title">Shell Integration</h3>
       </div>
 
       {/* Platform tabs */}
-      <div style={{ display: "flex", gap: "6px" }}>
+      <div className="si-tabs" role="tablist" aria-label="Platform">
         <button
-          style={tabStyle(platform === "mac")}
+          role="tab"
+          aria-selected={platform === "mac"}
+          className={`si-tab${platform === "mac" ? " active" : ""}`}
           onClick={() => setPlatform("mac")}
         >
           macOS
         </button>
         <button
-          style={tabStyle(platform === "windows")}
+          role="tab"
+          aria-selected={platform === "windows"}
+          className={`si-tab${platform === "windows" ? " active" : ""}`}
           onClick={() => setPlatform("windows")}
         >
           Windows
@@ -315,16 +246,20 @@ export default function ShellIntegration() {
 
       {/* Shell tabs (mac only — Windows Git Bash is always bash) */}
       {platform === "mac" && (
-        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-          <span style={{ ...secondary, marginRight: "4px" }}>Shell:</span>
+        <div className="si-shell-tabs" role="tablist" aria-label="Shell">
+          <span className="si-shell-label">Shell:</span>
           <button
-            style={tabStyle(shell === "zsh")}
+            role="tab"
+            aria-selected={shell === "zsh"}
+            className={`si-tab${shell === "zsh" ? " active" : ""}`}
             onClick={() => setShell("zsh")}
           >
             zsh (default)
           </button>
           <button
-            style={tabStyle(shell === "bash")}
+            role="tab"
+            aria-selected={shell === "bash"}
+            className={`si-tab${shell === "bash" ? " active" : ""}`}
             onClick={() => setShell("bash")}
           >
             bash
@@ -333,74 +268,44 @@ export default function ShellIntegration() {
       )}
 
       {/* Snippet */}
-      <div>
-        <div style={{ ...secondary, marginBottom: "6px" }}>
-          1. Copy this snippet:
+      {hookSnippet ? (
+        <div>
+          <div className="si-section-label">1. Copy this snippet:</div>
+          <div className="si-code-block">
+            <pre className="si-code-pre">{hookSnippet}</pre>
+            <button
+              onClick={handleCopy}
+              className="si-copy-btn"
+              aria-label={copied ? "Copied" : "Copy shell hook"}
+            >
+              {copied ? (
+                <CheckCheck size={12} aria-hidden="true" />
+              ) : (
+                <Copy size={12} aria-hidden="true" />
+              )}
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          {copyFailed && (
+            <div className="si-copy-error" role="alert">
+              Copy failed — select and copy manually.
+            </div>
+          )}
         </div>
-        <div style={{ position: "relative" }}>
-          <pre
-            style={{
-              margin: 0,
-              padding: "12px",
-              background: "rgba(0,0,0,0.3)",
-              borderRadius: "8px",
-              fontSize: "0.72rem",
-              fontFamily: "var(--font-mono, monospace)",
-              overflowX: "auto",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-all",
-              maxHeight: "180px",
-              overflowY: "auto",
-              color: "var(--text-primary)",
-            }}
-          >
-            {hookSnippet}
-          </pre>
-          <button
-            onClick={handleCopy}
-            aria-label={copied ? "Copied" : "Copy shell hook"}
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "4px 10px",
-              fontSize: "0.72rem",
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: "6px",
-              cursor: "pointer",
-              color: "var(--text-primary)",
-            }}
-          >
-            {copied ? <CheckCheck size={12} /> : <Copy size={12} />}
-            {copied ? "Copied!" : "Copy"}
-          </button>
-        </div>
-      </div>
+      ) : (
+        <div className="si-state">No shell hook available.</div>
+      )}
 
       {/* App data dir */}
       {appDataDir && (
-        <div style={{ ...secondary }}>
-          Vars stored at:{" "}
-          <code
-            style={{
-              fontFamily: "var(--font-mono, monospace)",
-              wordBreak: "break-all",
-            }}
-          >
-            {appDataDir}
-          </code>
+        <div className="si-storage">
+          Vars stored at: <code>{appDataDir}</code>
         </div>
       )}
 
       {/* Step-by-step instructions */}
       <div>
-        <div style={{ ...secondary, marginBottom: "10px" }}>
-          2. Paste it into your shell config:
-        </div>
+        <div className="si-section-label">2. Paste it into your shell config:</div>
         {platform === "mac" ? (
           <MacInstructions rcFile={rcFile} shell={shell} />
         ) : (
