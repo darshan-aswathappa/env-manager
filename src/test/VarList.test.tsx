@@ -5,7 +5,8 @@ import type { Project, EnvVar } from '../types'
 
 const makeProject = (vars: EnvVar[] = []): Project => ({
   id: 'p1', name: 'Test Project', path: '/test', parentId: null,
-  vars, inheritanceMode: 'merge-child-wins', sortOrder: 0,
+  vars, environments: [{ suffix: '', vars: [] }], activeEnv: '',
+  inheritanceMode: 'merge-child-wins', sortOrder: 0,
 })
 
 const makeVar = (key: string, val: string, revealed = false): EnvVar => ({

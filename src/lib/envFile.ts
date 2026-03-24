@@ -28,7 +28,7 @@ export function unquoteEnvValue(raw: string): string {
   return v
 }
 
-function parseEnvContent(content: string, projectId = ''): EnvVar[] {
+export function parseEnvContent(content: string, projectId = ''): EnvVar[] {
   const vars: EnvVar[] = []
   for (const line of content.split('\n')) {
     if (!line.trim() || line.startsWith('#')) continue
@@ -45,13 +45,13 @@ function parseEnvContent(content: string, projectId = ''): EnvVar[] {
   return vars
 }
 
-export async function saveProjectEnv(projectId: string, vars: EnvVar[]): Promise<void> {
+export async function saveProjectEnv(projectId: string, suffix: string, vars: EnvVar[]): Promise<void> {
   const content = serializeVars(vars)
-  await invoke('save_project_env', { projectId, content })
+  await invoke('save_project_env', { projectId, suffix, content })
 }
 
-export async function loadProjectEnv(projectId: string): Promise<EnvVar[]> {
-  const content = await invoke<string>('load_project_env', { projectId })
+export async function loadProjectEnv(projectId: string, suffix: string): Promise<EnvVar[]> {
+  const content = await invoke<string>('load_project_env', { projectId, suffix })
   return parseEnvContent(content, projectId)
 }
 
@@ -60,8 +60,20 @@ export async function importEnvFromProject(projectPath: string): Promise<EnvVar[
   return parseEnvContent(content)
 }
 
+export async function importAllEnvsFromProject(projectPath: string): Promise<Array<{ suffix: string; vars: EnvVar[] }>> {
+  const entries = await invoke<Array<[string, string]>>('import_all_envs_from_project', { projectPath })
+  return entries.map(([suffix, content]) => ({
+    suffix,
+    vars: parseEnvContent(content),
+  }))
+}
+
+export async function deleteProjectEnv(projectId: string, suffix: string): Promise<void> {
+  await invoke('delete_project_env', { projectId, suffix })
+}
+
 export async function registerProject(entry: {
-  id: string; name: string; path: string; parentId: string | null
+  id: string; name: string; path: string; parentId: string | null; activeEnv?: string
 }): Promise<void> {
   await invoke('register_project', { entry })
 }

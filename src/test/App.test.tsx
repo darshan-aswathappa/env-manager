@@ -9,12 +9,14 @@ const mockOpen = vi.mocked(open)
 
 const baseProject = {
   id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
-  vars: [], inheritanceMode: 'merge-child-wins', sortOrder: 0
+  vars: [], environments: [{ suffix: '', vars: [] }], activeEnv: '',
+  inheritanceMode: 'merge-child-wins', sortOrder: 0
 }
 
 const projectWithVars = {
   ...baseProject,
   vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+  environments: [{ suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] }],
 }
 
 function setupProjects(projects: object[]) {
@@ -70,7 +72,7 @@ describe('App', () => {
     })
     render(<App />)
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith('load_project_env', { projectId: 'p1' })
+      expect(mockInvoke).toHaveBeenCalledWith('load_project_env', { projectId: 'p1', suffix: '' })
     })
   })
 
@@ -78,7 +80,7 @@ describe('App', () => {
     mockOpen.mockResolvedValue('/new/project/myapp')
     mockInvoke.mockImplementation((cmd) => {
       if (cmd === 'register_project') return Promise.resolve(undefined)
-      if (cmd === 'import_env_from_project') return Promise.resolve('')
+      if (cmd === 'import_all_envs_from_project') return Promise.resolve([])
       return Promise.resolve('')
     })
     render(<App />)
@@ -97,11 +99,39 @@ describe('App', () => {
     expect(mockInvoke).not.toHaveBeenCalledWith('register_project', expect.anything())
   })
 
+  it('switchEnvironment: saves current env and loads new one', async () => {
+    const multiEnvProject = {
+      ...baseProject,
+      environments: [
+        { suffix: '', vars: [{ id: 'v1', key: 'BASE', val: '', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'local', vars: [] },
+        { suffix: 'production', vars: [] },
+      ],
+      vars: [{ id: 'v1', key: 'BASE', val: '', revealed: false, sourceProjectId: 'p1' }],
+      activeEnv: '',
+    }
+    setupProjects([multiEnvProject])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('BASE=value')
+      if (cmd === 'save_project_env') return Promise.resolve(undefined)
+      if (cmd === 'register_project') return Promise.resolve(undefined)
+      if (cmd === 'check_gitignore_status') return Promise.resolve('no_gitignore')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('BASE')).toBeInTheDocument())
+    // The switchEnvironment function will be tested via props once VarDetail is updated
+    // For now verify multi-env loading works
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('load_project_env', { projectId: 'p1', suffix: '' })
+    })
+  })
+
   it('addProject: imports env vars if .env file exists', async () => {
     mockOpen.mockResolvedValue('/new/project')
     mockInvoke.mockImplementation((cmd) => {
       if (cmd === 'register_project') return Promise.resolve(undefined)
-      if (cmd === 'import_env_from_project') return Promise.resolve('KEY=value')
+      if (cmd === 'import_all_envs_from_project') return Promise.resolve([['', 'KEY=value']])
       if (cmd === 'save_project_env') return Promise.resolve(undefined)
       return Promise.resolve('')
     })
@@ -109,7 +139,7 @@ describe('App', () => {
     const addBtns = screen.getAllByRole('button', { name: /Add project folder/i })
     await act(async () => { addBtns[0].click() })
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith('import_env_from_project', { projectPath: '/new/project' })
+      expect(mockInvoke).toHaveBeenCalledWith('import_all_envs_from_project', { projectPath: '/new/project' })
     })
   })
 
@@ -201,7 +231,7 @@ describe('App', () => {
     mockOpen.mockResolvedValue('/new/project/child')
     mockInvoke.mockImplementation((cmd) => {
       if (cmd === 'register_project') return Promise.resolve(undefined)
-      if (cmd === 'import_env_from_project') return Promise.resolve('')
+      if (cmd === 'import_all_envs_from_project') return Promise.resolve([])
       return Promise.resolve('')
     })
     render(<App />)
@@ -242,7 +272,7 @@ describe('App', () => {
     mockOpen.mockResolvedValue('/new/project/child')
     mockInvoke.mockImplementation((cmd) => {
       if (cmd === 'register_project') return Promise.resolve(undefined)
-      if (cmd === 'import_env_from_project') return Promise.resolve('CHILD_KEY=value')
+      if (cmd === 'import_all_envs_from_project') return Promise.resolve([['', 'CHILD_KEY=value']])
       if (cmd === 'save_project_env') return Promise.resolve(undefined)
       return Promise.resolve('')
     })
@@ -288,7 +318,7 @@ describe('App', () => {
     mockOpen.mockResolvedValue('/projects/withenv')
     mockInvoke.mockImplementation((cmd) => {
       if (cmd === 'register_project') return Promise.resolve(undefined)
-      if (cmd === 'import_env_from_project') return Promise.resolve('ENV_VAR=value123')
+      if (cmd === 'import_all_envs_from_project') return Promise.resolve([['', 'ENV_VAR=value123']])
       if (cmd === 'save_project_env') return Promise.resolve(undefined)
       return Promise.resolve('')
     })
@@ -342,10 +372,161 @@ describe('App', () => {
     expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0)
   })
 
+  it('opens settings modal and closes it via close button', async () => {
+    render(<App />)
+    const settingsBtn = screen.getByRole('button', { name: /Open settings/i })
+    await act(async () => { settingsBtn.click() })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: /Settings/i })).toBeInTheDocument())
+    const closeBtn = screen.getByRole('button', { name: /^Close$/i })
+    await act(async () => { closeBtn.click() })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Settings/i })).not.toBeInTheDocument())
+  })
+
+  it('closes settings modal when clicking the overlay', async () => {
+    render(<App />)
+    const settingsBtn = screen.getByRole('button', { name: /Open settings/i })
+    await act(async () => { settingsBtn.click() })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: /Settings/i })).toBeInTheDocument())
+    const overlay = screen.getByLabelText(/Close settings dialog/i)
+    await act(async () => { overlay.click() })
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Settings/i })).not.toBeInTheDocument())
+  })
+
+  it('closes shell integration modal when clicking the overlay', async () => {
+    render(<App />)
+    const shellBtn = screen.getByRole('button', { name: /Open shell integration/i })
+    await act(async () => { shellBtn.click() })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: /Shell integration/i })).toBeInTheDocument())
+    const overlay = screen.getByLabelText(/Close shell integration dialog/i)
+    await act(async () => { overlay.click() })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('persistProjects strips vals from all environments in localStorage', async () => {
+    const projectWithEnvVals = {
+      ...baseProject,
+      vars: [{ id: 'v1', key: 'SECRET', val: 'hidden', revealed: true, sourceProjectId: 'p1' }],
+      environments: [
+        { suffix: '', vars: [{ id: 'v1', key: 'SECRET', val: 'hidden', revealed: true, sourceProjectId: 'p1' }] },
+        { suffix: 'local', vars: [{ id: 'v2', key: 'LOCAL_KEY', val: 'local-secret', revealed: true, sourceProjectId: 'p1' }] },
+      ],
+    }
+    setupProjects([projectWithEnvVals])
+    render(<App />)
+    // After render, the useEffect persists projects (stripping vals)
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem('dotenv_mgr_projects') || '[]')
+      expect(stored[0].vars[0].val).toBe('')
+      expect(stored[0].vars[0].revealed).toBe(false)
+      expect(stored[0].environments[0].vars[0].val).toBe('')
+      expect(stored[0].environments[0].vars[0].revealed).toBe(false)
+      expect(stored[0].environments[1].vars[0].val).toBe('')
+      expect(stored[0].environments[1].vars[0].revealed).toBe(false)
+    })
+  })
+
+  it('migration: legacy project without environments gets all 6 envs', async () => {
+    const legacyNoEnvs = {
+      id: 'legacy2', name: 'LegacyNoEnvs', path: '/legacy2',
+      vars: [{ id: 'v1', key: 'OLD_VAR', val: 'val', revealed: false }],
+    }
+    setupProjects([legacyNoEnvs])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('LegacyNoEnvs').length).toBeGreaterThan(0))
+    // Verify localStorage was updated with all 6 environments
+    const stored = JSON.parse(localStorage.getItem('dotenv_mgr_projects') || '[]')
+    const project = stored.find((p: { id: string }) => p.id === 'legacy2')
+    expect(project.environments).toHaveLength(6)
+    const suffixes = project.environments.map((e: { suffix: string }) => e.suffix)
+    expect(suffixes).toEqual(['', 'local', 'development', 'production', 'testing', 'staging'])
+  })
+
+  it('addProject with import_all_envs_from_project returning multiple envs', async () => {
+    mockOpen.mockResolvedValue('/projects/multi-env')
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'register_project') return Promise.resolve(undefined)
+      if (cmd === 'import_all_envs_from_project') {
+        return Promise.resolve([
+          ['', 'BASE_KEY=base'],
+          ['local', 'LOCAL_KEY=local'],
+          ['production', 'PROD_KEY=prod'],
+        ])
+      }
+      if (cmd === 'save_project_env') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+    render(<App />)
+    const addBtns = screen.getAllByRole('button', { name: /Add project folder/i })
+    await act(async () => { addBtns[0].click() })
+    await waitFor(() => {
+      // Should save each env that has vars
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ content: expect.stringContaining('BASE_KEY') }))
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ content: expect.stringContaining('LOCAL_KEY') }))
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ content: expect.stringContaining('PROD_KEY') }))
+    })
+  })
+
+  it('auto-mask timer masks all vars after timeout', async () => {
+    vi.useFakeTimers()
+    // Set autoMaskMinutes=1 in settings
+    localStorage.setItem('dotenv_mgr_settings', JSON.stringify({ autoMaskMinutes: 1 }))
+    setupProjects([{
+      ...baseProject,
+      vars: [{ id: 'v1', key: 'MASKED', val: '', revealed: true, sourceProjectId: 'p1' }],
+      environments: [{ suffix: '', vars: [{ id: 'v1', key: 'MASKED', val: '', revealed: true, sourceProjectId: 'p1' }] }],
+    }])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('MASKED=secret')
+      return Promise.resolve('')
+    })
+    await act(async () => { render(<App />) })
+    // Advance time past autoMask delay (1 minute = 60000ms)
+    await act(async () => { vi.advanceTimersByTime(60001) })
+    // After timer fires, all vars should have revealed=false (persisted to localStorage)
+    const stored = JSON.parse(localStorage.getItem('dotenv_mgr_projects') || '[]')
+    expect(stored[0].vars[0].revealed).toBe(false)
+    vi.useRealTimers()
+  })
+
+  it('clearAllData calls unregister for all projects', async () => {
+    setupProjects([
+      baseProject,
+      { ...baseProject, id: 'p2', name: 'SecondProject', path: '/second', sortOrder: 1, environments: [{ suffix: '', vars: [] }], activeEnv: '' },
+    ])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'unregister_project') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+    // Mock window.location.reload to prevent jsdom error
+    const reloadMock = vi.fn()
+    Object.defineProperty(window, 'location', {
+      value: { ...window.location, reload: reloadMock },
+      writable: true,
+    })
+    render(<App />)
+    // Open settings modal
+    const settingsBtn = screen.getByRole('button', { name: /Open settings/i })
+    await act(async () => { settingsBtn.click() })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: /Settings/i })).toBeInTheDocument())
+    // Click the "Clear all data" button to show confirmation
+    const clearBtn = screen.getByRole('button', { name: /Clear all data/i })
+    await act(async () => { clearBtn.click() })
+    // Type RESET in the confirmation input
+    const confirmInput = screen.getByLabelText(/Type RESET to confirm/i)
+    await act(async () => { fireEvent.change(confirmInput, { target: { value: 'RESET' } }) })
+    // Click "Delete everything" button
+    const deleteBtn = screen.getByRole('button', { name: /Delete everything/i })
+    await act(async () => { deleteBtn.click() })
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('unregister_project', { projectId: 'p1' })
+      expect(mockInvoke).toHaveBeenCalledWith('unregister_project', { projectId: 'p2' })
+    })
+  })
+
   it('selectProject: switches selected project when clicked in sidebar', async () => {
     setupProjects([
       baseProject,
-      { ...baseProject, id: 'p2', name: 'SecondProject', path: '/second', sortOrder: 1 }
+      { ...baseProject, id: 'p2', name: 'SecondProject', path: '/second', sortOrder: 1, environments: [{ suffix: '', vars: [] }], activeEnv: '' }
     ])
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))

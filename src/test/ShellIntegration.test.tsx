@@ -140,6 +140,24 @@ describe('ShellIntegration', () => {
     expect(bodyText).toMatch(/\.bashrc/)
   })
 
+  it('retry button reloads the hook snippet after error', async () => {
+    let callCount = 0
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'generate_shell_hook') {
+        callCount++
+        if (callCount === 1) return Promise.reject(new Error('fail'))
+        return Promise.resolve('# retried hook')
+      }
+      if (cmd === 'get_app_data_dir') return Promise.resolve('/tmp')
+      return Promise.resolve(null)
+    })
+    render(<ShellIntegration />)
+    await waitFor(() => expect(screen.getByText(/error|failed|unable/i)).toBeInTheDocument())
+    const retryBtn = screen.getByRole('button', { name: /Try again/i })
+    await act(async () => { retryBtn.click() })
+    await waitFor(() => expect(screen.getByText(/retried hook/i)).toBeInTheDocument())
+  })
+
   it('shows loading initially before data loads', async () => {
     let resolveHook: (v: string) => void = () => {}
     let resolveDir: (v: string) => void = () => {}

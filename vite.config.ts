@@ -21,7 +21,8 @@ export default defineConfig(async () => ({
     setupFiles: ['./src/test/setup.ts'],
     coverage: {
       provider: 'v8',
-      thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
+      exclude: ['src/assets/**', 'src/main.tsx'],
+      thresholds: { lines: 85, functions: 85, branches: 85, statements: 85 },
     },
   },
 }));

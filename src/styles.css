@@ -786,7 +786,7 @@ a {
   padding: 16px 22px 12px;
   border-bottom: var(--panel-border);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   flex-shrink: 0;
   animation: slideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -1915,6 +1915,51 @@ a {
 .sett-pill.active {
   background: var(--accent);
   color: #fff;
+}
+
+/* ── Environment toggle ──────────────────────────────────── */
+/* ── Environment dropdown ────────────────────────────────── */
+.env-dropdown-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.env-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 4px 24px 4px 8px;
+  cursor: pointer;
+  transition: border-color var(--t-fast) cubic-bezier(0.16, 1, 0.3, 1),
+              background var(--t-fast) cubic-bezier(0.16, 1, 0.3, 1);
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  line-height: 1.4;
+  min-width: 120px;
+}
+
+.env-dropdown:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.env-dropdown:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.env-dropdown option {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  padding: 4px 8px;
 }
 
 /* ── Inline note ─────────────────────────────────────────── */

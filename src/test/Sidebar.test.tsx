@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar'
 import type { ProjectTreeNode } from '../types'
 
 const makeNode = (id: string, name: string, depth = 0, children: ProjectTreeNode[] = []): ProjectTreeNode => ({
-  project: { id, name, path: `/${id}`, parentId: null, vars: [], inheritanceMode: 'merge-child-wins', sortOrder: 0 },
+  project: { id, name, path: `/${id}`, parentId: null, vars: [], environments: [{ suffix: '', vars: [] }], activeEnv: '', inheritanceMode: 'merge-child-wins', sortOrder: 0 },
   depth,
   children,
   ancestorChain: [],
