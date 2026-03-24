@@ -26,6 +26,8 @@ describe('App', () => {
     mockInvoke.mockReset()
     mockOpen.mockReset()
     localStorage.clear()
+    // Skip onboarding so all tests render the main App
+    localStorage.setItem('dotenv_mgr_onboarding', 'complete')
     // Default: all invoke calls return empty string
     mockInvoke.mockResolvedValue('')
   })
