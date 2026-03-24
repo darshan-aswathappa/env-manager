@@ -10,13 +10,9 @@ interface VarListProps {
   onAddVar: () => void;
 }
 
-/** Derive a color for the type-indicator dot from the key name. */
-function varDotColor(key: string): string {
-  const k = key.toUpperCase();
-  if (/SECRET|KEY|TOKEN|PASS|AUTH|PRIVATE/.test(k)) return "var(--accent-text)";
-  if (/URL|HOST|PORT|ENDPOINT|BASE/.test(k))          return "#34d399";
-  if (/DB|DATABASE|REDIS|MONGO|PG|POSTGRES|MYSQL/.test(k)) return "#fbbf24";
-  return "#404040";
+/** Neutral indicator dot — uniform across all variable types. */
+function varDotColor(_key: string): string {
+  return "#3a3a3c";
 }
 
 /** Show masked dots or a truncated plain preview. */
@@ -93,7 +89,6 @@ export default function VarList({
             key={v.id}
             className={`var-list-item${selectedVarId === v.id ? " active" : ""}`}
             style={{
-              '--dot-color': varDotColor(v.key),
               '--item-index': Math.min(index, 8),
             } as React.CSSProperties}
             onClick={() => onSelectVar(v.id)}

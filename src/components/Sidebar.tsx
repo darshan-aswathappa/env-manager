@@ -12,18 +12,7 @@ interface SidebarProps {
   onOpenShellIntegration: () => void;
 }
 
-const PROJECT_COLORS = [
-  "#a78bfa", // soft violet
-  "#34d399", // mint
-  "#f472b6", // rose
-  "#fbbf24", // amber
-  "#fb7185", // coral
-];
-
-function dotColor(index: number): string {
-  return PROJECT_COLORS[index % PROJECT_COLORS.length];
-}
-
+const NEUTRAL_DOT = "#3a3a3c";
 
 function ProjectNodeItem({
   node,
@@ -31,14 +20,12 @@ function ProjectNodeItem({
   onSelect,
   onDelete,
   onAddSubProject,
-  index,
 }: {
   node: ProjectTreeNode;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onAddSubProject: (parentId: string) => void;
-  index: number;
 }) {
   const { project, depth, children } = node;
   const paddingLeft = depth * 16;
@@ -83,16 +70,16 @@ function ProjectNodeItem({
         ) : (
           <span
             className="project-dot"
-            style={{ background: dotColor(index) }}
+            style={{ background: NEUTRAL_DOT }}
             aria-hidden="true"
           />
         )}
         <div className="project-info">
           <div className="project-name">{project.name}</div>
-          <div className="project-count">
-            {project.vars.length} var{project.vars.length !== 1 ? "s" : ""}
-          </div>
         </div>
+        <span className="project-count" aria-label={`${project.vars.length} variables`}>
+          {project.vars.length}
+        </span>
         <button
           className="project-delete"
           style={{ marginLeft: "2px" }}
@@ -117,17 +104,17 @@ function ProjectNodeItem({
           ×
         </button>
       </div>
-      {!collapsed && children.map((child, childIdx) => (
-        <ProjectNodeItem
-          key={child.project.id}
-          node={child}
-          selectedId={selectedId}
-          onSelect={onSelect}
-          onDelete={onDelete}
-          onAddSubProject={onAddSubProject}
-          index={index + childIdx + 1}
-        />
-      ))}
+      {!collapsed &&
+        children.map((child) => (
+          <ProjectNodeItem
+            key={child.project.id}
+            node={child}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            onDelete={onDelete}
+            onAddSubProject={onAddSubProject}
+          />
+        ))}
     </>
   );
 }
@@ -147,24 +134,19 @@ export default function Sidebar({
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="app-logo">
-          <div className="app-logo-icon">
-            <FolderOpen size={15} />
-          </div>
-          <span className="app-title">dotenv</span>
+          <FolderOpen size={15} className="app-logo-icon-flat" aria-hidden="true" />
+          <span className="app-title">dotenv Manager</span>
         </div>
-        <div className="app-subtitle">Manager</div>
       </div>
 
       <div className="sidebar-section-label">Projects</div>
 
       <div className="sidebar-list">
         {totalProjects === 0 && (
-          <p className="sidebar-empty">
-            No projects yet. Click "Add project" to get started.
-          </p>
+          <p className="sidebar-empty">No projects yet.</p>
         )}
 
-        {projectTree.map((node, index) => (
+        {projectTree.map((node) => (
           <ProjectNodeItem
             key={node.project.id}
             node={node}
@@ -172,7 +154,6 @@ export default function Sidebar({
             onSelect={onSelect}
             onDelete={onDelete}
             onAddSubProject={onAddSubProject}
-            index={index}
           />
         ))}
       </div>
