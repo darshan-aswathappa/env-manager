@@ -99,13 +99,16 @@ describe('App', () => {
     expect(mockInvoke).not.toHaveBeenCalledWith('register_project', expect.anything())
   })
 
-  it('switchEnvironment: saves current env and loads new one', async () => {
+  it('switchEnvironment: saves current env, loads new one, and writes env signal', async () => {
     const multiEnvProject = {
       ...baseProject,
       environments: [
         { suffix: '', vars: [{ id: 'v1', key: 'BASE', val: '', revealed: false, sourceProjectId: 'p1' }] },
         { suffix: 'local', vars: [] },
         { suffix: 'production', vars: [] },
+        { suffix: 'development', vars: [] },
+        { suffix: 'testing', vars: [] },
+        { suffix: 'staging', vars: [] },
       ],
       vars: [{ id: 'v1', key: 'BASE', val: '', revealed: false, sourceProjectId: 'p1' }],
       activeEnv: '',
@@ -115,15 +118,20 @@ describe('App', () => {
       if (cmd === 'load_project_env') return Promise.resolve('BASE=value')
       if (cmd === 'save_project_env') return Promise.resolve(undefined)
       if (cmd === 'register_project') return Promise.resolve(undefined)
+      if (cmd === 'write_env_signal') return Promise.resolve(undefined)
       if (cmd === 'check_gitignore_status') return Promise.resolve('no_gitignore')
       return Promise.resolve('')
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('BASE')).toBeInTheDocument())
-    // The switchEnvironment function will be tested via props once VarDetail is updated
-    // For now verify multi-env loading works
+    // Switch environment via the dropdown
+    const select = screen.getByRole('combobox', { name: /Environment/i })
+    await act(async () => { fireEvent.change(select, { target: { value: 'local' } }) })
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith('load_project_env', { projectId: 'p1', suffix: '' })
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ projectId: 'p1', suffix: '' }))
+      expect(mockInvoke).toHaveBeenCalledWith('load_project_env', { projectId: 'p1', suffix: 'local' })
+      expect(mockInvoke).toHaveBeenCalledWith('register_project', expect.objectContaining({ entry: expect.objectContaining({ activeEnv: 'local' }) }))
+      expect(mockInvoke).toHaveBeenCalledWith('write_env_signal')
     })
   })
 

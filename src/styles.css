@@ -1054,6 +1054,7 @@ a {
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 2px 7px;
   border-radius: var(--radius-sm);
@@ -1062,6 +1063,8 @@ a {
   border: 1px solid transparent;
   line-height: 1.4;
   white-space: nowrap;
+  height: 32px;
+  box-sizing: border-box;
 }
 
 .badge-success {
@@ -1934,7 +1937,9 @@ a {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 400;
-  padding: 4px 24px 4px 8px;
+  padding: 7px 24px 7px 10px;
+  height: 32px;
+  box-sizing: border-box;
   cursor: pointer;
   transition: border-color var(--t-fast) cubic-bezier(0.16, 1, 0.3, 1),
               background var(--t-fast) cubic-bezier(0.16, 1, 0.3, 1);

@@ -7,6 +7,7 @@ import {
   registerProject,
   unregisterProject,
   checkGitignoreStatus,
+  writeEnvSignal,
 } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
 import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment } from "./types";
@@ -437,6 +438,8 @@ export default function App() {
         id: project.id, name: project.name, path: project.path, parentId: project.parentId, activeEnv: suffix,
       }).catch(() => {});
     }
+    // Signal terminal to reload env vars
+    await writeEnvSignal().catch(() => {});
     setSelectedVarId(null);
     setSaveStatus("idle");
   }, [projects, selectedId]);

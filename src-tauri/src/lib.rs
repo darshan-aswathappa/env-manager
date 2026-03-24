@@ -170,15 +170,45 @@ PYEOF
   done
 }}
 
+_dotenv_manager_signal_file="{data_dir}/env_signal"
+_dotenv_manager_last_signal=""
+
+_dotenv_manager_check() {{
+  local current_signal=""
+  if [ -f "$_dotenv_manager_signal_file" ]; then
+    current_signal=$(cat "$_dotenv_manager_signal_file" 2>/dev/null)
+  fi
+  if [ "$current_signal" != "$_dotenv_manager_last_signal" ]; then
+    _dotenv_manager_last_signal="$current_signal"
+    _dotenv_manager_load
+  fi
+}}
+
 _dotenv_manager_load
+_dotenv_manager_last_signal=$(cat "$_dotenv_manager_signal_file" 2>/dev/null)
 if [[ -n "$ZSH_VERSION" ]]; then
   autoload -Uz add-zsh-hook
   add-zsh-hook chpwd _dotenv_manager_load
+  add-zsh-hook precmd _dotenv_manager_check
 elif [[ -n "$BASH_VERSION" ]]; then
-  PROMPT_COMMAND="_dotenv_manager_load${{PROMPT_COMMAND:+; $PROMPT_COMMAND}}"
+  PROMPT_COMMAND="_dotenv_manager_check${{PROMPT_COMMAND:+; $PROMPT_COMMAND}}"
 fi
 # ── end dotenv-manager shell hook ─────────────────────────────────────────
 "#, data_dir = data_dir))
+}
+
+#[tauri::command]
+fn write_env_signal(app: tauri::AppHandle) -> Result<(), String> {
+    let signal_path = app_data_path(&app)?.join("env_signal");
+    if let Some(parent) = signal_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create dir: {e}"))?;
+    }
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| format!("Clock error: {e}"))?
+        .as_millis()
+        .to_string();
+    fs::write(&signal_path, &timestamp).map_err(|e| format!("Failed to write env_signal: {e}"))
 }
 
 #[tauri::command]
@@ -289,7 +319,7 @@ pub fn run() {
             register_project, unregister_project,
             get_app_data_dir, generate_shell_hook,
             import_env_from_project, import_all_envs_from_project,
-            delete_project_env, check_gitignore_status, check_shell_integration,
+            delete_project_env, write_env_signal, check_gitignore_status, check_shell_integration,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -409,6 +439,40 @@ mod tests {
         assert!(result[1].1.contains("LOCAL_KEY=local_val"));
         assert_eq!(result[2].0, "development");
         assert!(result[2].1.contains("DEV_KEY=dev_val"));
+    }
+
+    #[test]
+    fn write_env_signal_creates_signal_file() {
+        let dir = TempDir::new().unwrap();
+        let signal_path = dir.path().join("env_signal");
+        assert!(!signal_path.exists());
+        // Simulate what write_env_signal does
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string();
+        fs::write(&signal_path, &timestamp).unwrap();
+        assert!(signal_path.exists());
+        let content = fs::read_to_string(&signal_path).unwrap();
+        assert!(!content.is_empty());
+        // Content should be a numeric timestamp
+        assert!(content.parse::<u128>().is_ok());
+    }
+
+    #[test]
+    fn write_env_signal_overwrites_previous() {
+        let dir = TempDir::new().unwrap();
+        let signal_path = dir.path().join("env_signal");
+        fs::write(&signal_path, "111").unwrap();
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string();
+        fs::write(&signal_path, &timestamp).unwrap();
+        let content = fs::read_to_string(&signal_path).unwrap();
+        assert_ne!(content, "111");
     }
 
     #[test]

@@ -72,6 +72,10 @@ export async function deleteProjectEnv(projectId: string, suffix: string): Promi
   await invoke('delete_project_env', { projectId, suffix })
 }
 
+export async function writeEnvSignal(): Promise<void> {
+  await invoke('write_env_signal')
+}
+
 export async function registerProject(entry: {
   id: string; name: string; path: string; parentId: string | null; activeEnv?: string
 }): Promise<void> {

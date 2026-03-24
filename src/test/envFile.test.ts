@@ -7,6 +7,7 @@ import {
   importAllEnvsFromProject,
   deleteProjectEnv,
   registerProject,
+  writeEnvSignal,
   parseEnvContent,
   shellQuote,
   serializeVars,
@@ -268,6 +269,21 @@ describe('registerProject with activeEnv', () => {
         parentId: null,
       },
     })
+  })
+})
+
+describe('writeEnvSignal', () => {
+  beforeEach(() => mockInvoke.mockReset())
+
+  it('calls write_env_signal via invoke', async () => {
+    mockInvoke.mockResolvedValue(undefined)
+    await writeEnvSignal()
+    expect(mockInvoke).toHaveBeenCalledWith('write_env_signal')
+  })
+
+  it('propagates errors from invoke', async () => {
+    mockInvoke.mockRejectedValueOnce(new Error('write failed'))
+    await expect(writeEnvSignal()).rejects.toThrow('write failed')
   })
 })
 
