@@ -27,3 +27,6 @@ dist/
 # Planning/working files
 init-plan.md
 package-lock.json
+
+.impeccable.md
+CLAUDE.md
