@@ -1447,6 +1447,346 @@ a {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   ONBOARDING
+══════════════════════════════════════════════════════════════ */
+.ob-root {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.ob-card {
+  width: 620px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg-sidebar);
+  border: var(--panel-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  animation: scaleIn var(--t-entrance) both;
+}
+
+/* Step indicator */
+.ob-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0 0;
+  gap: 0;
+}
+
+.ob-stepper-track {
+  display: flex;
+  align-items: center;
+}
+
+.ob-stepper-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-moderate);
+  transition: background var(--t-normal);
+  flex-shrink: 0;
+}
+
+.ob-stepper-dot--active {
+  background: var(--accent);
+}
+
+.ob-stepper-line {
+  width: 28px;
+  height: 1px;
+  background: var(--border-subtle);
+  transition: background var(--t-normal);
+}
+
+.ob-stepper-line--active {
+  background: var(--accent);
+}
+
+/* Step content */
+.ob-step {
+  padding: 28px 40px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Step transition keyframes — 32px offset, ease-out-expo */
+@keyframes ob-exit-fwd {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-32px); }
+}
+@keyframes ob-exit-bwd {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(32px); }
+}
+@keyframes ob-enter-fwd {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes ob-enter-bwd {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.ob-step--exit-fwd {
+  animation: ob-exit-fwd 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.ob-step--exit-bwd {
+  animation: ob-exit-bwd 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.ob-step--enter-fwd {
+  animation: ob-enter-fwd 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.ob-step--enter-bwd {
+  animation: ob-enter-bwd 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ob-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 16px;
+  padding: 3px 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--t-fast);
+  align-self: flex-start;
+}
+
+.ob-btn-back:hover {
+  color: var(--text-primary);
+}
+
+.ob-btn-back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.ob-step-icon {
+  color: var(--accent-text);
+  margin-bottom: 16px;
+}
+
+.ob-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+
+.ob-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.ob-code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+}
+
+/* Feature list (welcome step) */
+.ob-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.ob-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+.ob-feature-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Shell embed (install step) */
+.ob-shell-embed {
+  border: var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+  max-height: 340px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+}
+
+/* Verify area */
+.ob-verify-area {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ob-verify-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+}
+
+.ob-verify-status--checking {
+  color: var(--text-secondary);
+  background: var(--bg-row-rest);
+}
+
+.ob-verify-status--found {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.ob-verify-status--not-found {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.ob-verify-not-found {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ob-verify-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ob-verify-retry-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Spin animation for loader */
+.ob-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Buttons */
+.ob-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ob-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 500;
+  transition: background var(--t-fast);
+  cursor: pointer;
+}
+
+.ob-btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.ob-btn-primary:active {
+  background: var(--accent-press);
+}
+
+.ob-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ob-btn-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ob-btn-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-row-rest);
+  border: 1px solid var(--border-moderate);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast);
+  cursor: pointer;
+}
+
+.ob-btn-check:hover {
+  background: var(--bg-row-hover);
+  border-color: var(--border-active);
+}
+
+.ob-btn-check:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ob-btn-skip,
+.ob-btn-ghost {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  transition: color var(--t-fast);
+  cursor: pointer;
+}
+
+.ob-btn-skip:hover,
+.ob-btn-ghost:hover {
+  color: var(--text-primary);
+}
+
+.ob-btn-skip:focus-visible,
+.ob-btn-ghost:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
    REDUCED MOTION
 ══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
@@ -1456,7 +1796,13 @@ a {
   .detail-header,
   .detail-body,
   .empty-state,
-  .modal-dialog {
+  .modal-dialog,
+  .ob-card,
+  .ob-step,
+  .ob-step--exit-fwd,
+  .ob-step--exit-bwd,
+  .ob-step--enter-fwd,
+  .ob-step--enter-bwd {
     animation: none;
   }
 

@@ -14,9 +14,15 @@ import Sidebar from "./components/Sidebar";
 import VarList from "./components/VarList";
 import VarDetail from "./components/VarDetail";
 import ShellIntegration from "./components/ShellIntegration";
+import Onboarding from "./components/Onboarding";
 import { FolderOpen, Plus, X } from "lucide-react";
 
 const STORAGE_KEY = "dotenv_mgr_projects";
+const ONBOARDING_KEY = "dotenv_mgr_onboarding";
+
+function isOnboardingComplete(): boolean {
+  return localStorage.getItem(ONBOARDING_KEY) === "complete";
+}
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 function loadProjects(): Project[] {
@@ -52,6 +58,7 @@ function persistProjects(projects: Project[]): void {
 }
 
 export default function App() {
+  const [onboardingComplete, setOnboardingComplete] = useState(isOnboardingComplete);
   const [projects, setProjects] = useState<Project[]>(loadProjects);
   const [selectedId, setSelectedId] = useState<string | null>(
     () => loadProjects()[0]?.id ?? null
@@ -306,6 +313,10 @@ export default function App() {
   const projectTree: ProjectTreeNode[] = buildProjectTree(projects);
 
   /* ── Render ──────────────────────────────────────────── */
+  if (!onboardingComplete) {
+    return <Onboarding onComplete={() => setOnboardingComplete(true)} />;
+  }
+
   return (
     <div className="app-shell">
       <Sidebar

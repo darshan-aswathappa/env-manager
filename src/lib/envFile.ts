@@ -81,3 +81,9 @@ export async function generateShellHook(): Promise<string> {
 export async function checkGitignoreStatus(projectPath: string): Promise<import('../types').GitignoreStatus> {
   return invoke<import('../types').GitignoreStatus>('check_gitignore_status', { projectPath })
 }
+
+export type ShellIntegrationStatus = 'zsh' | 'bash' | 'both' | 'not_found';
+
+export async function checkShellIntegration(): Promise<ShellIntegrationStatus> {
+  return invoke<ShellIntegrationStatus>('check_shell_integration')
+}

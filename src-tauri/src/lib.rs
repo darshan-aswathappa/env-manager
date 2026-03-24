@@ -181,6 +181,37 @@ fn check_gitignore_status(project_path: String) -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+fn check_shell_integration() -> Result<String, String> {
+    let home = std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .map_err(|_| "Cannot determine home directory".to_string())?;
+
+    let hook_marker = "_dotenv_manager_load";
+
+    let check_file = |path: &Path| -> bool {
+        if !path.exists() {
+            return false;
+        }
+        fs::read_to_string(path)
+            .map(|content| content.contains(hook_marker))
+            .unwrap_or(false)
+    };
+
+    let home_path = Path::new(&home);
+    let in_zsh = check_file(&home_path.join(".zshrc"));
+    let in_bash = check_file(&home_path.join(".bashrc"))
+        || check_file(&home_path.join(".bash_profile"));
+
+    let result = match (in_zsh, in_bash) {
+        (true, true) => "both",
+        (true, false) => "zsh",
+        (false, true) => "bash",
+        (false, false) => "not_found",
+    };
+    Ok(result.to_string())
+}
+
 // ── Legacy commands (keep during migration) ───────────────────────────────
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
@@ -207,7 +238,7 @@ pub fn run() {
             save_project_env, load_project_env,
             register_project, unregister_project,
             get_app_data_dir, generate_shell_hook,
-            import_env_from_project, check_gitignore_status,
+            import_env_from_project, check_gitignore_status, check_shell_integration,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
