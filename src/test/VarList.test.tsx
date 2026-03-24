@@ -48,8 +48,8 @@ describe('VarList', () => {
     const onSelectVar = vi.fn()
     const v = makeVar('API_KEY', 'secret')
     const project = makeProject([v])
-    render(<VarList project={project} selectedVarId={null} searchQuery="" onSearchChange={vi.fn()} onSelectVar={onSelectVar} onAddVar={vi.fn()} onDeleteVar={vi.fn()} />)
-    screen.getByText('API_KEY').closest('[role="listitem"]')!.click()
+    render(<VarList project={project} selectedVarId={null} searchQuery="" onSearchChange={vi.fn()} onSelectVar={onSelectVar} onAddVar={vi.fn()} onDeleteVar={vi.fn()} />);
+    (screen.getByText('API_KEY').closest('[role="listitem"]')! as HTMLElement).click()
     expect(onSelectVar).toHaveBeenCalledWith(v.id)
   })
 

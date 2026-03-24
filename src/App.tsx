@@ -9,16 +9,35 @@ import {
   checkGitignoreStatus,
 } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
-import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus } from "./types";
+import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings } from "./types";
 import Sidebar from "./components/Sidebar";
 import VarList from "./components/VarList";
 import VarDetail from "./components/VarDetail";
 import ShellIntegration from "./components/ShellIntegration";
+import SettingsPanel from "./components/Settings";
 import Onboarding from "./components/Onboarding";
 import { FolderOpen, Plus, X } from "lucide-react";
 
 const STORAGE_KEY = "dotenv_mgr_projects";
 const ONBOARDING_KEY = "dotenv_mgr_onboarding";
+const SETTINGS_KEY = "dotenv_mgr_settings";
+
+const DEFAULT_SETTINGS: AppSettings = {
+  defaultShell: "zsh",
+  defaultInheritanceMode: "merge-child-wins",
+  autoMaskMinutes: 0,
+  clipboardClearSeconds: 0,
+};
+
+function loadSettings(): AppSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
 
 function isOnboardingComplete(): boolean {
   return localStorage.getItem(ONBOARDING_KEY) === "complete";
@@ -32,13 +51,13 @@ function loadProjects(): Project[] {
     const parsed = JSON.parse(raw) as Project[];
     // Migrate legacy projects missing new fields
     return parsed.map((p) => ({
-      parentId: null,
-      inheritanceMode: "merge-child-wins" as const,
-      sortOrder: 0,
       ...p,
+      parentId: p.parentId ?? null,
+      inheritanceMode: p.inheritanceMode ?? ("merge-child-wins" as const),
+      sortOrder: p.sortOrder ?? 0,
       vars: (p.vars || []).map((v) => ({
-        sourceProjectId: p.id,
         ...v,
+        sourceProjectId: v.sourceProjectId ?? p.id,
         val: "", // val is never stored in localStorage
         revealed: false,
       })),
@@ -68,12 +87,48 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [gitignoreStatus, setGitignoreStatus] = useState<GitignoreStatus>('no_gitignore');
   const [showShellIntegration, setShowShellIntegration] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [appSettings, setAppSettings] = useState<AppSettings>(loadSettings);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const autoMaskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Sync to localStorage */
   useEffect(() => {
     persistProjects(projects);
   }, [projects]);
+
+  /* Persist settings */
+  useEffect(() => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+  }, [appSettings]);
+
+  /* Auto-mask revealed values after inactivity */
+  useEffect(() => {
+    if (!appSettings.autoMaskMinutes) return;
+    const delay = appSettings.autoMaskMinutes * 60 * 1000;
+
+    function resetTimer() {
+      if (autoMaskTimerRef.current) clearTimeout(autoMaskTimerRef.current);
+      autoMaskTimerRef.current = setTimeout(() => {
+        setProjects((prev) =>
+          prev.map((p) => ({
+            ...p,
+            vars: p.vars.map((v) => ({ ...v, revealed: false })),
+          }))
+        );
+      }, delay);
+    }
+
+    document.addEventListener("mousemove", resetTimer);
+    document.addEventListener("keydown", resetTimer);
+    resetTimer();
+
+    return () => {
+      document.removeEventListener("mousemove", resetTimer);
+      document.removeEventListener("keydown", resetTimer);
+      if (autoMaskTimerRef.current) clearTimeout(autoMaskTimerRef.current);
+    };
+  }, [appSettings.autoMaskMinutes]);
 
   /* Load vars per project from app data on mount and when project list changes */
   useEffect(() => {
@@ -290,6 +345,19 @@ export default function App() {
     [selectedId]
   );
 
+  /* ── Settings actions ───────────────────────────────── */
+  const resetOnboarding = useCallback(() => {
+    localStorage.removeItem(ONBOARDING_KEY);
+    window.location.reload();
+  }, []);
+
+  const clearAllData = useCallback(() => {
+    projects.forEach((p) => unregisterProject(p.id).catch(() => {}));
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(ONBOARDING_KEY);
+    window.location.reload();
+  }, [projects]);
+
   /* ── File I/O ────────────────────────────────────────── */
   const saveToFile = useCallback(async () => {
     const project = projects.find((p) => p.id === selectedId);
@@ -327,6 +395,7 @@ export default function App() {
         onAdd={addProject}
         onAddSubProject={addSubProject}
         onOpenShellIntegration={() => setShowShellIntegration(true)}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       <VarList
@@ -345,6 +414,7 @@ export default function App() {
           selectedVar={selectedVar}
           gitignoreStatus={gitignoreStatus}
           saveStatus={saveStatus}
+          clipboardClearSeconds={appSettings.clipboardClearSeconds}
           onUpdateVar={updateVar}
           onDeleteVar={deleteVar}
           onToggleReveal={toggleReveal}
@@ -393,6 +463,40 @@ export default function App() {
               <X size={14} />
             </button>
             <ShellIntegration />
+          </div>
+        </div>
+      )}
+
+      {showSettings && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowSettings(false)}
+          aria-label="Close settings dialog"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Settings"
+            className="modal-dialog"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowSettings(false)}
+              aria-label="Close"
+              className="modal-close"
+            >
+              <X size={14} />
+            </button>
+            <SettingsPanel
+              settings={appSettings}
+              onChange={setAppSettings}
+              onResetOnboarding={resetOnboarding}
+              onClearAllData={clearAllData}
+              onOpenShellIntegration={() => {
+                setShowSettings(false);
+                setShowShellIntegration(true);
+              }}
+            />
           </div>
         </div>
       )}

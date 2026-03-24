@@ -19,6 +19,7 @@ interface VarDetailProps {
   selectedVar: EnvVar | null;
   gitignoreStatus: GitignoreStatus;
   saveStatus: "idle" | "saving" | "saved" | "error";
+  clipboardClearSeconds?: number;
   onUpdateVar: (varId: string, field: keyof EnvVar, value: string | boolean) => void;
   onDeleteVar: (varId: string) => void;
   onToggleReveal: (varId: string) => void;
@@ -26,7 +27,7 @@ interface VarDetailProps {
   onSave: () => void;
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -34,6 +35,11 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
+      if (clearAfterSecs > 0) {
+        setTimeout(() => {
+          navigator.clipboard.writeText("").catch(() => {});
+        }, clearAfterSecs * 1000);
+      }
     } catch {
       /* clipboard unavailable */
     }
@@ -56,6 +62,7 @@ export default function VarDetail({
   selectedVar,
   gitignoreStatus,
   saveStatus,
+  clipboardClearSeconds = 0,
   onUpdateVar,
   onDeleteVar,
   onToggleReveal,
@@ -102,6 +109,7 @@ export default function VarDetail({
             key={selectedVar.id}
             v={selectedVar}
             projectId={project.id}
+            clipboardClearSeconds={clipboardClearSeconds}
             onUpdate={onUpdateVar}
             onDelete={onDeleteVar}
             onToggleReveal={onToggleReveal}
@@ -156,12 +164,13 @@ export default function VarDetail({
 interface SelectedVarFieldsProps {
   v: EnvVar;
   projectId: string;
+  clipboardClearSeconds?: number;
   onUpdate: (varId: string, field: keyof EnvVar, value: string | boolean) => void;
   onDelete: (varId: string) => void;
   onToggleReveal: (varId: string) => void;
 }
 
-function SelectedVarFields({ v, onUpdate, onDelete, onToggleReveal }: SelectedVarFieldsProps) {
+function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, onToggleReveal }: SelectedVarFieldsProps) {
   return (
     <div className="var-detail-content">
       {/* KEY field */}
@@ -178,7 +187,7 @@ function SelectedVarFields({ v, onUpdate, onDelete, onToggleReveal }: SelectedVa
             autoComplete="off"
             aria-label="Variable key"
           />
-          <CopyButton text={v.key} label="Copy key" />
+          <CopyButton text={v.key} label="Copy key" clearAfterSecs={clipboardClearSeconds} />
           <button
             className="icon-btn danger"
             onClick={() => onDelete(v.id)}
@@ -217,7 +226,7 @@ function SelectedVarFields({ v, onUpdate, onDelete, onToggleReveal }: SelectedVa
             >
               {v.revealed ? <EyeOff size={13} /> : <Eye size={13} />}
             </button>
-            <CopyButton text={v.val} label="Copy value" />
+            <CopyButton text={v.val} label="Copy value" clearAfterSecs={clipboardClearSeconds} />
           </div>
         </div>
       </div>

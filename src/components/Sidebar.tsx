@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderOpen, Plus, GitBranch, Terminal, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { FolderOpen, Plus, GitBranch, Terminal, Settings, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { ProjectTreeNode } from "../types";
 
 interface SidebarProps {
@@ -10,6 +10,7 @@ interface SidebarProps {
   onAdd: () => void;
   onAddSubProject: (parentId: string) => void;
   onOpenShellIntegration: () => void;
+  onOpenSettings: () => void;
 }
 
 const NEUTRAL_DOT = "#3a3a3c";
@@ -127,6 +128,7 @@ export default function Sidebar({
   onAdd,
   onAddSubProject,
   onOpenShellIntegration,
+  onOpenSettings,
 }: SidebarProps) {
   const totalProjects = countNodes(projectTree);
   const [collapsed, setCollapsed] = useState(false);
@@ -189,6 +191,15 @@ export default function Sidebar({
         >
           <Terminal size={14} />
           <span>Shell</span>
+        </button>
+        <button
+          className="sidebar-footer-btn"
+          onClick={onOpenSettings}
+          aria-label="Open settings"
+          title="Settings"
+        >
+          <Settings size={14} />
+          <span>Settings</span>
         </button>
         <button
           className="sidebar-footer-btn add-project"

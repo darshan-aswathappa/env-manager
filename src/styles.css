@@ -1793,6 +1793,344 @@ a {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════════════════════════ */
+.sett-root {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sett-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sett-header-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ── Section ─────────────────────────────────────────────── */
+.sett-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.sett-section--danger {
+  border-color: rgba(229, 72, 77, 0.2);
+}
+
+.sett-section--about {
+  border-color: var(--border-separator);
+}
+
+.sett-section-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border-separator);
+}
+
+/* ── Row ─────────────────────────────────────────────────── */
+.sett-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-separator);
+}
+
+.sett-row:last-child {
+  border-bottom: none;
+}
+
+.sett-row--wrap {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.sett-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sett-row-name {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.sett-row-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ── Pill toggle group ───────────────────────────────────── */
+.sett-pill-group {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.sett-pill {
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.sett-pill:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sett-pill.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Select dropdown ─────────────────────────────────────── */
+.sett-select {
+  appearance: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  padding: 4px 28px 4px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238e8e93' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color var(--t-fast);
+}
+
+.sett-select:hover {
+  border-color: var(--border-active);
+}
+
+.sett-select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* ── Number input ────────────────────────────────────────── */
+.sett-number-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sett-number-input {
+  width: 56px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  padding: 4px 8px;
+  text-align: right;
+  transition: border-color var(--t-fast);
+}
+
+.sett-number-input:hover {
+  border-color: var(--border-active);
+}
+
+.sett-number-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.sett-unit {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Path display ────────────────────────────────────────── */
+.sett-path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sett-path {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sett-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.sett-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+/* ── Link button ─────────────────────────────────────────── */
+.sett-link-btn {
+  font-size: 0.75rem;
+  color: var(--accent-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+  flex-shrink: 0;
+  transition: color var(--t-fast);
+}
+
+.sett-link-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ── Danger buttons ──────────────────────────────────────── */
+.sett-danger-btn {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border: 1px solid rgba(229, 72, 77, 0.2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+
+.sett-danger-btn:hover {
+  background: rgba(229, 72, 77, 0.14);
+  border-color: rgba(229, 72, 77, 0.35);
+}
+
+.sett-danger-btn--confirm {
+  background: var(--color-danger);
+  color: #fff;
+  border-color: var(--color-danger);
+}
+
+.sett-danger-btn--confirm:hover {
+  background: #cc3f44;
+}
+
+.sett-danger-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Clear confirm form ──────────────────────────────────── */
+.sett-clear-confirm {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-separator);
+}
+
+.sett-clear-confirm:last-child {
+  border-bottom: none;
+}
+
+.sett-clear-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sett-clear-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid rgba(229, 72, 77, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  transition: border-color var(--t-fast);
+}
+
+.sett-clear-input:focus {
+  outline: 2px solid var(--color-danger);
+  outline-offset: -1px;
+}
+
+/* ── About section ───────────────────────────────────────── */
+.sett-about-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.sett-about-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sett-about-version {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+
+/* ══════════════════════════════════════════════════════════════
    REDUCED MOTION
 ══════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {

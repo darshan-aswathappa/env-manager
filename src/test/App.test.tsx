@@ -166,9 +166,9 @@ describe('App', () => {
       return Promise.resolve('')
     })
     render(<App />)
-    await waitFor(() => expect(screen.getByText('OLD')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('OLD')).toBeInTheDocument());
     // Click on the var to select it
-    screen.getByText('OLD').closest('[role="listitem"]')!.click()
+    (screen.getByText('OLD').closest('[role="listitem"]')! as HTMLElement).click()
     await waitFor(() => expect(screen.getByLabelText(/Variable key/i)).toBeInTheDocument())
     const keyInput = screen.getByLabelText(/Variable key/i)
     await act(async () => {
@@ -187,8 +187,8 @@ describe('App', () => {
       return Promise.resolve('')
     })
     render(<App />)
-    await waitFor(() => expect(screen.getByText('SECRET')).toBeInTheDocument())
-    screen.getByText('SECRET').closest('[role="listitem"]')!.click()
+    await waitFor(() => expect(screen.getByText('SECRET')).toBeInTheDocument());
+    (screen.getByText('SECRET').closest('[role="listitem"]')! as HTMLElement).click()
     await waitFor(() => expect(screen.getByRole('button', { name: /Reveal value/i })).toBeInTheDocument())
     await act(async () => { screen.getByRole('button', { name: /Reveal value/i }).click() })
     await waitFor(() => expect(screen.getByRole('button', { name: /Hide value/i })).toBeInTheDocument())
@@ -347,8 +347,8 @@ describe('App', () => {
     ])
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    await waitFor(() => expect(screen.getByText('SecondProject')).toBeInTheDocument())
-    screen.getByText('SecondProject').closest('[role="button"]')!.click()
+    await waitFor(() => expect(screen.getByText('SecondProject')).toBeInTheDocument());
+    (screen.getByText('SecondProject').closest('[role="button"]')! as HTMLElement).click()
     await waitFor(() => {
       const elements = screen.getAllByText('SecondProject')
       expect(elements.length).toBeGreaterThan(0)
@@ -365,8 +365,8 @@ describe('App', () => {
       return Promise.resolve('')
     })
     render(<App />)
-    await waitFor(() => expect(screen.getByText('TO_DELETE')).toBeInTheDocument())
-    screen.getByText('TO_DELETE').closest('[role="listitem"]')!.click()
+    await waitFor(() => expect(screen.getByText('TO_DELETE')).toBeInTheDocument());
+    (screen.getByText('TO_DELETE').closest('[role="listitem"]')! as HTMLElement).click()
     await waitFor(() => expect(screen.getByRole('button', { name: /Delete variable/i })).toBeInTheDocument())
     await act(async () => { screen.getByRole('button', { name: /Delete variable/i }).click() })
     await waitFor(() => expect(screen.queryByText('TO_DELETE')).not.toBeInTheDocument())

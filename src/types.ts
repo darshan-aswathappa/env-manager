@@ -28,3 +28,10 @@ export interface ProjectTreeNode {
 export type ProjectRegistry = Project[];
 
 export type GitignoreStatus = 'no_gitignore' | 'not_listed' | 'listed';
+
+export interface AppSettings {
+  defaultShell: 'zsh' | 'bash';
+  defaultInheritanceMode: InheritanceMode;
+  autoMaskMinutes: number;
+  clipboardClearSeconds: number;
+}
