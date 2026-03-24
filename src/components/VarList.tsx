@@ -1,6 +1,5 @@
 import { Search, ChevronRight, Plus, FolderOpen } from "lucide-react";
 import type { EnvVar, Project } from "../types";
-import ExposureBadge from "./ExposureBadge";
 
 interface VarListProps {
   project: Project | null;
@@ -110,7 +109,6 @@ export default function VarList({
               <div className="var-list-key">{v.key || <em style={{ color: "var(--text-muted)", fontStyle: "normal" }}>unnamed</em>}</div>
               <div className="var-list-preview">{valuePreview(v)}</div>
             </div>
-            <ExposureBadge value={v.val} />
             <ChevronRight size={13} className="var-list-chevron" aria-hidden="true" />
           </div>
         ))}
