@@ -776,7 +776,7 @@ a {
   right: 14px;
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-lg);
+  border-radius: 10px;
   background: var(--accent);
   border: none;
   color: #fff;
@@ -996,6 +996,10 @@ a {
   background: var(--bg-row-hover);
   border-color: var(--border-moderate);
   color: var(--text-primary);
+}
+
+.detail-add-btn:active {
+  background: var(--bg-row-active);
 }
 
 .detail-add-btn:focus-visible {
@@ -1258,6 +1262,15 @@ a {
   color: var(--text-primary);
 }
 
+.modal-close:active {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.modal-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
 /* ══════════════════════════════════════════════════════════════
    SHELL INTEGRATION
 ══════════════════════════════════════════════════════════════ */
@@ -1327,11 +1340,20 @@ a {
     border-color var(--t-fast);
 }
 
+.si-tab:hover:not(.active) {
+  background: var(--bg-row-hover);
+  color: var(--text-primary);
+}
+
 .si-tab.active {
   font-weight: 600;
   background: var(--bg-row-rest);
   border-color: var(--border-active);
   color: var(--text-primary);
+}
+
+.si-tab:active {
+  background: var(--bg-row-active);
 }
 
 .si-tab:focus-visible {
@@ -1519,20 +1541,27 @@ a {
 /* Step indicator */
 .ob-stepper {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px 0 0;
+  padding: 24px 0 0;
   gap: 0;
 }
 
 .ob-stepper-track {
   display: flex;
+  align-items: flex-start;
+}
+
+.ob-stepper-node {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 6px;
 }
 
 .ob-stepper-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--border-moderate);
   transition: background var(--t-normal);
@@ -1543,11 +1572,26 @@ a {
   background: var(--accent);
 }
 
+.ob-stepper-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition: color var(--t-normal);
+  user-select: none;
+}
+
+.ob-stepper-label--active {
+  color: var(--text-secondary);
+}
+
 .ob-stepper-line {
-  width: 28px;
+  width: 32px;
   height: 1px;
   background: var(--border-subtle);
   transition: background var(--t-normal);
+  margin-top: 3.5px; /* vertically center with dot */
 }
 
 .ob-stepper-line--active {
@@ -1623,6 +1667,10 @@ a {
   margin-bottom: 16px;
 }
 
+.ob-logo-img {
+  animation: scaleIn var(--t-entrance) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .ob-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -1661,6 +1709,20 @@ a {
   gap: 10px;
   font-size: 0.84rem;
   color: var(--text-secondary);
+  animation: fadeIn var(--t-entrance) cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--feat-i, 0) * 60ms + 120ms);
+}
+
+.ob-feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
+  background: var(--accent-dim);
+  color: var(--accent-text);
+  flex-shrink: 0;
 }
 
 .ob-feature-dot {
@@ -1745,8 +1807,25 @@ a {
 .ob-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+}
+
+.ob-kbd-hint {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  padding: 2px 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  user-select: none;
+  letter-spacing: 0.01em;
+}
+
+.ob-verify-idle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .ob-btn-primary {
@@ -1761,6 +1840,10 @@ a {
   font-weight: 500;
   transition: background var(--t-fast);
   cursor: pointer;
+}
+
+.ob-btn-primary--enter {
+  padding: 10px 22px;
 }
 
 .ob-btn-primary:hover {
@@ -1801,6 +1884,10 @@ a {
 .ob-btn-check:hover {
   background: var(--bg-row-hover);
   border-color: var(--border-active);
+}
+
+.ob-btn-check:active {
+  background: var(--bg-row-active);
 }
 
 .ob-btn-check:focus-visible {
@@ -1951,6 +2038,11 @@ a {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.sett-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .sett-pill.active {
   background: var(--accent);
   color: #fff;
@@ -1992,9 +2084,9 @@ a {
 }
 
 .env-dropdown:focus {
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .env-dropdown option {
@@ -2130,6 +2222,11 @@ a {
   color: var(--text-primary);
 }
 
+.sett-icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* ── Link button ─────────────────────────────────────────── */
 .sett-link-btn {
   font-size: 0.75rem;
@@ -2144,6 +2241,12 @@ a {
 
 .sett-link-btn:hover {
   color: var(--text-primary);
+}
+
+.sett-link-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* ── Danger buttons ──────────────────────────────────────── */
@@ -2173,6 +2276,11 @@ a {
 
 .sett-danger-btn--confirm:hover {
   background: rgba(229, 72, 77, 0.85);
+}
+
+.sett-danger-btn:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
 }
 
 .sett-danger-btn:disabled {
@@ -2289,7 +2397,11 @@ a {
   .ob-step--exit-fwd,
   .ob-step--exit-bwd,
   .ob-step--enter-fwd,
-  .ob-step--enter-bwd {
+  .ob-step--enter-bwd,
+  .ob-feature,
+  .ob-logo-img,
+  .ob-spin,
+  .spinner {
     animation: none;
   }
 

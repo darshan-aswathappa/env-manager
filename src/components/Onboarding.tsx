@@ -4,6 +4,10 @@ import {
   XCircle,
   Loader2,
   ArrowLeft,
+  ArrowRight,
+  FolderTree,
+  Terminal as TerminalIcon,
+  ShieldCheck,
 } from "lucide-react";
 import ShellIntegration from "./ShellIntegration";
 import { checkShellIntegration } from "../lib/envFile";
@@ -13,12 +17,37 @@ type Step = "welcome" | "install" | "verify";
 type VerifyStatus = "idle" | "checking" | "found" | "not_found";
 
 const STEPS: Step[] = ["welcome", "install", "verify"];
+const STEP_LABELS: Record<Step, string> = {
+  welcome: "Welcome",
+  install: "Install",
+  verify: "Verify",
+};
 
 const SHELL_LABEL: Record<string, string> = {
   zsh: "zsh",
   bash: "bash",
   both: "zsh and bash",
 };
+
+const FEATURES = [
+  {
+    icon: FolderTree,
+    text: "Manage variables across multiple projects and sub-projects",
+  },
+  {
+    icon: TerminalIcon,
+    text: (
+      <>
+        Shell hook auto-loads vars when you{" "}
+        <code className="ob-code">cd</code> into a directory
+      </>
+    ),
+  },
+  {
+    icon: ShieldCheck,
+    text: "Values stay local — nothing leaves your machine",
+  },
+] as const;
 
 // Animation timing (ms)
 const SWAP_MS = 160;
@@ -46,31 +75,39 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
     };
   }, []);
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) {
+        if (renderedStep === "welcome") navigateTo("install");
+        else if (renderedStep === "install") navigateTo("verify");
+        else if (renderedStep === "verify" && verifyStatus === "idle") handleVerify();
+        else if (renderedStep === "verify" && verifyStatus === "found") handleComplete();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [renderedStep, verifyStatus]);
+
   function navigateTo(nextStep: Step) {
     const currentIdx = STEPS.indexOf(renderedStep);
     const nextIdx = STEPS.indexOf(nextStep);
     const forward = nextIdx > currentIdx;
 
-    // Cancel any in-flight transition
     if (swapTimer.current) clearTimeout(swapTimer.current);
     if (cleanTimer.current) clearTimeout(cleanTimer.current);
 
-    // Lock current height before exit
     const sizer = sizerRef.current;
     if (sizer) {
       sizer.style.height = `${sizer.scrollHeight}px`;
     }
 
-    // Trigger exit
     setAnimClass(forward ? "ob-step--exit-fwd" : "ob-step--exit-bwd");
 
-    // Swap content after exit completes
     swapTimer.current = setTimeout(() => {
       setRenderedStep(nextStep);
       setStepIdx(nextIdx);
       setAnimClass(forward ? "ob-step--enter-fwd" : "ob-step--enter-bwd");
 
-      // After React renders new content, animate height to new size
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (sizer) {
@@ -78,7 +115,6 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             sizer.style.height = "auto";
             const newHeight = sizer.scrollHeight;
             sizer.style.height = `${prevHeight}px`;
-            // Force reflow so the transition fires
             void sizer.offsetHeight;
             sizer.style.height = `${newHeight}px`;
           }
@@ -115,14 +151,21 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   return (
     <div className="ob-root">
       <div className="ob-card">
-        {/* Step indicator */}
+        {/* Step indicator with labels */}
         <div className="ob-stepper" aria-label="Setup progress">
           {STEPS.map((s, i) => (
             <div key={s} className="ob-stepper-track">
-              <div
-                className={`ob-stepper-dot${i <= stepIdx ? " ob-stepper-dot--active" : ""}`}
-                aria-current={s === renderedStep ? "step" : undefined}
-              />
+              <div className="ob-stepper-node">
+                <div
+                  className={`ob-stepper-dot${i <= stepIdx ? " ob-stepper-dot--active" : ""}`}
+                  aria-current={s === renderedStep ? "step" : undefined}
+                />
+                <span
+                  className={`ob-stepper-label${i <= stepIdx ? " ob-stepper-label--active" : ""}`}
+                >
+                  {STEP_LABELS[s]}
+                </span>
+              </div>
               {i < STEPS.length - 1 && (
                 <div
                   className={`ob-stepper-line${i < stepIdx ? " ob-stepper-line--active" : ""}`}
@@ -143,25 +186,23 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </div>
                 <h1 className="ob-title">Welcome to .envVault</h1>
                 <p className="ob-subtitle">
-                  A local environment variable manager built for developers.
+                  A local environment variable manager for developers.
                   Keep your <code className="ob-code">.env</code> files
-                  organized, inheritable, and automatically loaded in your
-                  terminal.
+                  organized, inheritable, and automatically loaded.
                 </p>
                 <div className="ob-feature-list">
-                  <div className="ob-feature">
-                    <span className="ob-feature-dot" />
-                    Manage variables across multiple projects and sub-projects
-                  </div>
-                  <div className="ob-feature">
-                    <span className="ob-feature-dot" />
-                    Shell hook auto-loads vars when you{" "}
-                    <code className="ob-code">cd</code> into a directory
-                  </div>
-                  <div className="ob-feature">
-                    <span className="ob-feature-dot" />
-                    Values stay local — nothing leaves your machine
-                  </div>
+                  {FEATURES.map((f, i) => (
+                    <div
+                      key={i}
+                      className="ob-feature"
+                      style={{ "--feat-i": i } as React.CSSProperties}
+                    >
+                      <span className="ob-feature-icon">
+                        <f.icon size={14} aria-hidden="true" />
+                      </span>
+                      <span>{f.text}</span>
+                    </div>
+                  ))}
                 </div>
                 <div className="ob-actions">
                   <button
@@ -169,7 +210,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => navigateTo("install")}
                   >
                     Get Started
+                    <ArrowRight size={14} aria-hidden="true" />
                   </button>
+                  <kbd className="ob-kbd-hint">press Enter</kbd>
                 </div>
               </>
             )}
@@ -186,21 +229,22 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </button>
                 <h1 className="ob-title">Set up shell integration</h1>
                 <p className="ob-subtitle">
-                  Add this hook to your shell config. It auto-loads your
-                  environment variables whenever you{" "}
-                  <code className="ob-code">cd</code> into a project directory —
-                  no manual sourcing needed.
+                  Add this hook to your shell config so environment
+                  variables load automatically when you{" "}
+                  <code className="ob-code">cd</code> into a project.
                 </p>
                 <div className="ob-shell-embed">
                   <ShellIntegration />
                 </div>
-                <div className="ob-actions pb-2">
+                <div className="ob-actions">
                   <button
                     className="ob-btn-primary"
                     onClick={() => navigateTo("verify")}
                   >
-                    I've added the snippet — Continue
+                    I've added the snippet
+                    <ArrowRight size={14} aria-hidden="true" />
                   </button>
+                  <kbd className="ob-kbd-hint">Enter</kbd>
                 </div>
               </>
             )}
@@ -217,15 +261,17 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 </button>
                 <h1 className="ob-title">Verify your setup</h1>
                 <p className="ob-subtitle">
-                  Shell integration is required for .envVault to work. Confirm
-                  the hook is detected in your config file before continuing.
+                  Confirm the shell hook is detected before continuing.
                 </p>
 
                 <div className="ob-verify-area">
                   {verifyStatus === "idle" && (
-                    <button className="ob-btn-check" onClick={handleVerify}>
-                      Check Integration
-                    </button>
+                    <div className="ob-verify-idle">
+                      <button className="ob-btn-check" onClick={handleVerify}>
+                        Check Integration
+                      </button>
+                      <kbd className="ob-kbd-hint">Enter</kbd>
+                    </div>
                   )}
 
                   {verifyStatus === "checking" && (
@@ -235,14 +281,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         className="ob-spin"
                         aria-hidden="true"
                       />
-                      Checking...
+                      Checking shell config...
                     </div>
                   )}
 
                   {verifyStatus === "found" && (
                     <div className="ob-verify-status ob-verify-status--found">
                       <CheckCircle2 size={16} aria-hidden="true" />
-                      Hook found in{" "}
+                      Hook detected in{" "}
                       <strong>
                         {foundShell
                           ? (SHELL_LABEL[foundShell] ?? foundShell)
@@ -280,9 +326,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
 
                 {verifyStatus === "found" && (
                   <div className="ob-actions">
-                    <button className="ob-btn-primary" onClick={handleComplete}>
+                    <button className="ob-btn-primary ob-btn-primary--enter" onClick={handleComplete}>
                       Enter .envVault
+                      <ArrowRight size={14} aria-hidden="true" />
                     </button>
+                    <kbd className="ob-kbd-hint">Enter</kbd>
                   </div>
                 )}
               </>

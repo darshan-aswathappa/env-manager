@@ -241,8 +241,8 @@ export default function App() {
       }
       setProjects((prev) => [...prev, newProject]);
       setSelectedId(newProject.id);
-    } catch (err) {
-      console.error("Failed to add project:", err);
+    } catch {
+      /* project add failed — user sees no project added */
     }
   }, []);
 
@@ -292,8 +292,8 @@ export default function App() {
         }
         setProjects((prev) => [...prev, newProject]);
         setSelectedId(newProject.id);
-      } catch (err) {
-        console.error("Failed to add sub-project:", err);
+      } catch {
+        /* sub-project add failed — user sees no project added */
       }
     },
     [projects]
@@ -467,7 +467,7 @@ export default function App() {
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
-      console.error("Save failed:", err);
+      /* save failed — user sees error status in footer */
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -548,7 +548,8 @@ export default function App() {
           className="modal-overlay"
           onClick={() => setShowShellIntegration(false)}
           onKeyDown={(e) => { if (e.key === "Escape") setShowShellIntegration(false); }}
-          aria-label="Close shell integration dialog"
+          tabIndex={-1}
+          role="presentation"
         >
           <div
             ref={dialogRef}
@@ -575,7 +576,8 @@ export default function App() {
           className="modal-overlay"
           onClick={() => setShowSettings(false)}
           onKeyDown={(e) => { if (e.key === "Escape") setShowSettings(false); }}
-          aria-label="Close settings dialog"
+          tabIndex={-1}
+          role="presentation"
         >
           <div
             role="dialog"

@@ -397,7 +397,8 @@ describe('App', () => {
     const settingsBtn = screen.getByRole('button', { name: /Open settings/i })
     await act(async () => { settingsBtn.click() })
     await waitFor(() => expect(screen.getByRole('dialog', { name: /Settings/i })).toBeInTheDocument())
-    const overlay = screen.getByLabelText(/Close settings dialog/i)
+    const dialog = screen.getByRole('dialog', { name: /Settings/i })
+    const overlay = dialog.parentElement!
     await act(async () => { overlay.click() })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /Settings/i })).not.toBeInTheDocument())
   })
@@ -407,7 +408,8 @@ describe('App', () => {
     const shellBtn = screen.getByRole('button', { name: /Open shell integration/i })
     await act(async () => { shellBtn.click() })
     await waitFor(() => expect(screen.getByRole('dialog', { name: /Shell integration/i })).toBeInTheDocument())
-    const overlay = screen.getByLabelText(/Close shell integration dialog/i)
+    const dialog = screen.getByRole('dialog', { name: /Shell integration/i })
+    const overlay = dialog.parentElement!
     await act(async () => { overlay.click() })
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })

@@ -124,7 +124,7 @@ describe('Onboarding', () => {
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
 
-    expect(screen.getByText("I've added the snippet — Continue")).toBeInTheDocument()
+    expect(screen.getByText("I've added the snippet")).toBeInTheDocument()
   })
 
   // ── Navigation: Install -> Welcome (back) ─────────
@@ -149,7 +149,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     // Go to verify
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     expect(screen.getByText('Verify your setup')).toBeInTheDocument()
@@ -159,7 +159,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     expect(screen.getByText('Check Integration')).toBeInTheDocument()
@@ -172,14 +172,14 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
       fireEvent.click(screen.getByText('Check Integration'))
     })
 
-    expect(screen.getByText('Checking...')).toBeInTheDocument()
+    expect(screen.getByText('Checking shell config...')).toBeInTheDocument()
   })
 
   // ── Verify: found state ───────────────────────────
@@ -189,7 +189,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -197,7 +197,7 @@ describe('Onboarding', () => {
     })
 
     expect(screen.getByText('zsh')).toBeInTheDocument()
-    expect(screen.getByText(/Hook found in/)).toBeInTheDocument()
+    expect(screen.getByText(/Hook detected in/)).toBeInTheDocument()
   })
 
   it('shows found state with bash label', async () => {
@@ -205,7 +205,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -220,7 +220,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -235,7 +235,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -252,7 +252,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -267,7 +267,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -284,7 +284,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -300,7 +300,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -315,7 +315,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -333,7 +333,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     // First attempt: not found
@@ -346,7 +346,7 @@ describe('Onboarding', () => {
     await act(async () => {
       fireEvent.click(screen.getByText('Check again'))
     })
-    expect(screen.getByText(/Hook found in/)).toBeInTheDocument()
+    expect(screen.getByText(/Hook detected in/)).toBeInTheDocument()
     expect(screen.getByText('Enter .envVault')).toBeInTheDocument()
   })
 
@@ -357,7 +357,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     await act(async () => {
@@ -410,7 +410,7 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     // Click Back on verify step
@@ -426,10 +426,10 @@ describe('Onboarding', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
-    expect(screen.getByText(/Shell integration is required/)).toBeInTheDocument()
+    expect(screen.getByText(/Confirm the shell hook is detected/)).toBeInTheDocument()
   })
 
   // ── Full wizard walkthrough ───────────────────────
@@ -445,7 +445,7 @@ describe('Onboarding', () => {
 
     // Step 2: Install
     expect(screen.getByText('Set up shell integration')).toBeInTheDocument()
-    fireEvent.click(screen.getByText("I've added the snippet — Continue"))
+    fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
     // Step 3: Verify
