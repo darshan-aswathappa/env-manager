@@ -14,9 +14,8 @@ import {
 } from "lucide-react";
 import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
 import { envDisplayName } from "../types";
+import type { ShellIntegrationStatus } from "../lib/envFile";
 import EnvironmentToggle from "./EnvironmentToggle";
-
-type ShellIntegrationStatus = 'zsh' | 'bash' | 'both' | 'not_found';
 
 interface VarDetailProps {
   project: Project;

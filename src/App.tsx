@@ -708,10 +708,6 @@ export default function App() {
               onChange={setAppSettings}
               onResetOnboarding={resetOnboarding}
               onClearAllData={clearAllData}
-              onOpenShellIntegration={() => {
-                setShowSettings(false);
-                setShowShellIntegration(true);
-              }}
             />
           </div>
         </div>

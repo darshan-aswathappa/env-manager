@@ -16,7 +16,6 @@ interface SettingsProps {
   onChange: (settings: AppSettings) => void;
   onResetOnboarding: () => void;
   onClearAllData: () => void;
-  onOpenShellIntegration: () => void;
 }
 
 export default function SettingsPanel({
@@ -70,48 +69,7 @@ export default function SettingsPanel({
         <h3 className="sett-header-title">Settings</h3>
       </div>
 
-      {/* ── Shell ──────────────────────────────────────────── */}
-      {/* <section className="sett-section">
-        <div className="sett-section-label">
-          <Terminal size={10} aria-hidden="true" />
-          Shell
-        </div>
-
-        <div className="sett-row">
-          <div className="sett-row-info">
-            <div className="sett-row-name">Default shell</div>
-            <div className="sett-row-desc">Used when generating the hook snippet</div>
-          </div>
-          <div className="sett-pill-group" role="group" aria-label="Default shell">
-            <button
-              className={`sett-pill${settings.defaultShell === "zsh" ? " active" : ""}`}
-              onClick={() => update({ defaultShell: "zsh" })}
-              aria-pressed={settings.defaultShell === "zsh"}
-            >
-              zsh
-            </button>
-            <button
-              className={`sett-pill${settings.defaultShell === "bash" ? " active" : ""}`}
-              onClick={() => update({ defaultShell: "bash" })}
-              aria-pressed={settings.defaultShell === "bash"}
-            >
-              bash
-            </button>
-          </div>
-        </div>
-
-        <div className="sett-row">
-          <div className="sett-row-info">
-            <div className="sett-row-name">Hook status</div>
-            <div className="sett-row-desc">{shellStatus}</div>
-          </div>
-          <button className="sett-link-btn" onClick={onOpenShellIntegration}>
-            Manage →
-          </button>
-        </div>
-      </section> */}
-
-      {/* ── Inheritance ────────────────────────────────────── */}
+{/* ── Inheritance ────────────────────────────────────── */}
       <section className="sett-section">
         <div className="sett-section-label">Inheritance</div>
 
