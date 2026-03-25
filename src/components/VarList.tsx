@@ -67,24 +67,14 @@ export default function VarList({
         </div>
         <button
           data-testid="push-to-stage-btn"
+          className="icon-btn icon-btn--bordered"
           aria-label="Push variables to stage"
           title="Push to stage (⌘⇧P)"
           onClick={() => { if (onOpenPush) onOpenPush(); }}
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 28,
-            height: 28,
-            flexShrink: 0,
-            background: "transparent",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: "var(--radius-md)",
-            color: "var(--text-secondary)",
             cursor: onOpenPush ? "pointer" : "default",
             opacity: onOpenPush ? 1 : 0.4,
             pointerEvents: onOpenPush ? "auto" : "none",
-            transition: "opacity var(--t-fast)",
           }}
         >
           <Upload size={13} />

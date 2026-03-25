@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Component } from "react";
+import type { ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   saveProjectEnv,
@@ -23,6 +24,40 @@ import SettingsPanel from "./components/Settings";
 import Onboarding from "./components/Onboarding";
 import PushToStagePanel from "./components/PushToStage/PushToStagePanel";
 import { FolderOpen, Plus, X } from "lucide-react";
+
+// ── Error Boundary ─────────────────────────────────────────────────────────
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="app-shell" style={{ background: 'var(--bg-base)' }}>
+          <div className="detail-panel">
+            <div className="empty-state">
+              <h2 className="empty-state-title">Something went wrong</h2>
+              <p className="empty-state-desc">
+                An unexpected error occurred. Reload to recover your session.
+              </p>
+              <button className="btn-primary" onClick={() => window.location.reload()}>
+                Reload app
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const STORAGE_KEY = "dotenv_mgr_projects";
 const ONBOARDING_KEY = "dotenv_mgr_onboarding";
@@ -119,7 +154,17 @@ export default function App() {
     snapshot: string;
   } | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const settingsDialogRef = useRef<HTMLDivElement>(null);
   const autoMaskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Auto-focus modals/panels when they open */
+  useEffect(() => {
+    if (showShellIntegration) dialogRef.current?.focus();
+  }, [showShellIntegration]);
+
+  useEffect(() => {
+    if (showSettings) settingsDialogRef.current?.focus();
+  }, [showSettings]);
 
   /* Sync to localStorage */
   useEffect(() => {
@@ -413,7 +458,8 @@ export default function App() {
         });
         const project = updated.find((p) => p.id === selectedId);
         if (project) {
-          saveProjectEnv(project.id, project.activeEnv, project.vars).catch(() => {});
+          const validVars = project.vars.filter((v) => v.key.trim() !== "");
+          saveProjectEnv(project.id, project.activeEnv, validVars).catch(() => {});
         }
         return updated;
       });
@@ -447,9 +493,10 @@ export default function App() {
   const switchEnvironment = useCallback(async (suffix: string) => {
     const project = projects.find((p) => p.id === selectedId);
     if (!project || project.activeEnv === suffix) return;
-    // Auto-save current env
+    // Auto-save current env (skip vars with empty keys)
     setSaveStatus("saving");
-    await saveProjectEnv(project.id, project.activeEnv, project.vars).catch(() => {});
+    const validVars = project.vars.filter((v) => v.key.trim() !== "");
+    await saveProjectEnv(project.id, project.activeEnv, validVars).catch(() => {});
     // Load new env vars
     const newVars = await loadProjectEnv(project.id, suffix).catch(() => []);
     // Update project immutably
@@ -496,7 +543,8 @@ export default function App() {
     if (!project) return;
     setSaveStatus("saving");
     try {
-      await saveProjectEnv(project.id, project.activeEnv, project.vars);
+      const varsToSave = project.vars.filter((v) => v.key.trim() !== "");
+      await saveProjectEnv(project.id, project.activeEnv, varsToSave);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
@@ -532,10 +580,15 @@ export default function App() {
 
   /* ── Render ──────────────────────────────────────────── */
   if (!onboardingComplete) {
-    return <Onboarding onComplete={() => setOnboardingComplete(true)} />;
+    return (
+      <ErrorBoundary>
+        <Onboarding onComplete={() => setOnboardingComplete(true)} />
+      </ErrorBoundary>
+    );
   }
 
   return (
+    <ErrorBoundary>
     <div className="app-shell">
       <Sidebar
         projectTree={projectTree}
@@ -611,6 +664,7 @@ export default function App() {
             aria-modal="true"
             aria-label="Shell integration"
             className="modal-dialog"
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -634,10 +688,12 @@ export default function App() {
           role="presentation"
         >
           <div
+            ref={settingsDialogRef}
             role="dialog"
             aria-modal="true"
             aria-label="Settings"
             className="modal-dialog"
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -685,5 +741,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 }

@@ -23,7 +23,7 @@ type PushStatus = 'idle' | 'pushing' | 'success' | 'error'
 
 function valuePreview(v: EnvVar): string {
   if (!v.val) return ''
-  if (!v.revealed) return '•••••••'
+  if (!v.revealed) return '••••••••'
   return v.val.length > 24 ? v.val.slice(0, 24) + '…' : v.val
 }
 
@@ -192,6 +192,11 @@ export default function PushToStagePanel({
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // Auto-focus panel on mount so keyboard users are not stranded
+  useEffect(() => {
+    panelRef.current?.focus()
+  }, [])
 
   // ── Derived: filtered vars ──────────────────────────────────────────────
   const q = searchQuery.trim().toLowerCase()
@@ -463,6 +468,7 @@ export default function PushToStagePanel({
     <div
       ref={panelRef}
       data-testid="push-to-stage-panel"
+      className="push-panel"
       style={{
         position: 'fixed',
         top: 0,
@@ -474,7 +480,6 @@ export default function PushToStagePanel({
         display: 'flex',
         flexDirection: 'column',
         zIndex: 200,
-        animation: 'slideInRight 260ms cubic-bezier(0.16,1,0.3,1) both',
       }}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
@@ -645,6 +650,8 @@ export default function PushToStagePanel({
             background: 'var(--color-danger-bg)',
             borderTop: '1px solid rgba(229,72,77,0.15)',
             flexShrink: 0,
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
           }}
         >
           {errorMsg}

@@ -159,7 +159,7 @@ describe('PushToStagePanel', () => {
       const vars = [makeVar('SECRET', 'super-secret', false)]
       const project = makeProject(vars)
       render(<PushToStagePanel {...defaultProps} project={project} />)
-      expect(screen.getByText('•••••••')).toBeInTheDocument()
+      expect(screen.getByText('••••••••')).toBeInTheDocument()
     })
 
     it('shows revealed value truncated to 24 chars', () => {

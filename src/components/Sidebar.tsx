@@ -34,7 +34,7 @@ function ProjectNodeItem({
   onAddSubProject: (parentId: string) => void;
 }) {
   const { project, depth, children } = node;
-  const paddingLeft = depth * 16;
+  const paddingLeft = Math.min(depth, 5) * 16;
   const hasChildren = children.length > 0;
   const [collapsed, setCollapsed] = useState(false);
   const confirming = pendingDeleteId === project.id;

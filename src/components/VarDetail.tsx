@@ -243,6 +243,11 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             <Trash2 size={13} />
           </button>
         </div>
+        {!v.key.trim() && (
+          <span className="detail-warn" role="alert">
+            Key is empty — this variable will be skipped when saving
+          </span>
+        )}
       </div>
 
       <div className="detail-divider" />
