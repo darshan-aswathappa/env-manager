@@ -10,7 +10,7 @@ import {
   ArrowRightLeft,
   GitCompare,
 } from "lucide-react";
-import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
+import type { EnvVar, Project, GitignoreStatus, Environment, DuplicateReport } from "../types";
 import { envDisplayName } from "../types";
 import type { ShellIntegrationStatus } from "../lib/envFile";
 
@@ -31,6 +31,7 @@ interface VarDetailProps {
   onOpenShellIntegration: () => void;
   onOpenPush?: (() => void) | null;
   onOpenDiff?: (() => void) | null;
+  duplicateReport?: DuplicateReport;
   renamePrompt?: {
     oldKey: string;
     newKey: string;
@@ -92,6 +93,7 @@ export default function VarDetail({
   onOpenShellIntegration,
   onOpenPush = null,
   onOpenDiff = null,
+  duplicateReport = { hasDuplicates: false, entries: [], affectedIds: new Set() } as DuplicateReport,
   renamePrompt = null,
   onPropagateRename,
   onDismissRename,
@@ -237,6 +239,7 @@ export default function VarDetail({
             renamePrompt={renamePrompt}
             onPropagateRename={onPropagateRename}
             onDismissRename={onDismissRename}
+            duplicateReport={duplicateReport}
           />
         ) : (
           <NoVarSelected />
@@ -267,8 +270,9 @@ export default function VarDetail({
 
         <button
           className="btn-primary"
-          onClick={onSave}
+          onClick={() => { if (!duplicateReport.hasDuplicates) onSave(); }}
           disabled={saveStatus === "saving"}
+          aria-disabled={duplicateReport.hasDuplicates ? "true" : undefined}
           aria-label={`Save ${envDisplayName(activeEnv)} file to disk`}
         >
           <Save size={13} />
@@ -342,9 +346,10 @@ interface SelectedVarFieldsProps {
   renamePrompt?: { oldKey: string; newKey: string; affectedSuffixes: string[] } | null;
   onPropagateRename?: () => void;
   onDismissRename?: () => void;
+  duplicateReport?: DuplicateReport;
 }
 
-function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, onToggleReveal, renamePrompt = null, onPropagateRename, onDismissRename }: SelectedVarFieldsProps) {
+function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, onToggleReveal, renamePrompt = null, onPropagateRename, onDismissRename, duplicateReport = { hasDuplicates: false, entries: [], affectedIds: new Set() } as DuplicateReport }: SelectedVarFieldsProps) {
   return (
     <div className="var-detail-content">
       {/* KEY field */}
@@ -379,6 +384,11 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
         {!v.key.trim() && (
           <span className="detail-warn" role="alert">
             Add a key name — this variable won't be saved without one
+          </span>
+        )}
+        {v.key.trim() && duplicateReport.affectedIds.has(v.id) && (
+          <span className="detail-warn detail-warn--dup" data-testid="duplicate-warning" role="alert">
+            "{v.key}" already exists in this environment. The last saved value will take effect when the file is read.
           </span>
         )}
       </div>
@@ -422,6 +432,26 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             </button>
             <CopyButton text={v.val} label="Copy value" clearAfterSecs={clipboardClearSeconds} />
           </div>
+        </div>
+      </div>
+
+      <div className="detail-divider" />
+
+      {/* NOTE field */}
+      <div className="detail-field">
+        <label htmlFor="var-note" className="detail-label">Note</label>
+        <div className="detail-value-row">
+          <textarea
+            id="var-note"
+            className="detail-input detail-input--note"
+            value={v.comment ?? ''}
+            placeholder="Add a note — purpose, expiry, rotation link…"
+            onChange={(e) => onUpdate(v.id, 'comment', e.target.value)}
+            rows={1}
+            spellCheck={false}
+            aria-label="Note"
+            maxLength={500}
+          />
         </div>
       </div>
 

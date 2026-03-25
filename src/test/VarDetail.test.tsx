@@ -336,6 +336,107 @@ describe('VarDetail diff button', () => {
   })
 })
 
+describe('VarDetail Note textarea', () => {
+  it('renders a Note textarea when a variable is selected', () => {
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    expect(screen.getByLabelText('Note')).toBeInTheDocument()
+  })
+
+  it('does NOT render a Note textarea when selectedVar is null', () => {
+    render(<VarDetail {...defaultProps} selectedVar={null} />)
+    expect(screen.queryByLabelText('Note')).not.toBeInTheDocument()
+  })
+
+  it('displays the existing comment value in the textarea', () => {
+    const v = { ...makeVar(), comment: 'some note' }
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const textarea = screen.getByLabelText('Note') as HTMLTextAreaElement
+    expect(textarea.value).toBe('some note')
+  })
+
+  it('shows empty textarea when comment is undefined', () => {
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const textarea = screen.getByLabelText('Note') as HTMLTextAreaElement
+    expect(textarea.value).toBe('')
+  })
+
+  it('shows empty textarea when comment is empty string', () => {
+    const v = { ...makeVar(), comment: '' }
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const textarea = screen.getByLabelText('Note') as HTMLTextAreaElement
+    expect(textarea.value).toBe('')
+  })
+
+  it('textarea has a non-empty placeholder attribute', () => {
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const textarea = screen.getByLabelText('Note')
+    const placeholder = textarea.getAttribute('placeholder')
+    expect(placeholder).toBeTruthy()
+    expect(placeholder!.length).toBeGreaterThan(0)
+  })
+
+  it('typing in textarea calls onUpdateVar with (varId, comment, newValue)', () => {
+    const onUpdateVar = vi.fn()
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} onUpdateVar={onUpdateVar} />)
+    const textarea = screen.getByLabelText('Note')
+    fireEvent.change(textarea, { target: { value: 'new note' } })
+    expect(onUpdateVar).toHaveBeenCalledWith('var-1', 'comment', 'new note')
+  })
+
+  it('clearing the textarea calls onUpdateVar with (varId, comment, empty string)', () => {
+    const onUpdateVar = vi.fn()
+    const v = { ...makeVar(), comment: 'existing note' }
+    render(<VarDetail {...defaultProps} selectedVar={v} onUpdateVar={onUpdateVar} />)
+    const textarea = screen.getByLabelText('Note')
+    fireEvent.change(textarea, { target: { value: '' } })
+    expect(onUpdateVar).toHaveBeenCalledWith('var-1', 'comment', '')
+  })
+
+  it('selecting a different variable shows that variables comment', () => {
+    const v1 = { ...makeVar('KEY1', 'val1'), id: 'var-1', comment: 'note1' }
+    const v2 = { ...makeVar('KEY2', 'val2'), id: 'var-2', comment: 'note2' }
+    const { rerender } = render(<VarDetail {...defaultProps} selectedVar={v1} />)
+    const textarea1 = screen.getByLabelText('Note') as HTMLTextAreaElement
+    expect(textarea1.value).toBe('note1')
+    rerender(<VarDetail {...defaultProps} selectedVar={v2} />)
+    const textarea2 = screen.getByLabelText('Note') as HTMLTextAreaElement
+    expect(textarea2.value).toBe('note2')
+  })
+
+  it('Note textarea appears after the Value input in DOM order', () => {
+    const v = makeVar()
+    const { container } = render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const allInputs = Array.from(container.querySelectorAll('input, textarea'))
+    const valueInputIndex = allInputs.findIndex(el => el.getAttribute('aria-label')?.includes('Value for'))
+    const noteTextareaIndex = allInputs.findIndex(el => el.getAttribute('aria-label') === 'Note')
+    expect(noteTextareaIndex).toBeGreaterThan(valueInputIndex)
+  })
+
+  it('Note textarea has a natural tabIndex (not -1)', () => {
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const textarea = screen.getByLabelText('Note')
+    expect(textarea.getAttribute('tabindex')).not.toBe('-1')
+  })
+
+  it('textarea is associated with a visible Note label (getByLabelText works)', () => {
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    expect(() => screen.getByLabelText('Note')).not.toThrow()
+  })
+
+  it('textarea has an aria-label attribute equal to Note', () => {
+    const v = makeVar()
+    render(<VarDetail {...defaultProps} selectedVar={v} />)
+    const textarea = screen.getByLabelText('Note')
+    expect(textarea).toHaveAttribute('aria-label', 'Note')
+  })
+})
+
 describe('VarDetail RenamePropagateBanner', () => {
   // Test 23: banner renders when renamePrompt prop is non-null
   it('renders banner when renamePrompt prop is non-null', () => {
@@ -436,5 +537,75 @@ describe('VarDetail RenamePropagateBanner', () => {
     />)
     const propagateBtn = screen.getByRole('button', { name: /Propagate All/i })
     expect(document.activeElement).toBe(propagateBtn)
+  })
+})
+
+describe('VarDetail duplicate key warning', () => {
+  const makeReport = (affectedIds: string[]): import('../types').DuplicateReport => ({
+    hasDuplicates: affectedIds.length > 0,
+    entries: affectedIds.length > 0 ? [{ key: 'PORT', ids: affectedIds, firstSeenIndex: 0 }] : [],
+    affectedIds: new Set(affectedIds),
+  })
+
+  const makeEmptyReport = (): import('../types').DuplicateReport => ({
+    hasDuplicates: false,
+    entries: [],
+    affectedIds: new Set(),
+  })
+
+  it('no warning when key is unique', () => {
+    const v = makeVar('PORT', '3000')
+    render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeEmptyReport()} />)
+    expect(screen.queryByTestId('duplicate-warning')).not.toBeInTheDocument()
+  })
+
+  it('warning appears when var is in duplicateReport.affectedIds', () => {
+    const v = makeVar('PORT', '3000')
+    render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeReport([v.id])} />)
+    expect(screen.getByTestId('duplicate-warning')).toBeInTheDocument()
+  })
+
+  it('warning text mentions the key name', () => {
+    const v = { ...makeVar('PORT', '3000'), id: 'var-1' }
+    render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeReport(['var-1'])} />)
+    expect(screen.getByTestId('duplicate-warning')).toHaveTextContent('PORT')
+  })
+
+  it('warning disappears when duplicateReport is empty', () => {
+    const v = makeVar('PORT', '3000')
+    const { rerender } = render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeReport([v.id])} />)
+    expect(screen.getByTestId('duplicate-warning')).toBeInTheDocument()
+    rerender(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeEmptyReport()} />)
+    expect(screen.queryByTestId('duplicate-warning')).not.toBeInTheDocument()
+  })
+
+  it('save button has aria-disabled="true" when duplicateReport.hasDuplicates', () => {
+    const v = makeVar('PORT', '3000')
+    render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeReport([v.id])} />)
+    const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
+    expect(saveBtn).toHaveAttribute('aria-disabled', 'true')
+  })
+
+  it('save button does NOT have aria-disabled when no duplicates', () => {
+    const v = makeVar('PORT', '3000')
+    render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeEmptyReport()} />)
+    const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
+    expect(saveBtn).not.toHaveAttribute('aria-disabled', 'true')
+  })
+
+  it('save button re-enables after duplicates resolved', () => {
+    const v = makeVar('PORT', '3000')
+    const { rerender } = render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeReport([v.id])} />)
+    expect(screen.getByRole('button', { name: /Save .env file to disk/i })).toHaveAttribute('aria-disabled', 'true')
+    rerender(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeEmptyReport()} />)
+    expect(screen.getByRole('button', { name: /Save .env file to disk/i })).not.toHaveAttribute('aria-disabled', 'true')
+  })
+
+  it('no warning for empty key even if id is in affectedIds', () => {
+    const v = makeVar('', '')
+    const { id } = v
+    render(<VarDetail {...defaultProps} selectedVar={v} duplicateReport={makeReport([id])} />)
+    // empty key should not show duplicate warning (empty keys are excluded from detection)
+    expect(screen.queryByTestId('duplicate-warning')).not.toBeInTheDocument()
   })
 })
