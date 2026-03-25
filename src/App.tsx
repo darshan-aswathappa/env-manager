@@ -626,7 +626,6 @@ export default function App() {
           onUpdateVar={updateVar}
           onDeleteVar={deleteVar}
           onToggleReveal={toggleReveal}
-          onAddVar={addVar}
           onSave={saveToFile}
           onOpenShellIntegration={() => setShowShellIntegration(true)}
         />

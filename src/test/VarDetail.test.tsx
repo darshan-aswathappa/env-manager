@@ -30,7 +30,6 @@ const defaultProps = {
   onUpdateVar: vi.fn(),
   onDeleteVar: vi.fn(),
   onToggleReveal: vi.fn(),
-  onAddVar: vi.fn(),
   onSave: vi.fn(),
   onSwitchEnvironment: vi.fn(),
   shellStatus: 'zsh' as const,
@@ -46,6 +45,16 @@ describe('VarDetail', () => {
   it('shows no variable selected state when selectedVar is null', () => {
     render(<VarDetail {...defaultProps} />)
     expect(screen.getByText(/No variable selected/i)).toBeInTheDocument()
+  })
+
+  it('empty state shows orientation copy directing user to the list', () => {
+    render(<VarDetail {...defaultProps} />)
+    expect(screen.getByText(/use \+ to create one/i)).toBeInTheDocument()
+  })
+
+  it('does not render an Add variable button in the detail footer', () => {
+    render(<VarDetail {...defaultProps} />)
+    expect(screen.queryByRole('button', { name: /Add new variable/i })).not.toBeInTheDocument()
   })
 
   it('shows warning signal with tooltip when no gitignore exists', () => {
@@ -98,13 +107,6 @@ describe('VarDetail', () => {
     render(<VarDetail {...defaultProps} selectedVar={v} onToggleReveal={onToggleReveal} />)
     screen.getByRole('button', { name: /Reveal value/i }).click()
     expect(onToggleReveal).toHaveBeenCalledWith('var-1')
-  })
-
-  it('calls onAddVar when add variable button is clicked', () => {
-    const onAddVar = vi.fn()
-    render(<VarDetail {...defaultProps} onAddVar={onAddVar} />)
-    screen.getByRole('button', { name: /Add new variable/i }).click()
-    expect(onAddVar).toHaveBeenCalled()
   })
 
   it('calls onSave when save button is clicked', () => {

@@ -5,7 +5,6 @@ import {
   Copy,
   Check,
   Trash2,
-  Plus,
   Save,
   ChevronDown,
 } from "lucide-react";
@@ -25,7 +24,6 @@ interface VarDetailProps {
   onUpdateVar: (varId: string, field: keyof EnvVar, value: string | boolean) => void;
   onDeleteVar: (varId: string) => void;
   onToggleReveal: (varId: string) => void;
-  onAddVar: () => void;
   onSave: () => void;
   onSwitchEnvironment: (suffix: string) => void;
   onOpenShellIntegration: () => void;
@@ -78,7 +76,6 @@ export default function VarDetail({
   onUpdateVar,
   onDeleteVar,
   onToggleReveal,
-  onAddVar,
   onSave,
   onSwitchEnvironment,
   onOpenShellIntegration,
@@ -193,11 +190,6 @@ export default function VarDetail({
 
       {/* Footer */}
       <div className="detail-footer">
-        <button className="detail-add-btn" onClick={onAddVar} aria-label="Add new variable">
-          <Plus size={13} />
-          Add variable
-        </button>
-
         <div style={{ flex: 1 }} />
 
         {saveStatus === "saving" && (
@@ -324,7 +316,7 @@ function NoVarSelected() {
     <div className="empty-state">
       <h2 className="empty-state-title">No variable selected</h2>
       <p className="empty-state-desc">
-        Pick a variable from the list to edit it, or add a new one below.
+        Pick a variable from the list to edit it, or use + to create one.
       </p>
     </div>
   );
