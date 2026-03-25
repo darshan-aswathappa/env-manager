@@ -609,7 +609,6 @@ export default function App() {
         onSelectVar={setSelectedVarId}
         onAddVar={addVar}
         onDeleteVar={deleteVar}
-        onOpenPush={selectedProject && selectedProject.vars.length > 0 ? () => setShowPushPanel(true) : null}
       />
 
       {selectedProject ? (
@@ -628,6 +627,7 @@ export default function App() {
           onToggleReveal={toggleReveal}
           onSave={saveToFile}
           onOpenShellIntegration={() => setShowShellIntegration(true)}
+          onOpenPush={selectedProject.vars.length > 0 ? () => setShowPushPanel(true) : null}
         />
       ) : (
         <div className="detail-panel">

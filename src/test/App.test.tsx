@@ -705,7 +705,7 @@ describe('App keyboard and modal edge cases', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
-    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
     await act(async () => { fireEvent.click(pushBtn) })
     await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
     // Click the close button inside the panel (not the backdrop)
@@ -722,7 +722,7 @@ describe('App keyboard and modal edge cases', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
-    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
     await act(async () => { fireEvent.click(pushBtn) })
     await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
     // Click on the inner wrapper div (direct child of backdrop) — covers stopPropagation at line 730
@@ -746,7 +746,7 @@ describe('App keyboard and modal edge cases', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
-    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
     await act(async () => { fireEvent.click(pushBtn) })
     await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
     // The panel opened, which means handlePushComplete's snapshot path is tested via panel interaction
@@ -774,7 +774,7 @@ describe('App PushToStagePanel integration', () => {
     expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument()
   })
 
-  it('renders push button in VarList when project is selected', async () => {
+  it('renders promote button in VarDetail when project is selected', async () => {
     setupProjects([projectWithVars])
     mockInvoke.mockImplementation((cmd) => {
       if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
@@ -782,7 +782,7 @@ describe('App PushToStagePanel integration', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
-    expect(screen.getByTestId('push-to-stage-btn')).toBeInTheDocument()
+    expect(screen.getByTestId('promote-to-env-btn')).toBeInTheDocument()
   })
 
   it('opens push panel when push button is clicked', async () => {
@@ -793,7 +793,7 @@ describe('App PushToStagePanel integration', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
-    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
     await act(async () => { fireEvent.click(pushBtn) })
     await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
   })
@@ -806,7 +806,7 @@ describe('App PushToStagePanel integration', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
-    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
     await act(async () => { fireEvent.click(pushBtn) })
     await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
     const backdrop = screen.getByTestId('push-panel-backdrop')
@@ -861,7 +861,7 @@ describe('App PushToStagePanel integration', () => {
     render(<App />)
     await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
     // Open push panel
-    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
     await act(async () => { fireEvent.click(pushBtn) })
     await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
     // Panel is open — close it via the backdrop click

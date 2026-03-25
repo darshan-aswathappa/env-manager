@@ -34,6 +34,7 @@ const defaultProps = {
   onSwitchEnvironment: vi.fn(),
   shellStatus: 'zsh' as const,
   onOpenShellIntegration: vi.fn(),
+  onOpenPush: null as (() => void) | null,
 }
 
 describe('VarDetail', () => {
@@ -228,5 +229,70 @@ describe('VarDetail', () => {
     await act(async () => { vi.advanceTimersByTime(10000) })
     expect(writeText).toHaveBeenCalledWith('')
     vi.useRealTimers()
+  })
+})
+
+describe('VarDetail promote button', () => {
+  it('renders promote button in header when onOpenPush is provided', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /Promote to another environment/i })).toBeInTheDocument()
+  })
+
+  it('shows "Promote" text label on the button', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    const btn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(btn).toHaveTextContent('Promote')
+  })
+
+  it('calls onOpenPush when promote button is clicked', () => {
+    const onOpenPush = vi.fn()
+    render(<VarDetail {...defaultProps} onOpenPush={onOpenPush} />)
+    fireEvent.click(screen.getByRole('button', { name: /Promote to another environment/i }))
+    expect(onOpenPush).toHaveBeenCalledTimes(1)
+  })
+
+  it('promote button is natively disabled (HTML disabled attribute) when onOpenPush is null', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={null} />)
+    const btn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(btn).toBeDisabled()
+  })
+
+  it('promote button is enabled when onOpenPush is a function', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    const btn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(btn).not.toBeDisabled()
+  })
+
+  it('promote button title contains keyboard shortcut hint', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    const btn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(btn).toHaveAttribute('title', expect.stringContaining('⌘⇧P'))
+  })
+
+  it('promote button does not call handler when disabled (onOpenPush is null)', () => {
+    const onOpenPush = vi.fn()
+    render(<VarDetail {...defaultProps} onOpenPush={null} />)
+    // disabled buttons don't fire click events
+    fireEvent.click(screen.getByRole('button', { name: /Promote to another environment/i }))
+    expect(onOpenPush).not.toHaveBeenCalled()
+  })
+
+  it('promote button uses promote-btn CSS class', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    const btn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(btn).toHaveClass('promote-btn')
+  })
+
+  it('promote button is always rendered (enabled or disabled)', () => {
+    const { rerender } = render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /Promote to another environment/i })).toBeInTheDocument()
+    rerender(<VarDetail {...defaultProps} onOpenPush={null} />)
+    expect(screen.getByRole('button', { name: /Promote to another environment/i })).toBeInTheDocument()
+  })
+
+  it('promote button is positioned in the header area', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} />)
+    const btn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(btn.closest('header')).toBeTruthy()
   })
 })

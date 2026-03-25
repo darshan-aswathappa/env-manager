@@ -179,10 +179,10 @@ describe('VarList', () => {
   })
 })
 
-describe('VarList push button', () => {
-  const renderVarList = (onOpenPush: (() => void) | null, vars: EnvVar[] = [makeVar('API_KEY', 'secret')]) => {
-    const project = makeProject(vars)
-    return render(
+describe('VarList search toolbar', () => {
+  it('does not render a push-to-stage button (moved to VarDetail header)', () => {
+    const project = makeProject([makeVar('API_KEY', 'secret')])
+    render(
       <VarList
         project={project}
         selectedVarId={null}
@@ -191,52 +191,25 @@ describe('VarList push button', () => {
         onSelectVar={vi.fn()}
         onAddVar={vi.fn()}
         onDeleteVar={vi.fn()}
-        onOpenPush={onOpenPush}
       />
     )
-  }
-
-  it('renders push button when onOpenPush is provided', () => {
-    renderVarList(vi.fn())
-    expect(screen.getByTestId('push-to-stage-btn')).toBeInTheDocument()
+    expect(screen.queryByTestId('push-to-stage-btn')).not.toBeInTheDocument()
   })
 
-  it('calls onOpenPush when push button is clicked', () => {
-    const onOpenPush = vi.fn()
-    renderVarList(onOpenPush)
-    fireEvent.click(screen.getByTestId('push-to-stage-btn'))
-    expect(onOpenPush).toHaveBeenCalledTimes(1)
-  })
-
-  it('push button is disabled when onOpenPush is null', () => {
-    renderVarList(null)
-    const btn = screen.getByTestId('push-to-stage-btn')
-    expect(btn).toHaveStyle({ pointerEvents: 'none' })
-  })
-
-  it('push button has correct aria-label and title', () => {
-    renderVarList(vi.fn())
-    const btn = screen.getByTestId('push-to-stage-btn')
-    expect(btn).toHaveAttribute('aria-label', 'Push variables to stage')
-    expect(btn).toHaveAttribute('title', 'Push to stage (⌘⇧P)')
-  })
-
-  it('push button renders but is disabled when onOpenPush is null', () => {
-    renderVarList(null)
-    const btn = screen.getByTestId('push-to-stage-btn')
-    expect(btn).toBeInTheDocument()
-    expect(btn).toHaveStyle({ opacity: '0.4' })
-  })
-
-  it('push button does not call handler when disabled (onOpenPush is null)', () => {
-    const onOpenPush = vi.fn()
-    renderVarList(null)
-    fireEvent.click(screen.getByTestId('push-to-stage-btn'))
-    expect(onOpenPush).not.toHaveBeenCalled()
-  })
-
-  it('renders push button even when project has no vars', () => {
-    renderVarList(null, [])
-    expect(screen.getByTestId('push-to-stage-btn')).toBeInTheDocument()
+  it('only renders search input and FAB in list panel', () => {
+    const project = makeProject([makeVar('API_KEY', 'secret')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+      />
+    )
+    expect(screen.getByRole('searchbox')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add new variable/i })).toBeInTheDocument()
   })
 })

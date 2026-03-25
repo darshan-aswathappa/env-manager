@@ -7,6 +7,7 @@ import {
   Trash2,
   Save,
   ChevronDown,
+  ArrowRightLeft,
 } from "lucide-react";
 import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
 import { envDisplayName } from "../types";
@@ -27,6 +28,7 @@ interface VarDetailProps {
   onSave: () => void;
   onSwitchEnvironment: (suffix: string) => void;
   onOpenShellIntegration: () => void;
+  onOpenPush?: (() => void) | null;
 }
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -79,6 +81,7 @@ export default function VarDetail({
   onSave,
   onSwitchEnvironment,
   onOpenShellIntegration,
+  onOpenPush = null,
 }: VarDetailProps) {
   const envTier = activeEnv === 'production'
     ? 'prod'
@@ -93,28 +96,42 @@ export default function VarDetail({
       {/* Unified 2-row header */}
       <header className="proj-header" aria-label={`${project.name} — ${envDisplayName(activeEnv)}`}>
 
-        {/* Row 1: project name + env badge */}
+        {/* Row 1: project name + env badge + promote button */}
         <div className="proj-header__row proj-header__row--primary">
           <h1 className="proj-header__name">{project.name}</h1>
 
-          <div className="env-badge-wrap" data-env-tier={envTier}>
-            <span className="env-badge" aria-hidden="true">
-              <span className="env-badge__dot" />
-              <span className="env-badge__label">{envDisplayName(activeEnv)}</span>
-              <span className="env-badge__chevron"><ChevronDown size={9} /></span>
-            </span>
-            <select
-              className="env-badge__select"
-              value={activeEnv}
-              onChange={(e) => { if (e.target.value !== activeEnv) onSwitchEnvironment(e.target.value); }}
-              aria-label="Switch environment"
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="env-badge-wrap" data-env-tier={envTier}>
+              <span className="env-badge" aria-hidden="true">
+                <span className="env-badge__dot" />
+                <span className="env-badge__label">{envDisplayName(activeEnv)}</span>
+                <span className="env-badge__chevron"><ChevronDown size={9} /></span>
+              </span>
+              <select
+                className="env-badge__select"
+                value={activeEnv}
+                onChange={(e) => { if (e.target.value !== activeEnv) onSwitchEnvironment(e.target.value); }}
+                aria-label="Switch environment"
+              >
+                {environments.map((env) => (
+                  <option key={env.suffix} value={env.suffix}>
+                    {envDisplayName(env.suffix)}{env.vars.length > 0 ? ` (${env.vars.length})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              data-testid="promote-to-env-btn"
+              className="promote-btn"
+              aria-label="Promote to another environment"
+              title="Promote to another environment (⌘⇧P)"
+              onClick={() => { if (onOpenPush) onOpenPush(); }}
+              disabled={!onOpenPush}
             >
-              {environments.map((env) => (
-                <option key={env.suffix} value={env.suffix}>
-                  {envDisplayName(env.suffix)}{env.vars.length > 0 ? ` (${env.vars.length})` : ''}
-                </option>
-              ))}
-            </select>
+              <ArrowRightLeft size={11} />
+              Promote
+            </button>
           </div>
         </div>
 
