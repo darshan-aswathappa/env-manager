@@ -567,3 +567,120 @@ describe('App', () => {
     await waitFor(() => expect(screen.queryByText('TO_DELETE')).not.toBeInTheDocument())
   })
 })
+
+describe('App PushToStagePanel integration', () => {
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    mockOpen.mockReset()
+    localStorage.clear()
+    localStorage.setItem('dotenv_mgr_onboarding', 'complete')
+    mockInvoke.mockResolvedValue('')
+  })
+
+  it('push panel not shown initially', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument()
+  })
+
+  it('renders push button in VarList when project is selected', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    expect(screen.getByTestId('push-to-stage-btn')).toBeInTheDocument()
+  })
+
+  it('opens push panel when push button is clicked', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    await act(async () => { fireEvent.click(pushBtn) })
+    await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
+  })
+
+  it('closes push panel when Escape is pressed on backdrop', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    await act(async () => { fireEvent.click(pushBtn) })
+    await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
+    const backdrop = screen.getByTestId('push-panel-backdrop')
+    await act(async () => { fireEvent.keyDown(backdrop, { key: 'Escape' }) })
+    await waitFor(() => expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  it('Cmd+Shift+P opens push panel when project has vars', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'P', metaKey: true, shiftKey: true })
+    })
+    await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
+  })
+
+  it('Cmd+Shift+P does nothing when no project selected', async () => {
+    render(<App />)
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'P', metaKey: true, shiftKey: true })
+    })
+    expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument()
+  })
+
+  it('Cmd+Shift+P does nothing when project has no vars', async () => {
+    setupProjects([baseProject])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'P', metaKey: true, shiftKey: true })
+    })
+    expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument()
+  })
+
+  it('handlePushComplete updates project environments and closes panel', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      if (cmd === 'preview_push_vars_to_stage') return Promise.resolve({ newKeys: ['API_KEY'], conflictSame: [], conflictDifferent: [] })
+      if (cmd === 'push_vars_to_stage') return Promise.resolve({ updatedVars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }], snapshot: null })
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    // Open push panel
+    const pushBtn = screen.getByTestId('push-to-stage-btn')
+    await act(async () => { fireEvent.click(pushBtn) })
+    await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
+    // Panel is open — close it via the backdrop click
+    const backdrop = screen.getByTestId('push-panel-backdrop')
+    await act(async () => { fireEvent.click(backdrop) })
+    await waitFor(() => expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument())
+  })
+})

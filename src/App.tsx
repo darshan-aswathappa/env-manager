@@ -9,6 +9,7 @@ import {
   checkGitignoreStatus,
   writeEnvSignal,
   checkShellIntegration,
+  applyPushResultToProject,
 } from "./lib/envFile";
 import type { ShellIntegrationStatus } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
@@ -20,6 +21,7 @@ import VarDetail from "./components/VarDetail";
 import ShellIntegration from "./components/ShellIntegration";
 import SettingsPanel from "./components/Settings";
 import Onboarding from "./components/Onboarding";
+import PushToStagePanel from "./components/PushToStage/PushToStagePanel";
 import { FolderOpen, Plus, X } from "lucide-react";
 
 const STORAGE_KEY = "dotenv_mgr_projects";
@@ -110,6 +112,12 @@ export default function App() {
   const [shellStatus, setShellStatus] = useState<ShellIntegrationStatus>("not_found");
   const [showSettings, setShowSettings] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings>(loadSettings);
+  const [showPushPanel, setShowPushPanel] = useState(false);
+  const [_pushUndoSnapshot, setPushUndoSnapshot] = useState<{
+    projectId: string;
+    suffix: string;
+    snapshot: string;
+  } | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const autoMaskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -161,6 +169,21 @@ export default function App() {
       if (autoMaskTimerRef.current) clearTimeout(autoMaskTimerRef.current);
     };
   }, [appSettings.autoMaskMinutes]);
+
+  /* Global keyboard shortcut Cmd+Shift+P to open push panel */
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'P') {
+        e.preventDefault();
+        const proj = projects.find((p) => p.id === selectedId) ?? null;
+        if (proj && proj.vars.length > 0) {
+          setShowPushPanel(true);
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [projects, selectedId]);
 
   /* Load vars per project from app data on mount and when project list changes */
   useEffect(() => {
@@ -483,6 +506,24 @@ export default function App() {
     }
   }, [projects, selectedId]);
 
+  /* ── Push to stage ───────────────────────────────────── */
+  const handlePushComplete = useCallback(
+    (targetSuffix: string, updatedVars: EnvVar[], snapshot: string | null) => {
+      if (!selectedId) return;
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== selectedId) return p;
+          return applyPushResultToProject(p, targetSuffix, updatedVars);
+        })
+      );
+      setShowPushPanel(false);
+      if (snapshot !== null) {
+        setPushUndoSnapshot({ projectId: selectedId, suffix: targetSuffix, snapshot });
+      }
+    },
+    [selectedId]
+  );
+
   /* ── Derived state ───────────────────────────────────── */
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null;
   const selectedVar =
@@ -515,6 +556,7 @@ export default function App() {
         onSelectVar={setSelectedVarId}
         onAddVar={addVar}
         onDeleteVar={deleteVar}
+        onOpenPush={selectedProject && selectedProject.vars.length > 0 ? () => setShowPushPanel(true) : null}
       />
 
       {selectedProject ? (
@@ -614,6 +656,30 @@ export default function App() {
                 setShowSettings(false);
                 setShowShellIntegration(true);
               }}
+            />
+          </div>
+        </div>
+      )}
+
+      {showPushPanel && selectedProject && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.15)',
+            display: 'flex', justifyContent: 'flex-end',
+          }}
+          onClick={() => setShowPushPanel(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowPushPanel(false); }}
+          tabIndex={-1}
+          role="presentation"
+          data-testid="push-panel-backdrop"
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <PushToStagePanel
+              project={selectedProject}
+              sourceSuffix={selectedProject.activeEnv}
+              onClose={() => setShowPushPanel(false)}
+              onPushComplete={handlePushComplete}
             />
           </div>
         </div>

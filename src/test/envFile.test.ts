@@ -12,8 +12,13 @@ import {
   shellQuote,
   serializeVars,
   unquoteEnvValue,
+  buildConflictReport,
+  mergeVarsForPush,
+  previewPushVarsToStage,
+  pushVarsToStage,
+  applyPushResultToProject,
 } from '../lib/envFile'
-import type { EnvVar } from '../types'
+import type { EnvVar, Project, Environment } from '../types'
 
 const mockInvoke = vi.mocked(invoke)
 
@@ -301,5 +306,358 @@ describe('parseEnvContent (exported)', () => {
     const vars = parseEnvContent('KEY=val')
     expect(vars).toHaveLength(1)
     expect(vars[0].sourceProjectId).toBe('')
+  })
+})
+
+// ── Push to Stage Tests ────────────────────────────────────────
+
+const makeProject = (overrides: Partial<Project> = {}): Project => ({
+  id: 'proj-1',
+  name: 'Test Project',
+  path: '/tmp/test',
+  parentId: null,
+  vars: [],
+  environments: [],
+  activeEnv: '',
+  inheritanceMode: 'merge-child-wins',
+  sortOrder: 0,
+  ...overrides,
+})
+
+const makeEnv = (suffix: string, vars: EnvVar[]): Environment => ({ suffix, vars })
+
+describe('buildConflictReport', () => {
+  it('classifies all vars as new when target is empty', () => {
+    const varsToPush = [
+      { key: 'NEW_KEY', val: 'new_val' },
+      { key: 'ANOTHER', val: '123' },
+    ]
+    const report = buildConflictReport(varsToPush, [])
+    expect(report.newKeys).toEqual(['NEW_KEY', 'ANOTHER'])
+    expect(report.conflictSame).toHaveLength(0)
+    expect(report.conflictDifferent).toHaveLength(0)
+  })
+
+  it('classifies all vars as conflictSame when values are identical', () => {
+    const targetVars = [makeVar('API_KEY', 'secret'), makeVar('PORT', '3000')]
+    const varsToPush = [
+      { key: 'API_KEY', val: 'secret' },
+      { key: 'PORT', val: '3000' },
+    ]
+    const report = buildConflictReport(varsToPush, targetVars)
+    expect(report.newKeys).toHaveLength(0)
+    expect(report.conflictSame).toEqual(['API_KEY', 'PORT'])
+    expect(report.conflictDifferent).toHaveLength(0)
+  })
+
+  it('classifies all vars as conflictDifferent with correct sourceVal and targetVal', () => {
+    const targetVars = [makeVar('DB_URL', 'dev-db'), makeVar('LOG_LEVEL', 'debug')]
+    const varsToPush = [
+      { key: 'DB_URL', val: 'prod-db' },
+      { key: 'LOG_LEVEL', val: 'error' },
+    ]
+    const report = buildConflictReport(varsToPush, targetVars)
+    expect(report.newKeys).toHaveLength(0)
+    expect(report.conflictSame).toHaveLength(0)
+    expect(report.conflictDifferent).toHaveLength(2)
+    expect(report.conflictDifferent[0]).toEqual({ key: 'DB_URL', sourceVal: 'prod-db', targetVal: 'dev-db' })
+    expect(report.conflictDifferent[1]).toEqual({ key: 'LOG_LEVEL', sourceVal: 'error', targetVal: 'debug' })
+  })
+
+  it('handles mixed: some new, some same, some different', () => {
+    const targetVars = [makeVar('SAME', 'value'), makeVar('DIFFERENT', 'old')]
+    const varsToPush = [
+      { key: 'NEW', val: 'fresh' },
+      { key: 'SAME', val: 'value' },
+      { key: 'DIFFERENT', val: 'new' },
+    ]
+    const report = buildConflictReport(varsToPush, targetVars)
+    expect(report.newKeys).toEqual(['NEW'])
+    expect(report.conflictSame).toEqual(['SAME'])
+    expect(report.conflictDifferent).toHaveLength(1)
+    expect(report.conflictDifferent[0]).toEqual({ key: 'DIFFERENT', sourceVal: 'new', targetVal: 'old' })
+  })
+
+  it('returns empty report when varsToPush is empty', () => {
+    const targetVars = [makeVar('EXISTING', 'val')]
+    const report = buildConflictReport([], targetVars)
+    expect(report.newKeys).toHaveLength(0)
+    expect(report.conflictSame).toHaveLength(0)
+    expect(report.conflictDifferent).toHaveLength(0)
+  })
+})
+
+describe('mergeVarsForPush', () => {
+  it('adds a new key and includes it in summary.written', () => {
+    const targetVars = [makeVar('EXISTING', 'val')]
+    const varsToPush = [{ key: 'NEW_KEY', val: 'new_val' }]
+    const { mergedVars, summary } = mergeVarsForPush(varsToPush, targetVars, new Map(), 'p1')
+    const newVar = mergedVars.find(v => v.key === 'NEW_KEY')
+    expect(newVar).toBeDefined()
+    expect(newVar?.val).toBe('new_val')
+    expect(summary.written).toContain('NEW_KEY')
+    expect(summary.skippedConflict).toHaveLength(0)
+    expect(summary.skippedNoChange).toHaveLength(0)
+  })
+
+  it('skips identical key and includes it in summary.skippedNoChange', () => {
+    const targetVars = [makeVar('PORT', '3000')]
+    const varsToPush = [{ key: 'PORT', val: '3000' }]
+    const { mergedVars, summary } = mergeVarsForPush(varsToPush, targetVars, new Map(), 'p1')
+    const portVar = mergedVars.find(v => v.key === 'PORT')
+    expect(portVar?.val).toBe('3000')
+    expect(summary.written).not.toContain('PORT')
+    expect(summary.skippedNoChange).toContain('PORT')
+  })
+
+  it('replaces a different key with overwrite decision and includes it in summary.written', () => {
+    const targetVars = [makeVar('DB_URL', 'dev-db')]
+    const varsToPush = [{ key: 'DB_URL', val: 'prod-db' }]
+    const decisions = new Map<string, 'overwrite' | 'skip'>([['DB_URL', 'overwrite']])
+    const { mergedVars, summary } = mergeVarsForPush(varsToPush, targetVars, decisions, 'p1')
+    const dbVar = mergedVars.find(v => v.key === 'DB_URL')
+    expect(dbVar?.val).toBe('prod-db')
+    expect(summary.written).toContain('DB_URL')
+    expect(summary.skippedConflict).not.toContain('DB_URL')
+  })
+
+  it('preserves target value with skip decision and includes it in summary.skippedConflict', () => {
+    const targetVars = [makeVar('DB_URL', 'dev-db')]
+    const varsToPush = [{ key: 'DB_URL', val: 'prod-db' }]
+    const decisions = new Map<string, 'overwrite' | 'skip'>([['DB_URL', 'skip']])
+    const { mergedVars, summary } = mergeVarsForPush(varsToPush, targetVars, decisions, 'p1')
+    const dbVar = mergedVars.find(v => v.key === 'DB_URL')
+    expect(dbVar?.val).toBe('dev-db')
+    expect(summary.skippedConflict).toContain('DB_URL')
+    expect(summary.written).not.toContain('DB_URL')
+  })
+
+  it('defaults to overwrite for keys not in conflictDecisions map', () => {
+    const targetVars = [makeVar('LOG_LEVEL', 'debug')]
+    const varsToPush = [{ key: 'LOG_LEVEL', val: 'error' }]
+    const { mergedVars, summary } = mergeVarsForPush(varsToPush, targetVars, new Map(), 'p1')
+    const logVar = mergedVars.find(v => v.key === 'LOG_LEVEL')
+    expect(logVar?.val).toBe('error')
+    expect(summary.written).toContain('LOG_LEVEL')
+  })
+
+  it('preserves target keys that are not in varsToPush', () => {
+    const targetVars = [makeVar('KEEP', 'kept'), makeVar('ALSO_KEEP', 'also')]
+    const varsToPush = [{ key: 'NEW', val: 'fresh' }]
+    const { mergedVars } = mergeVarsForPush(varsToPush, targetVars, new Map(), 'p1')
+    expect(mergedVars.find(v => v.key === 'KEEP')?.val).toBe('kept')
+    expect(mergedVars.find(v => v.key === 'ALSO_KEEP')?.val).toBe('also')
+  })
+
+  it('assigns projectId correctly to newly added vars', () => {
+    const varsToPush = [{ key: 'BRAND_NEW', val: 'value' }]
+    const { mergedVars } = mergeVarsForPush(varsToPush, [], new Map(), 'project-abc')
+    const newVar = mergedVars.find(v => v.key === 'BRAND_NEW')
+    expect(newVar?.sourceProjectId).toBe('project-abc')
+  })
+})
+
+describe('previewPushVarsToStage', () => {
+  beforeEach(() => mockInvoke.mockReset())
+
+  it('calls load_project_env with correct projectId and targetSuffix', async () => {
+    mockInvoke.mockResolvedValue('EXISTING=val')
+    await previewPushVarsToStage('proj-1', 'staging', [{ key: 'NEW', val: 'new' }])
+    expect(mockInvoke).toHaveBeenCalledWith('load_project_env', {
+      projectId: 'proj-1',
+      suffix: 'staging',
+    })
+  })
+
+  it('returns a ConflictReport based on target content', async () => {
+    mockInvoke.mockResolvedValue('SAME=value\nDIFF=old')
+    const varsToPush = [
+      { key: 'NEW', val: 'fresh' },
+      { key: 'SAME', val: 'value' },
+      { key: 'DIFF', val: 'new' },
+    ]
+    const report = await previewPushVarsToStage('proj-1', 'staging', varsToPush)
+    expect(report.newKeys).toEqual(['NEW'])
+    expect(report.conflictSame).toEqual(['SAME'])
+    expect(report.conflictDifferent).toHaveLength(1)
+    expect(report.conflictDifferent[0].key).toBe('DIFF')
+  })
+
+  it('handles empty target — all vars are new', async () => {
+    mockInvoke.mockResolvedValue('')
+    const varsToPush = [{ key: 'KEY', val: 'val' }]
+    const report = await previewPushVarsToStage('proj-1', 'production', varsToPush)
+    expect(report.newKeys).toEqual(['KEY'])
+    expect(report.conflictSame).toHaveLength(0)
+    expect(report.conflictDifferent).toHaveLength(0)
+  })
+})
+
+describe('pushVarsToStage', () => {
+  beforeEach(() => mockInvoke.mockReset())
+
+  it('calls push_vars_to_stage with correct args', async () => {
+    // First call: load_project_env (current target vars)
+    mockInvoke.mockResolvedValueOnce('EXISTING=old')
+    // Second call: push_vars_to_stage (atomic write)
+    mockInvoke.mockResolvedValueOnce({ snapshot: null, targetCreated: false })
+    // Third call: load_project_env (re-read after push)
+    mockInvoke.mockResolvedValueOnce('EXISTING=new\nNEW_KEY=val')
+
+    await pushVarsToStage({
+      projectId: 'proj-1',
+      sourceSuffix: '',
+      targetSuffix: 'staging',
+      varsToPush: [{ key: 'EXISTING', val: 'new' }, { key: 'NEW_KEY', val: 'val' }],
+      conflictDecisions: new Map(),
+    })
+
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'push_vars_to_stage',
+      expect.objectContaining({ projectId: 'proj-1', targetSuffix: 'staging' })
+    )
+  })
+
+  it('returns correct PushResult with summary', async () => {
+    mockInvoke.mockResolvedValueOnce('')
+    mockInvoke.mockResolvedValueOnce({ snapshot: null, targetCreated: true })
+    mockInvoke.mockResolvedValueOnce('KEY=val')
+
+    const result = await pushVarsToStage({
+      projectId: 'proj-1',
+      sourceSuffix: '',
+      targetSuffix: 'production',
+      varsToPush: [{ key: 'KEY', val: 'val' }],
+      conflictDecisions: new Map(),
+    })
+
+    expect(result.summary.written).toContain('KEY')
+    expect(result.summary.skippedConflict).toHaveLength(0)
+    expect(result.summary.skippedNoChange).toHaveLength(0)
+    expect(result.updatedVars).toHaveLength(1)
+    expect(result.updatedVars[0].key).toBe('KEY')
+  })
+
+  it('passes through snapshot from AtomicWriteResult', async () => {
+    mockInvoke.mockResolvedValueOnce('OLD=val')
+    mockInvoke.mockResolvedValueOnce({ snapshot: 'OLD=val', targetCreated: false })
+    mockInvoke.mockResolvedValueOnce('OLD=val\nNEW=x')
+
+    const result = await pushVarsToStage({
+      projectId: 'proj-1',
+      sourceSuffix: '',
+      targetSuffix: 'staging',
+      varsToPush: [{ key: 'NEW', val: 'x' }],
+      conflictDecisions: new Map(),
+    })
+
+    expect(result.snapshot).toBe('OLD=val')
+  })
+
+  it('re-reads target after push to populate updatedVars', async () => {
+    mockInvoke.mockResolvedValueOnce('')
+    mockInvoke.mockResolvedValueOnce({ snapshot: null, targetCreated: true })
+    mockInvoke.mockResolvedValueOnce('A=1\nB=2\nC=3')
+
+    const result = await pushVarsToStage({
+      projectId: 'proj-1',
+      sourceSuffix: '',
+      targetSuffix: 'staging',
+      varsToPush: [{ key: 'A', val: '1' }],
+      conflictDecisions: new Map(),
+    })
+
+    expect(result.updatedVars).toHaveLength(3)
+    // Verify the re-read used the correct suffix
+    expect(mockInvoke).toHaveBeenCalledWith('load_project_env', expect.objectContaining({ suffix: 'staging' }))
+  })
+
+  it('passes through targetCreated from AtomicWriteResult', async () => {
+    mockInvoke.mockResolvedValueOnce('')
+    mockInvoke.mockResolvedValueOnce({ snapshot: null, targetCreated: true })
+    mockInvoke.mockResolvedValueOnce('KEY=val')
+
+    const result = await pushVarsToStage({
+      projectId: 'proj-1',
+      sourceSuffix: '',
+      targetSuffix: 'new-env',
+      varsToPush: [{ key: 'KEY', val: 'val' }],
+      conflictDecisions: new Map(),
+    })
+
+    expect(result.targetCreated).toBe(true)
+  })
+})
+
+describe('applyPushResultToProject', () => {
+  it('replaces target environment vars in project.environments', () => {
+    const oldVars = [makeVar('OLD', 'val')]
+    const newVars = [makeVar('NEW', 'val')]
+    const project = makeProject({
+      environments: [makeEnv('staging', oldVars)],
+      activeEnv: '',
+    })
+    const updated = applyPushResultToProject(project, 'staging', newVars)
+    const stagingEnv = updated.environments.find(e => e.suffix === 'staging')
+    expect(stagingEnv?.vars).toEqual(newVars)
+  })
+
+  it('does not mutate the original project', () => {
+    const oldVars = [makeVar('KEY', 'old')]
+    const project = makeProject({ environments: [makeEnv('staging', oldVars)] })
+    const newVars = [makeVar('KEY', 'new')]
+    applyPushResultToProject(project, 'staging', newVars)
+    // original environments should be unchanged
+    expect(project.environments[0].vars[0].val).toBe('old')
+  })
+
+  it('does not mutate the source environment', () => {
+    const sourceVars = [makeVar('SRC', 'src-val')]
+    const targetVars = [makeVar('TGT', 'tgt-val')]
+    const project = makeProject({
+      environments: [makeEnv('', sourceVars), makeEnv('staging', targetVars)],
+      activeEnv: '',
+    })
+    const newTargetVars = [makeVar('TGT', 'updated')]
+    const updated = applyPushResultToProject(project, 'staging', newTargetVars)
+    const sourceEnv = updated.environments.find(e => e.suffix === '')
+    expect(sourceEnv?.vars[0].val).toBe('src-val')
+  })
+
+  it('also updates project.vars when activeEnv matches targetSuffix', () => {
+    const newVars = [makeVar('ACTIVE', 'new')]
+    const project = makeProject({
+      environments: [makeEnv('staging', [makeVar('ACTIVE', 'old')])],
+      activeEnv: 'staging',
+      vars: [makeVar('ACTIVE', 'old')],
+    })
+    const updated = applyPushResultToProject(project, 'staging', newVars)
+    expect(updated.vars).toEqual(newVars)
+  })
+
+  it('leaves project.vars unchanged when activeEnv does not match targetSuffix', () => {
+    const originalVars = [makeVar('BASE', 'base-val')]
+    const project = makeProject({
+      environments: [makeEnv('staging', [makeVar('STAGING', 'old')])],
+      activeEnv: '',
+      vars: originalVars,
+    })
+    const newStagingVars = [makeVar('STAGING', 'new')]
+    const updated = applyPushResultToProject(project, 'staging', newStagingVars)
+    expect(updated.vars).toEqual(originalVars)
+  })
+
+  it('creates a new Environment entry if targetSuffix is not in environments', () => {
+    const project = makeProject({
+      environments: [makeEnv('', [makeVar('BASE', 'val')])],
+      activeEnv: '',
+    })
+    const newVars = [makeVar('PROD', 'prod-val')]
+    const updated = applyPushResultToProject(project, 'production', newVars)
+    const prodEnv = updated.environments.find(e => e.suffix === 'production')
+    expect(prodEnv).toBeDefined()
+    expect(prodEnv?.vars).toEqual(newVars)
+    // Original env must still be present
+    expect(updated.environments.find(e => e.suffix === '')).toBeDefined()
   })
 })

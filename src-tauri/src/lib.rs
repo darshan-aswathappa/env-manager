@@ -292,6 +292,66 @@ fn delete_project_env(app: tauri::AppHandle, project_id: String, suffix: String)
     Ok(())
 }
 
+// ── Atomic push ───────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AtomicWriteResult {
+    pub snapshot: Option<String>,
+    pub target_created: bool,
+}
+
+/// Pure helper: atomically write `content` to `target_path` using a
+/// temp-file + rename pattern.  Returns `(snapshot, target_created)`.
+fn atomic_write_env(target_path: &Path, content: &str) -> Result<(Option<String>, bool), String> {
+    let snapshot = if target_path.exists() {
+        Some(fs::read_to_string(target_path)
+            .map_err(|e| format!("Failed to read target for snapshot: {e}"))?)
+    } else {
+        None
+    };
+    let target_created = snapshot.is_none();
+
+    if let Some(parent) = target_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create dir: {e}"))?;
+    }
+
+    // Derive temp path: same directory, original filename + ".tmp" appended
+    let tmp_path = {
+        let mut name = target_path
+            .file_name()
+            .ok_or("Invalid target path: no filename")?
+            .to_owned();
+        name.push(".tmp");
+        target_path.with_file_name(name)
+    };
+
+    let write_result = fs::write(&tmp_path, content);
+    if let Err(e) = write_result {
+        let _ = fs::remove_file(&tmp_path);
+        return Err(format!("Failed to write temp file: {e}"));
+    }
+
+    if let Err(e) = fs::rename(&tmp_path, target_path) {
+        let _ = fs::remove_file(&tmp_path);
+        return Err(format!("Atomic rename failed: {e}"));
+    }
+
+    Ok((snapshot, target_created))
+}
+
+#[tauri::command]
+fn push_vars_to_stage(
+    app: tauri::AppHandle,
+    project_id: String,
+    target_suffix: String,
+    merged_content: String,
+) -> Result<AtomicWriteResult, String> {
+    let target_path = env_file_path(&app, &project_id, &target_suffix)?;
+    let (snapshot, target_created) = atomic_write_env(&target_path, &merged_content)?;
+    Ok(AtomicWriteResult { snapshot, target_created })
+}
+
 // ── Legacy commands (keep during migration) ───────────────────────────────
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
@@ -320,6 +380,7 @@ pub fn run() {
             get_app_data_dir, generate_shell_hook,
             import_env_from_project, import_all_envs_from_project,
             delete_project_env, write_env_signal, check_gitignore_status, check_shell_integration,
+            push_vars_to_stage,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -490,5 +551,99 @@ mod tests {
         write_registry_to_path(&path, &registry).unwrap();
         let loaded = read_registry_from_path(&path).unwrap();
         assert_eq!(loaded.projects[0].active_env, Some("local".to_string()));
+    }
+
+    // ── push_vars_to_stage / atomic_write_env tests ───────────────────────
+
+    #[test]
+    fn push_creates_new_file_when_target_missing() {
+        let dir = TempDir::new().unwrap();
+        let target = dir.path().join("proj.env.staging");
+        assert!(!target.exists());
+
+        let (snapshot, target_created) = atomic_write_env(&target, "KEY=value").unwrap();
+
+        assert!(target.exists());
+        assert_eq!(fs::read_to_string(&target).unwrap(), "KEY=value");
+        assert!(snapshot.is_none());
+        assert!(target_created);
+    }
+
+    #[test]
+    fn push_overwrites_existing_file_atomically() {
+        let dir = TempDir::new().unwrap();
+        let target = dir.path().join("proj.env");
+        fs::write(&target, "OLD=original").unwrap();
+
+        let (snapshot, target_created) = atomic_write_env(&target, "NEW=content").unwrap();
+
+        assert_eq!(fs::read_to_string(&target).unwrap(), "NEW=content");
+        assert_eq!(snapshot, Some("OLD=original".to_string()));
+        assert!(!target_created);
+    }
+
+    #[test]
+    fn push_empty_content_creates_empty_file() {
+        let dir = TempDir::new().unwrap();
+        let target = dir.path().join("proj.env.local");
+
+        let (snapshot, target_created) = atomic_write_env(&target, "").unwrap();
+
+        assert!(target.exists());
+        assert_eq!(fs::read_to_string(&target).unwrap(), "");
+        assert!(snapshot.is_none());
+        assert!(target_created);
+    }
+
+    #[test]
+    fn push_returns_snapshot_of_original_content() {
+        let dir = TempDir::new().unwrap();
+        let target = dir.path().join("proj.env.production");
+        let original = "DB_URL=postgres://localhost\nSECRET=abc123\n";
+        fs::write(&target, original).unwrap();
+
+        let (snapshot, _) = atomic_write_env(&target, "REPLACED=yes").unwrap();
+
+        assert_eq!(snapshot.as_deref(), Some(original));
+    }
+
+    #[test]
+    fn push_temp_file_cleaned_up_on_success() {
+        let dir = TempDir::new().unwrap();
+        let target = dir.path().join("proj.env.development");
+
+        atomic_write_env(&target, "CLEAN=true").unwrap();
+
+        // The temp file name is the target filename with ".tmp" appended
+        let tmp = dir.path().join("proj.env.development.tmp");
+        assert!(!tmp.exists(), "temp file should not remain after successful push");
+    }
+
+    #[test]
+    fn push_content_with_multi_line_env_format() {
+        let dir = TempDir::new().unwrap();
+        let target = dir.path().join("proj.env");
+        let content = "APP_NAME=vault\nPORT=3000\nDEBUG=false\nDB_HOST=localhost\n";
+
+        atomic_write_env(&target, content).unwrap();
+
+        assert_eq!(fs::read_to_string(&target).unwrap(), content);
+    }
+
+    #[test]
+    fn push_to_different_suffixes() {
+        let dir = TempDir::new().unwrap();
+        let dev_target = dir.path().join("proj.env.development");
+        let stg_target = dir.path().join("proj.env.staging");
+
+        let (snap_dev, created_dev) = atomic_write_env(&dev_target, "ENV=development").unwrap();
+        let (snap_stg, created_stg) = atomic_write_env(&stg_target, "ENV=staging").unwrap();
+
+        assert!(created_dev);
+        assert!(created_stg);
+        assert!(snap_dev.is_none());
+        assert!(snap_stg.is_none());
+        assert_eq!(fs::read_to_string(&dev_target).unwrap(), "ENV=development");
+        assert_eq!(fs::read_to_string(&stg_target).unwrap(), "ENV=staging");
     }
 }

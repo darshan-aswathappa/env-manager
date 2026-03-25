@@ -48,3 +48,45 @@ export interface AppSettings {
   autoMaskMinutes: number;
   clipboardClearSeconds: number;
 }
+
+// ── Push to Stage Types ────────────────────────────────────────
+
+export type ConflictStrategy = 'overwrite' | 'skip';
+
+export interface ConflictDetail {
+  key: string;
+  sourceVal: string;
+  targetVal: string;
+}
+
+export interface ConflictReport {
+  newKeys: string[];
+  conflictSame: string[];        // identical value — will be auto-skipped
+  conflictDifferent: ConflictDetail[];
+}
+
+export interface PushSummary {
+  written: string[];             // keys that will be written (new or overwritten)
+  skippedConflict: string[];     // keys skipped due to 'skip' strategy
+  skippedNoChange: string[];     // keys with identical values (auto-skipped)
+}
+
+export interface AtomicWriteResult {
+  snapshot: string | null;
+  targetCreated: boolean;
+}
+
+export interface PushVarsRequest {
+  projectId: string;
+  sourceSuffix: string;
+  targetSuffix: string;
+  varsToPush: Array<{ key: string; val: string }>;
+  conflictDecisions: Map<string, ConflictStrategy>; // per-key decisions; default is 'overwrite'
+}
+
+export interface PushResult {
+  summary: PushSummary;
+  snapshot: string | null;       // pre-push target content for undo
+  targetCreated: boolean;
+  updatedVars: import('./types').EnvVar[];  // the target env after push (re-read from disk)
+}

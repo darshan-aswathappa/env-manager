@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ChevronRight, Plus, FolderOpen, Trash2 } from "lucide-react";
+import { Search, ChevronRight, Plus, FolderOpen, Trash2, Upload } from "lucide-react";
 import type { EnvVar, Project } from "../types";
 
 interface VarListProps {
@@ -10,6 +10,7 @@ interface VarListProps {
   onSelectVar: (id: string) => void;
   onAddVar: () => void;
   onDeleteVar: (id: string) => void;
+  onOpenPush?: (() => void) | null;
 }
 
 function valuePreview(v: EnvVar): string {
@@ -26,6 +27,7 @@ export default function VarList({
   onSelectVar,
   onAddVar,
   onDeleteVar,
+  onOpenPush = null,
 }: VarListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -48,8 +50,8 @@ export default function VarList({
   return (
     <div className="list-panel">
       {/* Search */}
-      <div className="search-wrap">
-        <div className="search-input-wrap">
+      <div className="search-wrap" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="search-input-wrap" style={{ flex: 1 }}>
           <span className="search-icon" aria-hidden="true">
             <Search size={13} />
           </span>
@@ -63,6 +65,30 @@ export default function VarList({
             spellCheck={false}
           />
         </div>
+        <button
+          data-testid="push-to-stage-btn"
+          aria-label="Push variables to stage"
+          title="Push to stage (⌘⇧P)"
+          onClick={() => { if (onOpenPush) onOpenPush(); }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 28,
+            height: 28,
+            flexShrink: 0,
+            background: "transparent",
+            border: "1px solid var(--border-subtle)",
+            borderRadius: "var(--radius-md)",
+            color: "var(--text-secondary)",
+            cursor: onOpenPush ? "pointer" : "default",
+            opacity: onOpenPush ? 1 : 0.4,
+            pointerEvents: onOpenPush ? "auto" : "none",
+            transition: "opacity var(--t-fast)",
+          }}
+        >
+          <Upload size={13} />
+        </button>
       </div>
 
       {/* List */}

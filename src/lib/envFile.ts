@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { EnvVar } from '../types'
+import type { EnvVar, Project } from '../types'
+import type { ConflictReport, ConflictStrategy, PushSummary, AtomicWriteResult, PushVarsRequest, PushResult } from '../types'
 
 export function shellQuote(val: string): string {
   if (val === '') return "''"
@@ -102,4 +103,144 @@ export type ShellIntegrationStatus = 'zsh' | 'bash' | 'both' | 'not_found';
 
 export async function checkShellIntegration(): Promise<ShellIntegrationStatus> {
   return invoke<ShellIntegrationStatus>('check_shell_integration')
+}
+
+// ── Push to Stage ─────────────────────────────────────────────
+
+/**
+ * Pure function: classifies varsToPush against targetVars.
+ * Returns which keys are new, identical (auto-skip), or conflicting.
+ */
+export function buildConflictReport(
+  varsToPush: Array<{ key: string; val: string }>,
+  targetVars: EnvVar[]
+): ConflictReport {
+  const targetMap = new Map<string, string>(targetVars.map(v => [v.key, v.val]))
+  const newKeys: string[] = []
+  const conflictSame: string[] = []
+  const conflictDifferent: ConflictReport['conflictDifferent'] = []
+
+  for (const { key, val } of varsToPush) {
+    if (!targetMap.has(key)) {
+      newKeys.push(key)
+    } else if (targetMap.get(key) === val) {
+      conflictSame.push(key)
+    } else {
+      conflictDifferent.push({ key, sourceVal: val, targetVal: targetMap.get(key)! })
+    }
+  }
+
+  return { newKeys, conflictSame, conflictDifferent }
+}
+
+/**
+ * Pure function: merges varsToPush into targetVars using per-key conflict decisions.
+ * Returns merged EnvVar array and a summary of what happened.
+ * Default strategy for keys not in conflictDecisions is 'overwrite'.
+ */
+export function mergeVarsForPush(
+  varsToPush: Array<{ key: string; val: string }>,
+  targetVars: EnvVar[],
+  conflictDecisions: Map<string, ConflictStrategy>,
+  projectId: string
+): { mergedVars: EnvVar[]; summary: PushSummary } {
+  const merged = new Map<string, EnvVar>(targetVars.map(v => [v.key, { ...v }]))
+  const written: string[] = []
+  const skippedConflict: string[] = []
+  const skippedNoChange: string[] = []
+
+  for (const { key, val } of varsToPush) {
+    if (!merged.has(key)) {
+      // New key — always add
+      merged.set(key, { id: crypto.randomUUID(), key, val, revealed: false, sourceProjectId: projectId })
+      written.push(key)
+    } else if (merged.get(key)!.val === val) {
+      // Identical value — auto-skip
+      skippedNoChange.push(key)
+    } else {
+      // Different value — check per-key decision, default to 'overwrite'
+      const strategy: ConflictStrategy = conflictDecisions.get(key) ?? 'overwrite'
+      if (strategy === 'overwrite') {
+        merged.set(key, { ...merged.get(key)!, val })
+        written.push(key)
+      } else {
+        // 'skip' — leave target value unchanged
+        skippedConflict.push(key)
+      }
+    }
+  }
+
+  return {
+    mergedVars: Array.from(merged.values()),
+    summary: { written, skippedConflict, skippedNoChange },
+  }
+}
+
+/**
+ * Async: reads target env from disk, builds and returns ConflictReport.
+ * Does NOT write anything.
+ */
+export async function previewPushVarsToStage(
+  projectId: string,
+  targetSuffix: string,
+  varsToPush: Array<{ key: string; val: string }>
+): Promise<ConflictReport> {
+  const targetVars = await loadProjectEnv(projectId, targetSuffix)
+  return buildConflictReport(varsToPush, targetVars)
+}
+
+/**
+ * Async: merges vars, writes merged content atomically to target via Tauri,
+ * re-reads target from disk, returns full PushResult.
+ */
+export async function pushVarsToStage(request: PushVarsRequest): Promise<PushResult> {
+  const { projectId, targetSuffix, varsToPush, conflictDecisions } = request
+
+  const currentTargetVars = await loadProjectEnv(projectId, targetSuffix)
+  const { mergedVars, summary } = mergeVarsForPush(varsToPush, currentTargetVars, conflictDecisions, projectId)
+
+  const mergedContent = serializeVars(mergedVars)
+  const atomicResult = await invoke<AtomicWriteResult>('push_vars_to_stage', {
+    projectId,
+    targetSuffix,
+    mergedContent,
+  })
+
+  const updatedVars = await loadProjectEnv(projectId, targetSuffix)
+
+  return {
+    summary,
+    snapshot: atomicResult.snapshot,
+    targetCreated: atomicResult.targetCreated,
+    updatedVars,
+  }
+}
+
+/**
+ * Pure function: immutably updates a project's target environment vars.
+ * Returns new Project object. Source env is unchanged.
+ */
+export function applyPushResultToProject(
+  project: Project,
+  targetSuffix: string,
+  updatedVars: EnvVar[]
+): Project {
+  const existingIndex = project.environments.findIndex(e => e.suffix === targetSuffix)
+
+  let newEnvironments: Project['environments']
+  if (existingIndex === -1) {
+    // Target env doesn't exist yet — append a new entry
+    newEnvironments = [...project.environments, { suffix: targetSuffix, vars: updatedVars }]
+  } else {
+    // Replace the target env's vars immutably
+    newEnvironments = project.environments.map((env, i) =>
+      i === existingIndex ? { ...env, vars: updatedVars } : { ...env }
+    )
+  }
+
+  return {
+    ...project,
+    environments: newEnvironments,
+    vars: project.activeEnv === targetSuffix ? updatedVars : project.vars,
+  }
 }
