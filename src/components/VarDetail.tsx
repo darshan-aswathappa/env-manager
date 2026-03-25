@@ -8,6 +8,7 @@ import {
   Save,
   ChevronDown,
   ArrowRightLeft,
+  GitCompare,
 } from "lucide-react";
 import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
 import { envDisplayName } from "../types";
@@ -29,6 +30,7 @@ interface VarDetailProps {
   onSwitchEnvironment: (suffix: string) => void;
   onOpenShellIntegration: () => void;
   onOpenPush?: (() => void) | null;
+  onOpenDiff?: (() => void) | null;
 }
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -82,6 +84,7 @@ export default function VarDetail({
   onSwitchEnvironment,
   onOpenShellIntegration,
   onOpenPush = null,
+  onOpenDiff = null,
 }: VarDetailProps) {
   const envTier = activeEnv === 'production'
     ? 'prod'
@@ -132,6 +135,19 @@ export default function VarDetail({
               <ArrowRightLeft size={11} />
               Promote
             </button>
+
+            {typeof onOpenDiff === 'function' && (
+              <button
+                data-testid="compare-env-btn"
+                className="promote-btn"
+                aria-label="Compare Environments"
+                title="Compare Environments (⌘D)"
+                onClick={onOpenDiff}
+              >
+                <GitCompare size={11} />
+                Compare
+              </button>
+            )}
           </div>
         </div>
 

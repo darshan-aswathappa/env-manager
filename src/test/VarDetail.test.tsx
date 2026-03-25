@@ -296,3 +296,42 @@ describe('VarDetail promote button', () => {
     expect(btn.closest('header')).toBeTruthy()
   })
 })
+
+describe('VarDetail diff button', () => {
+  it('renders "Compare" button when onOpenDiff prop is provided', () => {
+    render(<VarDetail {...defaultProps} onOpenDiff={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /Compare Environments/i })).toBeInTheDocument()
+  })
+
+  it('does not render the diff button when onOpenDiff is null', () => {
+    render(<VarDetail {...defaultProps} onOpenDiff={null} />)
+    expect(screen.queryByRole('button', { name: /Compare Environments/i })).not.toBeInTheDocument()
+  })
+
+  it('does not render the diff button when onOpenDiff is undefined (omitted)', () => {
+    const { onOpenDiff: _, ...propsWithoutDiff } = { ...defaultProps, onOpenDiff: undefined }
+    render(<VarDetail {...propsWithoutDiff} />)
+    expect(screen.queryByRole('button', { name: /Compare Environments/i })).not.toBeInTheDocument()
+  })
+
+  it('clicking the Compare button calls onOpenDiff', () => {
+    const onOpenDiff = vi.fn()
+    render(<VarDetail {...defaultProps} onOpenDiff={onOpenDiff} />)
+    fireEvent.click(screen.getByRole('button', { name: /Compare Environments/i }))
+    expect(onOpenDiff).toHaveBeenCalledTimes(1)
+  })
+
+  it('Compare button is positioned in the header area alongside Promote button', () => {
+    render(<VarDetail {...defaultProps} onOpenPush={vi.fn()} onOpenDiff={vi.fn()} />)
+    const compareBtn = screen.getByRole('button', { name: /Compare Environments/i })
+    const promoteBtn = screen.getByRole('button', { name: /Promote to another environment/i })
+    expect(compareBtn.closest('header')).toBeTruthy()
+    expect(compareBtn.closest('header')).toBe(promoteBtn.closest('header'))
+  })
+
+  it('Compare button is disabled when onOpenDiff is falsy (null passed)', () => {
+    render(<VarDetail {...defaultProps} onOpenDiff={null} />)
+    // null means no button rendered, not a disabled button
+    expect(screen.queryByRole('button', { name: /Compare Environments/i })).not.toBeInTheDocument()
+  })
+})

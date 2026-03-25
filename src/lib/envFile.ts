@@ -217,6 +217,15 @@ export async function pushVarsToStage(request: PushVarsRequest): Promise<PushRes
 }
 
 /**
+ * Pure function: returns masked preview for display. If revealed, shows truncated value.
+ */
+export function valuePreview(val: string, revealed: boolean): string {
+  if (!val) return ''
+  if (!revealed) return '••••••••'
+  return val.length > 24 ? val.slice(0, 24) + '…' : val
+}
+
+/**
  * Pure function: immutably updates a project's target environment vars.
  * Returns new Project object. Source env is unchanged.
  */

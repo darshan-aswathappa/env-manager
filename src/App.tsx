@@ -23,6 +23,7 @@ import ShellIntegration from "./components/ShellIntegration";
 import SettingsPanel from "./components/Settings";
 import Onboarding from "./components/Onboarding";
 import PushToStagePanel from "./components/PushToStage/PushToStagePanel";
+import DiffViewPanel from "./components/DiffView/DiffViewPanel";
 import { Plus, X } from "lucide-react";
 
 // ── Error Boundary ─────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings>(loadSettings);
   const [showPushPanel, setShowPushPanel] = useState(false);
+  const [showDiffPanel, setShowDiffPanel] = useState(false);
   const [_pushUndoSnapshot, setPushUndoSnapshot] = useState<{
     projectId: string;
     suffix: string;
@@ -215,7 +217,7 @@ export default function App() {
     };
   }, [appSettings.autoMaskMinutes]);
 
-  /* Global keyboard shortcut Cmd+Shift+P to open push panel */
+  /* Global keyboard shortcuts */
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'P') {
@@ -225,10 +227,24 @@ export default function App() {
           setShowPushPanel(true);
         }
       }
+      // Cmd+D: toggle diff panel (guard: project selected + >= 2 envs with vars)
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'd') {
+        e.preventDefault();
+        const proj = projects.find((p) => p.id === selectedId) ?? null;
+        const envsWithVars = proj?.environments.filter((env) => env.vars.length > 0) ?? [];
+        if (proj && envsWithVars.length >= 2) {
+          if (showDiffPanel) {
+            setShowDiffPanel(false);
+          } else {
+            setShowPushPanel(false); // mutual exclusion
+            setShowDiffPanel(true);
+          }
+        }
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [projects, selectedId]);
+  }, [projects, selectedId, showDiffPanel]);
 
   /* Load vars per project from app data on mount and when project list changes */
   useEffect(() => {
@@ -572,6 +588,23 @@ export default function App() {
     [selectedId]
   );
 
+  /* ── Diff panel push complete ────────────────────────── */
+  const handleDiffPushComplete = useCallback(
+    (targetSuffix: string, updatedVars: EnvVar[], snapshot: string | null) => {
+      if (!selectedId) return;
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== selectedId) return p;
+          return applyPushResultToProject(p, targetSuffix, updatedVars);
+        })
+      );
+      if (snapshot !== null) {
+        setPushUndoSnapshot({ projectId: selectedId, suffix: targetSuffix, snapshot });
+      }
+    },
+    [selectedId]
+  );
+
   /* ── Derived state ───────────────────────────────────── */
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null;
   const selectedVar =
@@ -628,6 +661,11 @@ export default function App() {
           onSave={saveToFile}
           onOpenShellIntegration={() => setShowShellIntegration(true)}
           onOpenPush={selectedProject.vars.length > 0 ? () => setShowPushPanel(true) : null}
+          onOpenDiff={
+            (selectedProject.environments.filter((e) => e.vars.length > 0).length >= 2)
+              ? () => { setShowPushPanel(false); setShowDiffPanel(true); }
+              : null
+          }
         />
       ) : (
         <div className="detail-panel">
@@ -729,6 +767,31 @@ export default function App() {
               sourceSuffix={selectedProject.activeEnv}
               onClose={() => setShowPushPanel(false)}
               onPushComplete={handlePushComplete}
+            />
+          </div>
+        </div>
+      )}
+
+      {showDiffPanel && selectedProject && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.15)',
+            display: 'flex', justifyContent: 'flex-end',
+            animation: 'fadeIn var(--t-normal) both',
+          }}
+          onClick={() => setShowDiffPanel(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowDiffPanel(false); }}
+          tabIndex={-1}
+          role="presentation"
+          data-testid="diff-panel-backdrop"
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <DiffViewPanel
+              project={selectedProject}
+              initialLeftSuffix={selectedProject.activeEnv}
+              onClose={() => setShowDiffPanel(false)}
+              onPushComplete={handleDiffPushComplete}
             />
           </div>
         </div>

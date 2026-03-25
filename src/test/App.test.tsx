@@ -870,3 +870,96 @@ describe('App PushToStagePanel integration', () => {
     await waitFor(() => expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument())
   })
 })
+
+describe('App diff panel (Cmd+D)', () => {
+  const projectWith2Envs = {
+    id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
+    vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+    environments: [
+      { suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'staging', vars: [{ id: 'v2', key: 'STAGE_VAR', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'production', vars: [] },
+      { suffix: 'local', vars: [] },
+      { suffix: 'development', vars: [] },
+      { suffix: 'testing', vars: [] },
+    ],
+    activeEnv: '',
+    inheritanceMode: 'merge-child-wins',
+    sortOrder: 0,
+  }
+
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    mockOpen.mockReset()
+    localStorage.clear()
+    localStorage.setItem('dotenv_mgr_onboarding', 'complete')
+    mockInvoke.mockResolvedValue('')
+  })
+
+  it('Cmd+D opens the diff panel when a project with >= 2 envs with vars is selected', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument()
+    })
+  })
+
+  it('Cmd+D does not open the panel when no project is selected', async () => {
+    render(<App />)
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    expect(screen.queryByTestId('diff-panel-backdrop')).not.toBeInTheDocument()
+  })
+
+  it('opening the diff panel closes the push panel if it was open', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    // Open push panel
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'P', metaKey: true, shiftKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.queryByTestId('push-panel-backdrop')).toBeInTheDocument())
+    // Open diff panel — should close push panel
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => {
+      expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument()
+      expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument()
+    })
+  })
+
+  it('Cmd+D toggles the diff panel closed if it is already open', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    // Open
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+    // Close via Cmd+D again
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.queryByTestId('diff-panel-backdrop')).not.toBeInTheDocument())
+  })
+})
