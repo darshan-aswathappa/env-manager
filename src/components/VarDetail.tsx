@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  KeyRound,
   Eye,
   EyeOff,
   Copy,
@@ -8,11 +7,11 @@ import {
   Trash2,
   Plus,
   Save,
+  ChevronDown,
 } from "lucide-react";
 import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
 import { envDisplayName } from "../types";
 import type { ShellIntegrationStatus } from "../lib/envFile";
-import EnvironmentToggle from "./EnvironmentToggle";
 
 interface VarDetailProps {
   project: Project;
@@ -84,63 +83,96 @@ export default function VarDetail({
   onSwitchEnvironment,
   onOpenShellIntegration,
 }: VarDetailProps) {
+  const envTier = activeEnv === 'production'
+    ? 'prod'
+    : (activeEnv === 'staging' || activeEnv === 'testing')
+      ? 'warn'
+      : (activeEnv === 'development' || activeEnv === 'local')
+        ? 'dev'
+        : 'base';
+
   return (
     <div className="detail-panel">
-      {/* Header */}
-      <div className="detail-header">
-        <div className="detail-header-icon">
-          <KeyRound size={16} />
-        </div>
-        <div className="detail-header-info">
-          <div className="detail-header-title">{project.name}</div>
-          <div className="detail-header-sub">
-            {project.path}/<span className={`env-hint env-hint--${activeEnv === 'production' ? 'prod' : activeEnv === 'staging' || activeEnv === 'testing' ? 'warn' : activeEnv === 'development' || activeEnv === 'local' ? 'dev' : 'base'}`}>{envDisplayName(activeEnv)}</span>
+      {/* Unified 2-row header */}
+      <header className="proj-header" aria-label={`${project.name} — ${envDisplayName(activeEnv)}`}>
+
+        {/* Row 1: project name + env badge */}
+        <div className="proj-header__row proj-header__row--primary">
+          <h1 className="proj-header__name">{project.name}</h1>
+
+          <div className="env-badge-wrap" data-env-tier={envTier}>
+            <span className="env-badge" aria-hidden="true">
+              <span className="env-badge__dot" />
+              <span className="env-badge__label">{envDisplayName(activeEnv)}</span>
+              <span className="env-badge__chevron"><ChevronDown size={9} /></span>
+            </span>
+            <select
+              className="env-badge__select"
+              value={activeEnv}
+              onChange={(e) => { if (e.target.value !== activeEnv) onSwitchEnvironment(e.target.value); }}
+              aria-label="Switch environment"
+            >
+              {environments.map((env) => (
+                <option key={env.suffix} value={env.suffix}>
+                  {envDisplayName(env.suffix)}{env.vars.length > 0 ? ` (${env.vars.length})` : ''}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-        <EnvironmentToggle
-          environments={environments}
-          activeEnv={activeEnv}
-          envTier={activeEnv === 'production' ? 'prod' : activeEnv === 'staging' || activeEnv === 'testing' ? 'warn' : activeEnv === 'development' || activeEnv === 'local' ? 'dev' : 'base'}
-          onSwitch={onSwitchEnvironment}
-        />
-        <div className="detail-header-actions">
-          {gitignoreStatus === 'listed' && (
-            <span className="badge badge-success" title=".env is listed in .gitignore">
-              <span className="status-dot status-dot--success" />
-              .gitignore
-            </span>
-          )}
-          {gitignoreStatus === 'not_listed' && (
-            <span className="badge badge-warning" title=".env is NOT in .gitignore — secrets may be committed">
-              <span className="status-dot status-dot--warning" />
-              .gitignore!
-            </span>
-          )}
-          {gitignoreStatus === 'no_gitignore' && (
-            <span className="badge badge-warning" title="No .gitignore found — create one to protect secrets">
-              <span className="status-dot status-dot--warning" />
-              no .gitignore
-            </span>
-          )}
-        </div>
-      </div>
 
-      {/* Shell injection status */}
-      <div className="injection-bar">
-        <span className={`injection-bar__dot ${shellStatus !== 'not_found' ? 'injection-bar__dot--active' : 'injection-bar__dot--inactive'}`} />
-        {shellStatus !== 'not_found' ? (
-          <span>
-            <span className="injection-bar__env">{envDisplayName(activeEnv)}</span>
-            {' '}loaded via {shellLabel(shellStatus)}
+        {/* Row 2: path + security signals */}
+        <div className="proj-header__row proj-header__row--secondary">
+          <span className="proj-header__path" title={`${project.path}/${envDisplayName(activeEnv)}`}>
+            {project.path}/{envDisplayName(activeEnv)}
           </span>
-        ) : (
-          <span>
-            Auto-load not configured
-            {' · '}
-            <button className="injection-bar__link" onClick={onOpenShellIntegration}>Set up</button>
-          </span>
-        )}
-      </div>
+
+          <div className="proj-header__signals">
+            {gitignoreStatus === 'listed' ? (
+              <span
+                className="header-signal header-signal--ok"
+                title=".env is listed in .gitignore"
+                aria-label=".gitignore protected"
+              >
+                <span className="header-signal__dot" />
+                <span className="header-signal__text">.gitignore</span>
+              </span>
+            ) : (
+              <span
+                className="header-signal header-signal--warn"
+                title={gitignoreStatus === 'not_listed'
+                  ? '.env is NOT listed in .gitignore — secrets may be committed'
+                  : 'No .gitignore found in this project'}
+                aria-label={gitignoreStatus === 'not_listed' ? '.gitignore missing entry' : 'No .gitignore'}
+              >
+                <span className="header-signal__dot" />
+                <span className="header-signal__text">
+                  {gitignoreStatus === 'not_listed' ? '!.gitignore' : 'no .gitignore'}
+                </span>
+              </span>
+            )}
+
+            <span className="header-signal-sep" aria-hidden="true" />
+
+            <button
+              className={`header-signal header-signal--shell${shellStatus !== 'not_found' ? ' header-signal--ok' : ' header-signal--inactive'}`}
+              onClick={onOpenShellIntegration}
+              title={shellStatus !== 'not_found'
+                ? `Auto-load active via ${shellLabel(shellStatus)}`
+                : 'Auto-load not configured — click to set up'}
+              aria-label={shellStatus !== 'not_found'
+                ? `Shell integration active: ${shellLabel(shellStatus)}`
+                : 'Shell integration not configured'}
+            >
+              <span className="header-signal__dot" />
+              <span className="header-signal__text">
+                {shellStatus !== 'not_found' ? shellLabel(shellStatus) : 'shell'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+      </header>
 
       {/* Body */}
       <div className="detail-body">

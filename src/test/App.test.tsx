@@ -692,7 +692,7 @@ describe('App keyboard and modal edge cases', () => {
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
     // Wait for shellStatus to be set to not_found
-    const setupBtn = await screen.findByRole('button', { name: /Set up/i })
+    const setupBtn = await screen.findByRole('button', { name: /Shell integration not configured/i })
     await act(async () => { setupBtn.click() })
     await waitFor(() => expect(screen.getByRole('dialog', { name: /Shell integration/i })).toBeInTheDocument())
   })

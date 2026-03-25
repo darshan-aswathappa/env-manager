@@ -48,25 +48,25 @@ describe('VarDetail', () => {
     expect(screen.getByText(/No variable selected/i)).toBeInTheDocument()
   })
 
-  it('shows warning icon with tooltip when no gitignore exists', () => {
+  it('shows warning signal with tooltip when no gitignore exists', () => {
     render(<VarDetail {...defaultProps} gitignoreStatus="no_gitignore" />)
-    const badge = screen.getByTitle(/No .gitignore found/i)
-    expect(badge).toBeInTheDocument()
-    expect(badge.querySelector('svg')).toBeTruthy()
+    const signal = screen.getByTitle(/No .gitignore found/i)
+    expect(signal).toBeInTheDocument()
+    expect(signal.querySelector('.header-signal__dot')).toBeTruthy()
   })
 
-  it('shows warning icon with tooltip when .env is not listed', () => {
+  it('shows warning signal with tooltip when .env is not listed', () => {
     render(<VarDetail {...defaultProps} gitignoreStatus="not_listed" />)
-    const badge = screen.getByTitle(/.env is NOT listed/i)
-    expect(badge).toBeInTheDocument()
-    expect(badge.querySelector('svg')).toBeTruthy()
+    const signal = screen.getByTitle(/.env is NOT listed/i)
+    expect(signal).toBeInTheDocument()
+    expect(signal.querySelector('.header-signal__dot')).toBeTruthy()
   })
 
-  it('shows success icon with tooltip when .env is listed', () => {
+  it('shows success signal with tooltip when .env is listed', () => {
     render(<VarDetail {...defaultProps} gitignoreStatus="listed" />)
-    const badge = screen.getByTitle(/.env is listed in .gitignore/i)
-    expect(badge).toBeInTheDocument()
-    expect(badge.querySelector('svg')).toBeTruthy()
+    const signal = screen.getByTitle(/.env is listed in .gitignore/i)
+    expect(signal).toBeInTheDocument()
+    expect(signal.querySelector('.header-signal__dot')).toBeTruthy()
   })
 
   it('renders var fields when selectedVar is provided', () => {
@@ -127,14 +127,14 @@ describe('VarDetail', () => {
     expect(onSwitchEnvironment).toHaveBeenCalledWith('local')
   })
 
-  it('shows active env name in subtitle', () => {
+  it('shows active env name in badge label', () => {
     const { container } = render(<VarDetail {...defaultProps} activeEnv="production" />)
-    expect(container.querySelector('.env-hint')).toHaveTextContent('.env.production')
+    expect(container.querySelector('.env-badge__label')).toHaveTextContent('.env.production')
   })
 
-  it('shows base env name in subtitle when activeEnv is empty', () => {
+  it('shows base env name in badge label when activeEnv is empty', () => {
     const { container } = render(<VarDetail {...defaultProps} activeEnv="" />)
-    expect(container.querySelector('.env-hint')).toHaveTextContent('.env')
+    expect(container.querySelector('.env-badge__label')).toHaveTextContent('.env')
   })
 
   it('shows saving status', () => {

@@ -881,57 +881,224 @@ a {
   min-width: 0;
 }
 
-/* ── Detail Header ─────────────────────────────────────────── */
-.detail-header {
-  padding: 16px 22px 12px;
-  border-bottom: var(--panel-border);
+/* ══════════════════════════════════════════════════════════════
+   UNIFIED PROJECT HEADER (replaces detail-header + injection-bar)
+══════════════════════════════════════════════════════════════ */
+
+.proj-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  padding: 0 22px;
+  border-bottom: var(--panel-border);
   flex-shrink: 0;
   animation: slideIn var(--t-normal) both;
 }
 
-.detail-header-icon {
+/* ── Row shared ──────────────────────────────────────────── */
+.proj-header__row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
+  gap: 8px;
+  min-width: 0;
+}
+
+.proj-header__row--primary {
+  height: 36px;
+  border-bottom: 1px solid var(--border-separator);
+}
+
+.proj-header__row--secondary {
+  height: 24px;
+}
+
+/* ── Project name ────────────────────────────────────────── */
+.proj-header__name {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+/* ── Env badge — styled pill wrapping a hidden <select> ──── */
+.env-badge-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.env-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px 2px 6px;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast);
+}
+
+.env-badge-wrap[data-env-tier="base"] .env-badge {
+  background: rgba(72, 72, 74, 0.18);
+  border-color: rgba(72, 72, 74, 0.35);
+  color: var(--text-secondary);
+}
+
+.env-badge-wrap[data-env-tier="dev"] .env-badge {
+  background: rgba(59, 130, 246, 0.10);
+  border-color: rgba(59, 130, 246, 0.22);
+  color: #7aa8e8;
+}
+
+.env-badge-wrap[data-env-tier="warn"] .env-badge {
+  background: rgba(245, 165, 36, 0.10);
+  border-color: rgba(245, 165, 36, 0.22);
+  color: #c9943a;
+}
+
+.env-badge-wrap[data-env-tier="prod"] .env-badge {
+  background: rgba(229, 72, 77, 0.10);
+  border-color: rgba(229, 72, 77, 0.22);
+  color: #d96b6e;
+}
+
+.env-badge__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.detail-header-info {
+.env-badge-wrap[data-env-tier="base"] .env-badge__dot { background: var(--text-tertiary); }
+.env-badge-wrap[data-env-tier="dev"]  .env-badge__dot { background: var(--color-info); }
+.env-badge-wrap[data-env-tier="warn"] .env-badge__dot { background: var(--color-warning); }
+.env-badge-wrap[data-env-tier="prod"] .env-badge__dot { background: var(--color-danger); }
+
+.env-badge__chevron {
+  display: flex;
+  align-items: center;
+  opacity: 0.55;
+  margin-left: 1px;
+}
+
+/* Hidden select — covers the pill, handles all interaction */
+.env-badge__select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  z-index: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  background: none;
+}
+
+.env-badge-wrap:hover .env-badge {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.env-badge-wrap:focus-within .env-badge {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Path row ────────────────────────────────────────────── */
+.proj-header__path {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   flex: 1;
   min-width: 0;
 }
 
-.detail-header-title {
-  font-family: var(--font-mono);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.detail-header-sub {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--text-tertiary);
-  margin-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.detail-header-actions {
+/* ── Signals cluster ─────────────────────────────────────── */
+.proj-header__signals {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   flex-shrink: 0;
+}
+
+.header-signal-sep {
+  display: block;
+  width: 1px;
+  height: 10px;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.header-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+  transition: color var(--t-fast);
+}
+
+.header-signal__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background var(--t-fast);
+}
+
+.header-signal--ok .header-signal__dot  { background: var(--color-success); }
+.header-signal--ok .header-signal__text { color: var(--text-tertiary); }
+
+.header-signal--warn .header-signal__dot  { background: var(--color-warning); }
+.header-signal--warn .header-signal__text { color: var(--text-tertiary); }
+
+.header-signal--inactive .header-signal__dot  { background: var(--text-muted); }
+.header-signal--inactive .header-signal__text { color: var(--text-muted); }
+
+.header-signal--shell { cursor: pointer; }
+
+.header-signal--shell:hover .header-signal__text { color: var(--text-secondary); }
+.header-signal--shell:hover .header-signal__dot  { filter: brightness(1.2); }
+
+.header-signal--shell:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.header-signal--ok .header-signal__dot {
+  animation: dotReveal 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Detail Body ───────────────────────────────────────────── */
@@ -1234,61 +1401,7 @@ a {
 .env-hint--warn { color: var(--color-warning); }
 .env-hint--prod { color: var(--color-danger); }
 
-/* ══════════════════════════════════════════════════════════════
-   SHELL INJECTION STATUS BAR
-══════════════════════════════════════════════════════════════ */
-.injection-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 22px;
-  height: 28px;
-  border-bottom: 1px solid var(--border-separator);
-  background: rgba(255, 255, 255, 0.015);
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  color: var(--text-tertiary);
-  letter-spacing: 0.01em;
-}
-
-.injection-bar__dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  transition: background var(--t-fast);
-}
-
-.injection-bar__dot--active {
-  background: var(--color-success);
-  animation: dotReveal 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.injection-bar__dot--inactive {
-  background: var(--text-muted);
-}
-
-.injection-bar__env {
-  color: var(--text-secondary);
-}
-
-.injection-bar__link {
-  color: var(--accent-text);
-  background: none;
-  border: none;
-  font: inherit;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-  text-decoration-color: rgba(122, 163, 212, 0.3);
-  text-underline-offset: 2px;
-  transition: color var(--t-fast);
-}
-
-.injection-bar__link:hover {
-  color: var(--accent-hover);
-}
+/* injection-bar replaced by .proj-header__row--secondary signals */
 
 /* ══════════════════════════════════════════════════════════════
    SAVE STATUS
@@ -2556,7 +2669,7 @@ a {
   .fab-add,
   .var-list-item,
   .var-detail-content,
-  .detail-header,
+  .proj-header,
   .detail-body,
   .empty-state,
   .empty-state-icon,
@@ -2576,7 +2689,7 @@ a {
   .save-status-saved svg,
   .save-status-error,
   .icon-btn--copied,
-  .injection-bar__dot--active,
+  .header-signal--ok .header-signal__dot,
   .sett-root,
   .var-list-confirm-label,
   .var-list-confirm-actions,
