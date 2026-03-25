@@ -1,6 +1,6 @@
 import jsyaml from 'js-yaml'
 import Papa from 'papaparse'
-import type { EnvVar, ExportFormat, ConflictReport, ConflictStrategy } from '../types'
+import type { EnvVar, ExportFormat, ConflictReport, ConflictStrategy, EnvExampleFile, ExampleImportPlan, ExampleImportPlanRow, ExampleImportDecision } from '../types'
 import { parseEnvContent, serializeVars, shellQuote } from './envFile'
 
 // ── Error class ───────────────────────────────────────────────────────────
@@ -305,4 +305,149 @@ export function mergeVarsForImport(
   }
 
   return Array.from(merged.values())
+}
+
+// ── .env.example Import ───────────────────────────────────────────────────
+
+/**
+ * Parses .env.example file content into structured EnvExampleFile.
+ * Preserves keys, placeholder values, inline comments, and section headings.
+ * Pure function — no side effects.
+ */
+export function parseEnvExampleContent(content: string): EnvExampleFile {
+  // Normalize CRLF to LF
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const lines = normalized.split('\n')
+
+  const keys: EnvExampleFile['keys'] = []
+  let pendingHeading: string | null = null
+  const headingLines: string[] = []
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      // Blank line resets pending section heading
+      pendingHeading = null
+      headingLines.length = 0
+      continue
+    }
+
+    if (trimmed.startsWith('#')) {
+      // Accumulate section heading lines
+      const headingText = trimmed.slice(1).trim()
+      headingLines.push(headingText)
+      pendingHeading = headingLines.join('\n')
+      continue
+    }
+
+    // Key line: must contain '='
+    const eqIndex = line.indexOf('=')
+    if (eqIndex === -1) continue
+
+    const rawKey = line.slice(0, eqIndex).trim()
+    const rawAfterEq = line.slice(eqIndex + 1)
+
+    // Parse inline comment: only a ' #' (space + hash) splits value from comment
+    // A # without a preceding space is part of the value
+    const spaceHashIndex = rawAfterEq.search(/ #/)
+
+    let placeholder: string
+    let inlineComment: string | null
+
+    if (spaceHashIndex !== -1) {
+      placeholder = rawAfterEq.slice(0, spaceHashIndex).trim()
+      inlineComment = rawAfterEq.slice(spaceHashIndex + 2).trim() || null
+    } else {
+      placeholder = rawAfterEq.trim()
+      inlineComment = null
+    }
+
+    // Consume the pending section heading for this key
+    const sectionHeading = pendingHeading
+    pendingHeading = null
+    headingLines.length = 0
+
+    keys.push({ key: rawKey, placeholder, inlineComment, sectionHeading })
+  }
+
+  return {
+    keys,
+    totalKeyCount: keys.length,
+    hasPlaceholders: keys.some(k => k.placeholder !== ''),
+  }
+}
+
+/**
+ * Compares EnvExampleFile keys against existing vars to produce an import plan.
+ * Keys are 'exists' if existingVars contains matching key (case-sensitive).
+ * Row ordering follows the original exampleFile.keys order.
+ * Pure function — no side effects.
+ */
+export function buildExampleImportPlan(
+  exampleFile: EnvExampleFile,
+  existingVars: EnvVar[]
+): ExampleImportPlan {
+  const existingMap = new Map<string, string>(existingVars.map(v => [v.key, v.val]))
+
+  let newCount = 0
+  let existsCount = 0
+
+  const rows: ExampleImportPlanRow[] = exampleFile.keys.map(exKey => {
+    if (existingMap.has(exKey.key)) {
+      existsCount++
+      return {
+        key: exKey.key,
+        placeholder: exKey.placeholder,
+        sectionHeading: exKey.sectionHeading,
+        inlineComment: exKey.inlineComment,
+        status: 'exists' as const,
+        existingVal: existingMap.get(exKey.key) ?? null,
+      }
+    } else {
+      newCount++
+      return {
+        key: exKey.key,
+        placeholder: exKey.placeholder,
+        sectionHeading: exKey.sectionHeading,
+        inlineComment: exKey.inlineComment,
+        status: 'new' as const,
+        existingVal: null,
+      }
+    }
+  })
+
+  return { rows, newCount, existsCount }
+}
+
+/**
+ * Creates new vars from an import plan, excluding 'exists' rows and 'skip' decisions.
+ * New vars are created with val = "" (placeholder text is documentation, not a real value).
+ * Returns a new array containing existingVars plus new vars. Does not mutate.
+ * Pure function — no side effects.
+ */
+export function applyExampleImport(
+  plan: ExampleImportPlan,
+  existingVars: EnvVar[],
+  decisions: Map<string, ExampleImportDecision>,
+  projectId: string
+): EnvVar[] {
+  const newVars: EnvVar[] = []
+
+  for (const row of plan.rows) {
+    // Only import 'new' rows (never overwrite 'exists')
+    if (row.status !== 'new') continue
+    // Skip if explicitly decided to skip (default is 'import')
+    if (decisions.get(row.key) === 'skip') continue
+
+    newVars.push({
+      id: crypto.randomUUID(),
+      key: row.key,
+      val: '',  // always empty — placeholder text is documentation
+      revealed: false,
+      sourceProjectId: projectId,
+    })
+  }
+
+  return [...existingVars, ...newVars]
 }

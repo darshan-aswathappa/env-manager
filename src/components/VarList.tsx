@@ -12,6 +12,7 @@ interface VarListProps {
   onDeleteVar: (id: string) => void;
   onOpenImport?: () => void;
   onOpenExport?: () => void;
+  onImportFromExample?: () => void;
 }
 
 function valuePreview(v: EnvVar): string {
@@ -30,6 +31,7 @@ export default function VarList({
   onDeleteVar,
   onOpenImport,
   onOpenExport,
+  onImportFromExample,
 }: VarListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -105,6 +107,24 @@ export default function VarList({
           <div className="list-empty">
             <span>No variables yet.</span>
             <span>Use + to add one.</span>
+            {onImportFromExample && (
+              <button
+                onClick={onImportFromExample}
+                style={{
+                  marginTop: 8,
+                  background: 'none',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-secondary)',
+                  borderRadius: 4,
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                }}
+                aria-label="Import from .env.example"
+              >
+                Import from .env.example
+              </button>
+            )}
           </div>
         )}
 

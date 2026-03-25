@@ -128,3 +128,37 @@ export interface ImportPreviewRow {
   incomingVal: string
   currentVal: string | null
 }
+
+// ── .env.example Import Types ──────────────────────────────────────────────
+
+export interface EnvExampleKey {
+  key: string
+  placeholder: string
+  inlineComment: string | null
+  sectionHeading: string | null
+}
+
+export interface EnvExampleFile {
+  keys: EnvExampleKey[]
+  totalKeyCount: number
+  hasPlaceholders: boolean    // true if any key has a non-empty placeholder
+}
+
+export interface ExampleImportPlanRow {
+  key: string
+  placeholder: string
+  sectionHeading: string | null
+  inlineComment: string | null
+  status: 'new' | 'exists'
+  existingVal: string | null
+}
+
+export interface ExampleImportPlan {
+  rows: ExampleImportPlanRow[]
+  newCount: number
+  existsCount: number
+}
+
+export type ExampleImportDecision = 'import' | 'skip'
+
+export type ExampleImportStep = 'prompt' | 'preview' | 'done'

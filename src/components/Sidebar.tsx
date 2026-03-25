@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, GitBranch, Terminal, Settings, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import type { ProjectTreeNode } from "../types";
+import type { ProjectTreeNode, Project } from "../types";
 import logo from "../assets/logo.png";
 
 interface SidebarProps {
@@ -12,6 +12,7 @@ interface SidebarProps {
   onAddSubProject: (parentId: string) => void;
   onOpenShellIntegration: () => void;
   onOpenSettings: () => void;
+  onImportFromExample: (project: Project) => void;
 }
 
 function ProjectNodeItem({
@@ -23,6 +24,7 @@ function ProjectNodeItem({
   onRequestDelete,
   onCancelDelete,
   onAddSubProject,
+  onImportFromExample,
 }: {
   node: ProjectTreeNode;
   selectedId: string | null;
@@ -32,6 +34,7 @@ function ProjectNodeItem({
   onRequestDelete: (id: string) => void;
   onCancelDelete: () => void;
   onAddSubProject: (parentId: string) => void;
+  onImportFromExample: (project: Project) => void;
 }) {
   const { project, depth, children } = node;
   const paddingLeft = Math.min(depth, 5) * 16;
@@ -103,6 +106,18 @@ function ProjectNodeItem({
         >
           <GitBranch size={11} />
         </button>
+        <button
+          className="project-delete"
+          style={{ marginLeft: "2px" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onImportFromExample(project);
+          }}
+          aria-label={`Import from .env.example for ${project.name}`}
+          title="Import from .env.example"
+        >
+          <span style={{ fontSize: '10px', fontFamily: 'monospace', lineHeight: 1 }}>.ex</span>
+        </button>
         {confirming ? (
           <div className="project-confirm-row" onClick={(e) => e.stopPropagation()}>
             <button
@@ -146,6 +161,7 @@ function ProjectNodeItem({
             onRequestDelete={onRequestDelete}
             onCancelDelete={onCancelDelete}
             onAddSubProject={onAddSubProject}
+            onImportFromExample={onImportFromExample}
           />
         ))}
     </>
@@ -161,6 +177,7 @@ export default function Sidebar({
   onAddSubProject,
   onOpenShellIntegration,
   onOpenSettings,
+  onImportFromExample,
 }: SidebarProps) {
   const totalProjects = countNodes(projectTree);
   const [collapsed, setCollapsed] = useState(false);
@@ -214,6 +231,7 @@ export default function Sidebar({
             onRequestDelete={setPendingDeleteId}
             onCancelDelete={() => setPendingDeleteId(null)}
             onAddSubProject={onAddSubProject}
+            onImportFromExample={onImportFromExample}
           />
         ))}
       </div>

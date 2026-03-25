@@ -13,10 +13,13 @@ import {
   applyPushResultToProject,
   findKeyAcrossEnvironments,
   propagateKeyRenameToEnvironments,
+  checkEnvExample,
 } from "./lib/envFile";
+import { buildExampleImportPlan } from "./lib/envFormats";
+import EnvExamplePromptDialog from "./components/EnvExample/EnvExamplePromptDialog";
 import type { ShellIntegrationStatus } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
-import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment } from "./types";
+import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment, EnvExampleFile } from "./types";
 import { ENV_SUFFIXES } from "./types";
 import Sidebar from "./components/Sidebar";
 import VarList from "./components/VarList";
@@ -67,6 +70,7 @@ class ErrorBoundary extends Component<
 const STORAGE_KEY = "dotenv_mgr_projects";
 const ONBOARDING_KEY = "dotenv_mgr_onboarding";
 const SETTINGS_KEY = "dotenv_mgr_settings";
+const EXAMPLE_DISMISSED_KEY = 'dotenv_mgr_example_dismissed';
 
 const DEFAULT_SETTINGS: AppSettings = {
   defaultShell: "zsh",
@@ -89,6 +93,11 @@ function isOnboardingComplete(): boolean {
   return localStorage.getItem(ONBOARDING_KEY) === "complete";
 }
 type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+interface PendingExampleImport {
+  project: Project
+  exampleFile: EnvExampleFile
+}
 
 function ensureAllEnvironments(envs: Environment[] | undefined, fallbackVars: EnvVar[]): Environment[] {
   const existing = envs ?? [];
@@ -168,6 +177,7 @@ export default function App() {
     affectedSuffixes: string[];
   } | null>(null);
   const [selectedVarOriginalKey, setSelectedVarOriginalKey] = useState<string | null>(null);
+  const [pendingExampleImport, setPendingExampleImport] = useState<PendingExampleImport | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const settingsDialogRef = useRef<HTMLDivElement>(null);
   const autoMaskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -379,6 +389,21 @@ export default function App() {
       }
       setProjects((prev) => [...prev, newProject]);
       setSelectedId(newProject.id);
+      // Check for .env.example — non-blocking, fires after project is in state
+      setTimeout(async () => {
+        try {
+          const exampleFile = await checkEnvExample(dirPath).catch(() => null)
+          if (!exampleFile) return
+          const plan = buildExampleImportPlan(exampleFile, newProject.vars)
+          if (plan.newCount === 0) return
+          const dismissedRaw = localStorage.getItem(EXAMPLE_DISMISSED_KEY)
+          const dismissed: string[] = dismissedRaw ? JSON.parse(dismissedRaw) : []
+          if (dismissed.includes(newProject.id)) return
+          setPendingExampleImport({ project: newProject, exampleFile })
+        } catch {
+          // silently swallow — must never break project-add flow
+        }
+      }, 320)
     } catch {
       /* project add failed — user sees no project added */
     }
@@ -430,6 +455,21 @@ export default function App() {
         }
         setProjects((prev) => [...prev, newProject]);
         setSelectedId(newProject.id);
+        // Check for .env.example — non-blocking
+        setTimeout(async () => {
+          try {
+            const exampleFile = await checkEnvExample(dirPath).catch(() => null)
+            if (!exampleFile) return
+            const plan = buildExampleImportPlan(exampleFile, newProject.vars)
+            if (plan.newCount === 0) return
+            const dismissedRaw = localStorage.getItem(EXAMPLE_DISMISSED_KEY)
+            const dismissed: string[] = dismissedRaw ? JSON.parse(dismissedRaw) : []
+            if (dismissed.includes(newProject.id)) return
+            setPendingExampleImport({ project: newProject, exampleFile })
+          } catch {
+            // silently swallow
+          }
+        }, 320)
       } catch {
         /* sub-project add failed — user sees no project added */
       }
@@ -722,6 +762,47 @@ export default function App() {
     setShowImportDialog(false);
   }, [selectedId]);
 
+  /* ── Example import ─────────────────────────────────── */
+  const handleExampleImportComplete = useCallback((targetSuffix: string, mergedVars: EnvVar[]) => {
+    if (!pendingExampleImport) return
+    const { project } = pendingExampleImport
+    setProjects(prev =>
+      prev.map(p => {
+        if (p.id !== project.id) return p
+        return {
+          ...p,
+          vars: project.activeEnv === targetSuffix ? mergedVars : p.vars,
+          environments: p.environments.map(env =>
+            env.suffix === targetSuffix ? { ...env, vars: mergedVars } : env
+          ),
+        }
+      })
+    )
+    saveProjectEnv(project.id, targetSuffix, mergedVars).catch(() => {})
+    setPendingExampleImport(null)
+  }, [pendingExampleImport])
+
+  const handleExampleDismiss = useCallback((projectId: string) => {
+    const dismissedRaw = localStorage.getItem(EXAMPLE_DISMISSED_KEY)
+    const dismissed: string[] = dismissedRaw ? JSON.parse(dismissedRaw) : []
+    if (!dismissed.includes(projectId)) {
+      dismissed.push(projectId)
+      localStorage.setItem(EXAMPLE_DISMISSED_KEY, JSON.stringify(dismissed))
+    }
+  }, [])
+
+  const triggerExampleImport = useCallback(async (project: Project) => {
+    try {
+      const exampleFile = await checkEnvExample(project.path).catch(() => null)
+      if (!exampleFile) return
+      const plan = buildExampleImportPlan(exampleFile, project.vars)
+      if (plan.newCount === 0) return
+      setPendingExampleImport({ project, exampleFile })
+    } catch {
+      // silently swallow
+    }
+  }, [])
+
   /* ── Derived state ───────────────────────────────────── */
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null;
   const selectedVar =
@@ -749,6 +830,7 @@ export default function App() {
         onAddSubProject={addSubProject}
         onOpenShellIntegration={() => setShowShellIntegration(true)}
         onOpenSettings={() => setShowSettings(true)}
+        onImportFromExample={triggerExampleImport}
       />
 
       <VarList
@@ -761,6 +843,7 @@ export default function App() {
         onDeleteVar={deleteVar}
         onOpenImport={selectedProject ? () => { setShowExportPanel(false); setShowImportDialog(true); } : undefined}
         onOpenExport={selectedProject ? () => { setShowImportDialog(false); setShowExportPanel(true); } : undefined}
+        onImportFromExample={selectedProject ? () => triggerExampleImport(selectedProject) : undefined}
       />
 
       {selectedProject ? (
@@ -965,6 +1048,15 @@ export default function App() {
             />
           </div>
         </div>
+      )}
+      {pendingExampleImport && (
+        <EnvExamplePromptDialog
+          project={pendingExampleImport.project}
+          exampleFile={pendingExampleImport.exampleFile}
+          onImportComplete={handleExampleImportComplete}
+          onDismiss={handleExampleDismiss}
+          onClose={() => setPendingExampleImport(null)}
+        />
       )}
     </div>
     </ErrorBoundary>

@@ -1,7 +1,8 @@
 import { invoke } from '@tauri-apps/api/core'
 import { readTextFile } from '@tauri-apps/plugin-fs'
-import type { EnvVar, Project, Environment } from '../types'
+import type { EnvVar, Project, Environment, EnvExampleFile } from '../types'
 import type { ConflictReport, ConflictStrategy, PushSummary, AtomicWriteResult, PushVarsRequest, PushResult } from '../types'
+import { parseEnvExampleContent } from './envFormats'
 
 export function shellQuote(val: string): string {
   if (val === '') return "''"
@@ -305,4 +306,16 @@ export function propagateKeyRenameToEnvironments(
       ? { ...env, vars: renameKeyInEnvironment(oldKey, newKey, env.vars) }
       : env
   )
+}
+
+// ── .env.example Check ──────────────────────────────────────────
+
+/**
+ * Checks if .env.example exists in projectPath and returns parsed EnvExampleFile, or null.
+ * Caller should wrap in .catch(() => null) — errors must never prevent project-add flow.
+ */
+export async function checkEnvExample(projectPath: string): Promise<EnvExampleFile | null> {
+  const result = await invoke<{ rawContent: string } | null>('check_env_example', { projectPath })
+  if (result === null) return null
+  return parseEnvExampleContent(result.rawContent)
 }

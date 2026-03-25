@@ -301,6 +301,12 @@ pub struct AtomicWriteResult {
     pub target_created: bool,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvExampleResult {
+    pub raw_content: String,
+}
+
 /// Pure helper: atomically write `content` to `target_path` using a
 /// temp-file + rename pattern.  Returns `(snapshot, target_created)`.
 fn atomic_write_env(target_path: &Path, content: &str) -> Result<(Option<String>, bool), String> {
@@ -352,6 +358,17 @@ fn push_vars_to_stage(
     Ok(AtomicWriteResult { snapshot, target_created })
 }
 
+#[tauri::command]
+fn check_env_example(project_path: String) -> Result<Option<EnvExampleResult>, String> {
+    let example_path = Path::new(&project_path).join(".env.example");
+    if !example_path.exists() {
+        return Ok(None);
+    }
+    let raw_content = fs::read_to_string(&example_path)
+        .map_err(|e| format!("Failed to read .env.example: {e}"))?;
+    Ok(Some(EnvExampleResult { raw_content }))
+}
+
 // ── Legacy commands (keep during migration) ───────────────────────────────
 #[tauri::command]
 fn read_file(path: String) -> Result<String, String> {
@@ -381,6 +398,7 @@ pub fn run() {
             import_env_from_project, import_all_envs_from_project,
             delete_project_env, write_env_signal, check_gitignore_status, check_shell_integration,
             push_vars_to_stage,
+            check_env_example,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -645,5 +663,27 @@ mod tests {
         assert!(snap_stg.is_none());
         assert_eq!(fs::read_to_string(&dev_target).unwrap(), "ENV=development");
         assert_eq!(fs::read_to_string(&stg_target).unwrap(), "ENV=staging");
+    }
+
+    // ── check_env_example tests ───────────────────────────────────────────
+
+    #[test]
+    fn check_env_example_returns_none_when_missing() {
+        let dir = TempDir::new().unwrap();
+        let result = check_env_example(dir.path().to_string_lossy().into_owned()).unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn check_env_example_returns_content_when_exists() {
+        let dir = TempDir::new().unwrap();
+        let example_path = dir.path().join(".env.example");
+        fs::write(&example_path, "API_KEY=\nSECRET=your_secret_here # get from dashboard\n").unwrap();
+
+        let result = check_env_example(dir.path().to_string_lossy().into_owned()).unwrap();
+        assert!(result.is_some());
+        let env_result = result.unwrap();
+        assert!(env_result.raw_content.contains("API_KEY="));
+        assert!(env_result.raw_content.contains("SECRET="));
     }
 }
