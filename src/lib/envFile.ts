@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { readTextFile } from '@tauri-apps/plugin-fs'
 import type { EnvVar, Project } from '../types'
 import type { ConflictReport, ConflictStrategy, PushSummary, AtomicWriteResult, PushVarsRequest, PushResult } from '../types'
 
@@ -44,6 +45,10 @@ export function parseEnvContent(content: string, projectId = ''): EnvVar[] {
     })
   }
   return vars
+}
+
+export async function readFileContent(path: string): Promise<string> {
+  return readTextFile(path)
 }
 
 export async function saveProjectEnv(projectId: string, suffix: string, vars: EnvVar[]): Promise<void> {

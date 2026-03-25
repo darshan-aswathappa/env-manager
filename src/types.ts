@@ -115,3 +115,16 @@ export interface DiffResult {
   modifiedCount: number;
   unchangedCount: number;
 }
+
+// ── Import / Export Types ──────────────────────────────────────────────────
+
+export type ExportFormat = 'env' | 'json' | 'yaml' | 'csv' | 'shell'
+export type ExportScope = 'active' | 'all'
+export type ImportStep = 'pick' | 'preview' | 'conflicts' | 'done'
+
+export interface ImportPreviewRow {
+  key: string
+  status: 'new' | 'same' | 'conflict'
+  incomingVal: string
+  currentVal: string | null
+}

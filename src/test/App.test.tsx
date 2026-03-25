@@ -963,3 +963,114 @@ describe('App diff panel (Cmd+D)', () => {
     await waitFor(() => expect(screen.queryByTestId('diff-panel-backdrop')).not.toBeInTheDocument())
   })
 })
+
+describe('App import/export panels (Cmd+I, Cmd+E)', () => {
+  const projectWithActiveVars = {
+    id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
+    vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+    environments: [
+      { suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'production', vars: [] },
+      { suffix: 'local', vars: [] },
+      { suffix: 'development', vars: [] },
+      { suffix: 'testing', vars: [] },
+      { suffix: 'staging', vars: [] },
+    ],
+    activeEnv: '',
+    inheritanceMode: 'merge-child-wins',
+    sortOrder: 0,
+  }
+
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    mockOpen.mockReset()
+    localStorage.clear()
+    localStorage.setItem('dotenv_mgr_onboarding', 'complete')
+    mockInvoke.mockResolvedValue('')
+  })
+
+  it('Cmd+I opens ImportDialog when a project is selected', async () => {
+    setupProjects([projectWithActiveVars])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => {
+      expect(screen.getByText(/Choose File/i)).toBeInTheDocument()
+    })
+  })
+
+  it('Cmd+I does nothing when no project is selected', async () => {
+    render(<App />)
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', metaKey: true, bubbles: true }))
+    })
+    expect(screen.queryByText(/Choose File/i)).not.toBeInTheDocument()
+  })
+
+  it('Cmd+E opens ExportPanel when project has vars', async () => {
+    setupProjects([projectWithActiveVars])
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=val')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    // Wait for vars to load
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('load_project_env', expect.anything()))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => {
+      expect(screen.getByText(/Export Variables/i)).toBeInTheDocument()
+    })
+  })
+
+  it('Cmd+E does nothing when no project is selected', async () => {
+    render(<App />)
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', metaKey: true, bubbles: true }))
+    })
+    expect(screen.queryByText(/Export Variables/i)).not.toBeInTheDocument()
+  })
+
+  it('opening ImportDialog while ExportPanel is open closes ExportPanel', async () => {
+    setupProjects([projectWithActiveVars])
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=val')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('load_project_env', expect.anything()))
+    // Open Export
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => screen.getByText(/Export Variables/i))
+    // Open Import — should close Export
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => {
+      expect(screen.getByText(/Choose File/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Export Variables/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it('Escape closes ImportDialog when it is open', async () => {
+    setupProjects([projectWithActiveVars])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => screen.getByText(/Choose File/i))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+    await waitFor(() => {
+      expect(screen.queryByText(/Choose File/i)).not.toBeInTheDocument()
+    })
+  })
+})

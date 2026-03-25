@@ -24,6 +24,8 @@ import SettingsPanel from "./components/Settings";
 import Onboarding from "./components/Onboarding";
 import PushToStagePanel from "./components/PushToStage/PushToStagePanel";
 import DiffViewPanel from "./components/DiffView/DiffViewPanel";
+import ImportDialog from "./components/Import/ImportDialog";
+import ExportPanel from "./components/Export/ExportPanel";
 import { Plus, X } from "lucide-react";
 
 // ── Error Boundary ─────────────────────────────────────────────────────────
@@ -150,6 +152,8 @@ export default function App() {
   const [appSettings, setAppSettings] = useState<AppSettings>(loadSettings);
   const [showPushPanel, setShowPushPanel] = useState(false);
   const [showDiffPanel, setShowDiffPanel] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
   const [_pushUndoSnapshot, setPushUndoSnapshot] = useState<{
     projectId: string;
     suffix: string;
@@ -241,10 +245,33 @@ export default function App() {
           }
         }
       }
+      // Cmd+I: open import dialog
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'i') {
+        e.preventDefault();
+        const proj = projects.find((p) => p.id === selectedId) ?? null;
+        if (proj) {
+          setShowExportPanel(false);
+          setShowImportDialog(true);
+        }
+      }
+      // Cmd+E: open export panel
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'e') {
+        e.preventDefault();
+        const proj = projects.find((p) => p.id === selectedId) ?? null;
+        if (proj && proj.vars.length > 0) {
+          setShowImportDialog(false);
+          setShowExportPanel(true);
+        }
+      }
+      // Escape: close import dialog or export panel
+      if (e.key === 'Escape') {
+        if (showImportDialog) setShowImportDialog(false);
+        if (showExportPanel) setShowExportPanel(false);
+      }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [projects, selectedId, showDiffPanel]);
+  }, [projects, selectedId, showDiffPanel, showImportDialog, showExportPanel]);
 
   /* Load vars per project from app data on mount and when project list changes */
   useEffect(() => {
@@ -605,6 +632,24 @@ export default function App() {
     [selectedId]
   );
 
+  /* ── Import complete ─────────────────────────────────── */
+  const handleImportComplete = useCallback((mergedVars: EnvVar[]) => {
+    if (!selectedId) return;
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== selectedId) return p;
+        return {
+          ...p,
+          vars: mergedVars,
+          environments: p.environments.map((env) =>
+            env.suffix === p.activeEnv ? { ...env, vars: mergedVars } : env
+          ),
+        };
+      })
+    );
+    setShowImportDialog(false);
+  }, [selectedId]);
+
   /* ── Derived state ───────────────────────────────────── */
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null;
   const selectedVar =
@@ -792,6 +837,50 @@ export default function App() {
               initialLeftSuffix={selectedProject.activeEnv}
               onClose={() => setShowDiffPanel(false)}
               onPushComplete={handleDiffPushComplete}
+            />
+          </div>
+        </div>
+      )}
+
+      {showImportDialog && selectedProject && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeIn var(--t-normal) both',
+          }}
+          onClick={() => setShowImportDialog(false)}
+          role="presentation"
+          data-testid="import-dialog-backdrop"
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <ImportDialog
+              project={selectedProject}
+              onClose={() => setShowImportDialog(false)}
+              onImportComplete={handleImportComplete}
+            />
+          </div>
+        </div>
+      )}
+
+      {showExportPanel && selectedProject && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.15)',
+            display: 'flex', justifyContent: 'flex-end',
+            animation: 'fadeIn var(--t-normal) both',
+          }}
+          onClick={() => setShowExportPanel(false)}
+          role="presentation"
+          data-testid="export-panel-backdrop"
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <ExportPanel
+              project={selectedProject}
+              onClose={() => setShowExportPanel(false)}
+              onSaveComplete={() => setShowExportPanel(false)}
             />
           </div>
         </div>
