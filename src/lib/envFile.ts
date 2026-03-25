@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { readTextFile } from '@tauri-apps/plugin-fs'
-import type { EnvVar, Project } from '../types'
+import type { EnvVar, Project, Environment } from '../types'
 import type { ConflictReport, ConflictStrategy, PushSummary, AtomicWriteResult, PushVarsRequest, PushResult } from '../types'
 
 export function shellQuote(val: string): string {
@@ -257,4 +257,52 @@ export function applyPushResultToProject(
     environments: newEnvironments,
     vars: project.activeEnv === targetSuffix ? updatedVars : project.vars,
   }
+}
+
+// ── Key Rename Propagation ──────────────────────────────────────
+
+/**
+ * Pure function: returns the suffixes of all environments (excluding excludeSuffix)
+ * that contain a variable with the given key.
+ */
+export function findKeyAcrossEnvironments(
+  key: string,
+  environments: Environment[],
+  excludeSuffix: string
+): string[] {
+  return environments
+    .filter(env => env.suffix !== excludeSuffix)
+    .filter(env => env.vars.some(v => v.key === key))
+    .map(env => env.suffix)
+}
+
+/**
+ * Pure function: immutably renames oldKey to newKey within a single environment's vars.
+ * Preserves id, val, revealed, sourceProjectId for renamed var.
+ * Returns same array reference if oldKey is not present.
+ */
+export function renameKeyInEnvironment(
+  oldKey: string,
+  newKey: string,
+  vars: EnvVar[]
+): EnvVar[] {
+  return vars.map(v => v.key === oldKey ? { ...v, key: newKey } : v)
+}
+
+/**
+ * Pure function: applies renameKeyInEnvironment across a specific set of environments.
+ * Returns a new environments array. Only environments listed in targetSuffixes are modified.
+ * Immutable — does not mutate any input.
+ */
+export function propagateKeyRenameToEnvironments(
+  oldKey: string,
+  newKey: string,
+  environments: Environment[],
+  targetSuffixes: string[]
+): Environment[] {
+  return environments.map(env =>
+    targetSuffixes.includes(env.suffix)
+      ? { ...env, vars: renameKeyInEnvironment(oldKey, newKey, env.vars) }
+      : env
+  )
 }

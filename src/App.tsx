@@ -11,6 +11,8 @@ import {
   writeEnvSignal,
   checkShellIntegration,
   applyPushResultToProject,
+  findKeyAcrossEnvironments,
+  propagateKeyRenameToEnvironments,
 } from "./lib/envFile";
 import type { ShellIntegrationStatus } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
@@ -159,6 +161,13 @@ export default function App() {
     suffix: string;
     snapshot: string;
   } | null>(null);
+  const [pendingKeyRename, setPendingKeyRename] = useState<{
+    varId: string;
+    oldKey: string;
+    newKey: string;
+    affectedSuffixes: string[];
+  } | null>(null);
+  const [selectedVarOriginalKey, setSelectedVarOriginalKey] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const settingsDialogRef = useRef<HTMLDivElement>(null);
   const autoMaskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,6 +308,14 @@ export default function App() {
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* Snapshot original key when a var is selected — intentionally does NOT include
+     selectedProject.vars to avoid resetting the original key while the user types */
+  useEffect(() => {
+    const v = selectedProject?.vars.find(v => v.id === selectedVarId);
+    setSelectedVarOriginalKey(v?.key ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVarId]);
 
   /* Clear var selection and refresh gitignore status when project changes */
   useEffect(() => {
@@ -536,6 +553,7 @@ export default function App() {
   const switchEnvironment = useCallback(async (suffix: string) => {
     const project = projects.find((p) => p.id === selectedId);
     if (!project || project.activeEnv === suffix) return;
+    setPendingKeyRename(null);
     // Auto-save current env (skip vars with empty keys)
     setSaveStatus("saving");
     const validVars = project.vars.filter((v) => v.key.trim() !== "");
@@ -588,6 +606,28 @@ export default function App() {
     try {
       const varsToSave = project.vars.filter((v) => v.key.trim() !== "");
       await saveProjectEnv(project.id, project.activeEnv, varsToSave);
+      // Detect key rename after saving active env
+      if (selectedVarId && selectedVarOriginalKey !== null && selectedVarOriginalKey.trim() !== "") {
+        const renamedVar = project.vars.find((v) => v.id === selectedVarId);
+        if (renamedVar && renamedVar.key !== selectedVarOriginalKey) {
+          const affectedSuffixes = findKeyAcrossEnvironments(
+            selectedVarOriginalKey,
+            project.environments,
+            project.activeEnv
+          );
+          if (affectedSuffixes.length > 0) {
+            setPendingKeyRename({
+              varId: selectedVarId,
+              oldKey: selectedVarOriginalKey,
+              newKey: renamedVar.key,
+              affectedSuffixes,
+            });
+          }
+        }
+      }
+      // Reset original key tracking to current key after save
+      const currentVar = project.vars.find((v) => v.id === selectedVarId);
+      setSelectedVarOriginalKey(currentVar?.key ?? null);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
@@ -595,7 +635,39 @@ export default function App() {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
-  }, [projects, selectedId]);
+  }, [projects, selectedId, selectedVarId, selectedVarOriginalKey]);
+
+  /* ── Key rename propagation ──────────────────────────── */
+  const handlePropagateKeyRename = useCallback(async () => {
+    if (!selectedId || !pendingKeyRename) return;
+    const { oldKey, newKey, affectedSuffixes } = pendingKeyRename;
+    const project = projects.find((p) => p.id === selectedId);
+    if (project) {
+      const updatedEnvironments = propagateKeyRenameToEnvironments(
+        oldKey, newKey, project.environments, affectedSuffixes
+      );
+      setProjects((prev) => prev.map((p) => {
+        if (p.id !== selectedId) return p;
+        return {
+          ...p,
+          environments: updatedEnvironments,
+          vars: affectedSuffixes.includes(p.activeEnv)
+            ? (updatedEnvironments.find((e) => e.suffix === p.activeEnv)?.vars ?? p.vars)
+            : p.vars,
+        };
+      }));
+      await Promise.all(
+        affectedSuffixes.map((suffix) => {
+          const env = updatedEnvironments.find((e) => e.suffix === suffix);
+          if (env) return saveProjectEnv(project.id, suffix, env.vars).catch(() => {});
+          return Promise.resolve();
+        })
+      );
+    }
+    setPendingKeyRename(null);
+    setSaveStatus("saved");
+    setTimeout(() => setSaveStatus("idle"), 2000);
+  }, [selectedId, pendingKeyRename, projects]);
 
   /* ── Push to stage ───────────────────────────────────── */
   const handlePushComplete = useCallback(
@@ -713,6 +785,13 @@ export default function App() {
               ? () => { setShowPushPanel(false); setShowDiffPanel(true); }
               : null
           }
+          renamePrompt={pendingKeyRename ? {
+            oldKey: pendingKeyRename.oldKey,
+            newKey: pendingKeyRename.newKey,
+            affectedSuffixes: pendingKeyRename.affectedSuffixes,
+          } : null}
+          onPropagateRename={handlePropagateKeyRename}
+          onDismissRename={() => setPendingKeyRename(null)}
         />
       ) : (
         <div className="detail-panel">

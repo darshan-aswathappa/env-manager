@@ -335,3 +335,106 @@ describe('VarDetail diff button', () => {
     expect(screen.queryByRole('button', { name: /Compare Environments/i })).not.toBeInTheDocument()
   })
 })
+
+describe('VarDetail RenamePropagateBanner', () => {
+  // Test 23: banner renders when renamePrompt prop is non-null
+  it('renders banner when renamePrompt prop is non-null', () => {
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local', 'production'] }}
+      onPropagateRename={vi.fn()}
+      onDismissRename={vi.fn()}
+    />)
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText(/Rename/i)).toBeInTheDocument()
+  })
+
+  // Test 24: banner not rendered when renamePrompt is null
+  it('does not render banner when renamePrompt is null', () => {
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={null}
+      onPropagateRename={vi.fn()}
+      onDismissRename={vi.fn()}
+    />)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  // Test 25: lists each affected env as a chip
+  it('lists each affected env as a chip', () => {
+    const { container } = render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local', 'production'] }}
+      onPropagateRename={vi.fn()}
+      onDismissRename={vi.fn()}
+    />)
+    const chips = container.querySelectorAll('.env-badge--chip')
+    const chipTexts = Array.from(chips).map(c => c.textContent)
+    expect(chipTexts).toContain('.env.local')
+    expect(chipTexts).toContain('.env.production')
+  })
+
+  // Test 26: clicking "Propagate All" calls onPropagateRename
+  it('clicking "Propagate All" calls onPropagateRename', () => {
+    const onPropagateRename = vi.fn()
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local'] }}
+      onPropagateRename={onPropagateRename}
+      onDismissRename={vi.fn()}
+    />)
+    fireEvent.click(screen.getByRole('button', { name: /Propagate All/i }))
+    expect(onPropagateRename).toHaveBeenCalledTimes(1)
+  })
+
+  // Test 27: clicking "Skip" calls onDismissRename
+  it('clicking "Skip" calls onDismissRename', () => {
+    const onDismissRename = vi.fn()
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local'] }}
+      onPropagateRename={vi.fn()}
+      onDismissRename={onDismissRename}
+    />)
+    fireEvent.click(screen.getByRole('button', { name: /Skip/i }))
+    expect(onDismissRename).toHaveBeenCalledTimes(1)
+  })
+
+  // Test 28: Escape key calls onDismissRename
+  it('Escape key on banner calls onDismissRename', () => {
+    const onDismissRename = vi.fn()
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local'] }}
+      onPropagateRename={vi.fn()}
+      onDismissRename={onDismissRename}
+    />)
+    const alert = screen.getByRole('alert')
+    fireEvent.keyDown(alert, { key: 'Escape' })
+    expect(onDismissRename).toHaveBeenCalledTimes(1)
+  })
+
+  // Test 29: banner has correct ARIA attributes
+  it('banner has role="alert" and aria-live="polite"', () => {
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local'] }}
+      onPropagateRename={vi.fn()}
+      onDismissRename={vi.fn()}
+    />)
+    const alert = screen.getByRole('alert')
+    expect(alert).toHaveAttribute('aria-live', 'polite')
+  })
+
+  // Test 30: "Propagate All" button is focused on mount
+  it('"Propagate All" button is focused on mount', () => {
+    render(<VarDetail
+      {...defaultProps}
+      renamePrompt={{ oldKey: 'A', newKey: 'B', affectedSuffixes: ['local'] }}
+      onPropagateRename={vi.fn()}
+      onDismissRename={vi.fn()}
+    />)
+    const propagateBtn = screen.getByRole('button', { name: /Propagate All/i })
+    expect(document.activeElement).toBe(propagateBtn)
+  })
+})

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Eye,
   EyeOff,
@@ -31,6 +31,13 @@ interface VarDetailProps {
   onOpenShellIntegration: () => void;
   onOpenPush?: (() => void) | null;
   onOpenDiff?: (() => void) | null;
+  renamePrompt?: {
+    oldKey: string;
+    newKey: string;
+    affectedSuffixes: string[];
+  } | null;
+  onPropagateRename?: () => void;
+  onDismissRename?: () => void;
 }
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -85,6 +92,9 @@ export default function VarDetail({
   onOpenShellIntegration,
   onOpenPush = null,
   onOpenDiff = null,
+  renamePrompt = null,
+  onPropagateRename,
+  onDismissRename,
 }: VarDetailProps) {
   const envTier = activeEnv === 'production'
     ? 'prod'
@@ -206,6 +216,15 @@ export default function VarDetail({
 
       {/* Body */}
       <div className="detail-body">
+        {renamePrompt && !selectedVar && (
+          <RenamePropagateBanner
+            oldKey={renamePrompt.oldKey}
+            newKey={renamePrompt.newKey}
+            affectedSuffixes={renamePrompt.affectedSuffixes}
+            onPropagate={onPropagateRename ?? (() => {})}
+            onDismiss={onDismissRename ?? (() => {})}
+          />
+        )}
         {selectedVar ? (
           <SelectedVarFields
             key={selectedVar.id}
@@ -215,6 +234,9 @@ export default function VarDetail({
             onUpdate={onUpdateVar}
             onDelete={onDeleteVar}
             onToggleReveal={onToggleReveal}
+            renamePrompt={renamePrompt}
+            onPropagateRename={onPropagateRename}
+            onDismissRename={onDismissRename}
           />
         ) : (
           <NoVarSelected />
@@ -257,6 +279,58 @@ export default function VarDetail({
   );
 }
 
+/* ── Rename propagate banner ─────────────────────────────── */
+interface RenamePropagateBannerProps {
+  oldKey: string;
+  newKey: string;
+  affectedSuffixes: string[];
+  onPropagate: () => void;
+  onDismiss: () => void;
+}
+
+function RenamePropagateBanner({ oldKey, newKey, affectedSuffixes, onPropagate, onDismiss }: RenamePropagateBannerProps) {
+  const propagateBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    propagateBtnRef.current?.focus();
+  }, []);
+
+  return (
+    <div
+      className="rename-propagate-banner"
+      role="alert"
+      aria-live="polite"
+      aria-label="Key rename propagation prompt"
+      onKeyDown={(e) => { if (e.key === 'Escape') onDismiss(); }}
+      tabIndex={-1}
+    >
+      <span className="rename-propagate-banner__desc">
+        ⟳ Rename &ldquo;{oldKey}&rdquo; → &ldquo;{newKey}&rdquo; in {affectedSuffixes.length} other environment{affectedSuffixes.length !== 1 ? 's' : ''}?
+      </span>
+      <div className="rename-propagate-banner__chips">
+        {affectedSuffixes.map(suffix => (
+          <span key={suffix} className="env-badge env-badge--chip">
+            {suffix ? `.env.${suffix}` : '.env'}
+          </span>
+        ))}
+      </div>
+      <div className="rename-propagate-banner__actions">
+        <button className="btn-text" onClick={onDismiss} aria-label="Skip propagation">
+          Skip
+        </button>
+        <button
+          ref={propagateBtnRef}
+          className="btn-primary"
+          onClick={onPropagate}
+          aria-label="Propagate All"
+        >
+          Propagate All
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Selected var fields ─────────────────────────────────── */
 interface SelectedVarFieldsProps {
   v: EnvVar;
@@ -265,9 +339,12 @@ interface SelectedVarFieldsProps {
   onUpdate: (varId: string, field: keyof EnvVar, value: string | boolean) => void;
   onDelete: (varId: string) => void;
   onToggleReveal: (varId: string) => void;
+  renamePrompt?: { oldKey: string; newKey: string; affectedSuffixes: string[] } | null;
+  onPropagateRename?: () => void;
+  onDismissRename?: () => void;
 }
 
-function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, onToggleReveal }: SelectedVarFieldsProps) {
+function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, onToggleReveal, renamePrompt = null, onPropagateRename, onDismissRename }: SelectedVarFieldsProps) {
   return (
     <div className="var-detail-content">
       {/* KEY field */}
@@ -305,6 +382,16 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
           </span>
         )}
       </div>
+
+      {renamePrompt && (
+        <RenamePropagateBanner
+          oldKey={renamePrompt.oldKey}
+          newKey={renamePrompt.newKey}
+          affectedSuffixes={renamePrompt.affectedSuffixes}
+          onPropagate={onPropagateRename ?? (() => {})}
+          onDismiss={onDismissRename ?? (() => {})}
+        />
+      )}
 
       <div className="detail-divider" />
 

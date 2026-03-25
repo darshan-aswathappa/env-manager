@@ -1129,3 +1129,278 @@ describe('App import/export panels (Cmd+I, Cmd+E)', () => {
     })
   })
 })
+
+// ── Key Rename Propagation Integration Tests ─────────────────────────────────
+
+describe('App key rename propagation', () => {
+  const multiEnvKeyProject = {
+    id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
+    vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+    environments: [
+      { suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'local', vars: [{ id: 'v2', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'development', vars: [] },
+      { suffix: 'production', vars: [] },
+      { suffix: 'testing', vars: [] },
+      { suffix: 'staging', vars: [] },
+    ],
+    activeEnv: '',
+    inheritanceMode: 'merge-child-wins',
+    sortOrder: 0,
+  }
+
+  function setupMultiEnvMock() {
+    mockInvoke.mockImplementation((cmd, args: any) => {
+      if (cmd === 'load_project_env') {
+        const { suffix } = args
+        if (suffix === '') return Promise.resolve('API_KEY=secret')
+        if (suffix === 'local') return Promise.resolve('API_KEY=local_secret')
+        return Promise.resolve('')
+      }
+      if (cmd === 'save_project_env') return Promise.resolve(undefined)
+      if (cmd === 'check_shell_integration') return Promise.resolve('not_found')
+      if (cmd === 'check_gitignore_status') return Promise.resolve('no_gitignore')
+      if (cmd === 'register_project') return Promise.resolve(undefined)
+      if (cmd === 'write_env_signal') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+  }
+
+  async function selectVarAndRenameKey(newKey: string) {
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const varItem = screen.getByText('API_KEY').closest('[role="listitem"]') as HTMLElement
+    await act(async () => { varItem.click() })
+    await waitFor(() => expect(screen.getByLabelText(/Variable key/i)).toBeInTheDocument())
+    const keyInput = screen.getByLabelText(/Variable key/i)
+    await act(async () => { fireEvent.change(keyInput, { target: { value: newKey } }) })
+    const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
+    await act(async () => { saveBtn.click() })
+  }
+
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    mockOpen.mockReset()
+    localStorage.clear()
+    localStorage.setItem('dotenv_mgr_onboarding', 'complete')
+    mockInvoke.mockResolvedValue('')
+  })
+
+  // Test 18: banner appears when saved key exists in other environments
+  it('shows rename banner when saved key exists in other environments', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+  })
+
+  // Test 19: no banner when new key doesn't exist in other envs
+  it('does not show rename banner when renamed key does not exist in other envs', async () => {
+    const singleEnvProject = {
+      ...multiEnvKeyProject,
+      environments: [
+        { suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'local', vars: [] },
+        { suffix: 'development', vars: [] },
+        { suffix: 'production', vars: [] },
+        { suffix: 'testing', vars: [] },
+        { suffix: 'staging', vars: [] },
+      ],
+    }
+    setupProjects([singleEnvProject])
+    mockInvoke.mockImplementation((cmd, args: any) => {
+      if (cmd === 'load_project_env') {
+        const { suffix } = args
+        if (suffix === '') return Promise.resolve('API_KEY=secret')
+        return Promise.resolve('')
+      }
+      if (cmd === 'save_project_env') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.anything())
+    })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  // Test 20: no banner when key has not changed
+  it('does not show rename banner when key name has not changed', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const varItem = screen.getByText('API_KEY').closest('[role="listitem"]') as HTMLElement
+    await act(async () => { varItem.click() })
+    await waitFor(() => expect(screen.getByLabelText(/Variable key/i)).toBeInTheDocument())
+    const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
+    await act(async () => { saveBtn.click() })
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.anything())
+    })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  // Test 21: clicking Skip dismisses banner, no save for other envs
+  it('clicking Skip dismisses banner without saving other environments', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    // Reset mock to track new calls
+    mockInvoke.mockClear()
+    mockInvoke.mockResolvedValue(undefined)
+    const skipBtn = screen.getByRole('button', { name: /Skip/i })
+    await act(async () => { skipBtn.click() })
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+    // No save for other envs after skip
+    const localSaveCalls = (mockInvoke as any).mock.calls.filter(
+      (call: any[]) => call[0] === 'save_project_env' && call[1]?.suffix === 'local'
+    )
+    expect(localSaveCalls).toHaveLength(0)
+  })
+
+  // Test 22: banner dismissed when user switches environment
+  it('banner is dismissed when user switches environment', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    const select = screen.getByRole('combobox', { name: /Environment/i })
+    await act(async () => { fireEvent.change(select, { target: { value: 'local' } }) })
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+  })
+
+  // Test 31: Propagate All calls save_project_env for each affected suffix
+  it('Propagate All: calls save_project_env for each affected suffix', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    const propagateBtn = screen.getByRole('button', { name: /Propagate All/i })
+    await act(async () => { propagateBtn.click() })
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ suffix: 'local' }))
+    })
+  })
+
+  // Test 32: project environments updated in state after propagation
+  it('Propagate All: banner is dismissed after propagation completes', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    const propagateBtn = screen.getByRole('button', { name: /Propagate All/i })
+    await act(async () => { propagateBtn.click() })
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+  })
+
+  // Test 34: footer shows "Saved" after propagation
+  it('Propagate All: shows "Saved" confirmation in footer after propagation', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    const propagateBtn = screen.getByRole('button', { name: /Propagate All/i })
+    await act(async () => { propagateBtn.click() })
+    await waitFor(() => {
+      const statusEls = screen.queryAllByRole('status')
+      const hasSaved = statusEls.some(el => el.textContent?.includes('Saved'))
+      expect(hasSaved).toBe(true)
+    })
+  })
+
+  // Test 35: partial failure handled gracefully
+  it('Propagate All: handles save_project_env partial failure gracefully (no crash)', async () => {
+    setupProjects([multiEnvKeyProject])
+    let saveCallCount = 0
+    mockInvoke.mockImplementation((cmd, args: any) => {
+      if (cmd === 'load_project_env') {
+        const { suffix } = args
+        if (suffix === '') return Promise.resolve('API_KEY=secret')
+        if (suffix === 'local') return Promise.resolve('API_KEY=local_secret')
+        return Promise.resolve('')
+      }
+      if (cmd === 'save_project_env') {
+        saveCallCount++
+        if (saveCallCount === 2) return Promise.reject(new Error('disk error'))
+        return Promise.resolve(undefined)
+      }
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    const propagateBtn = screen.getByRole('button', { name: /Propagate All/i })
+    await act(async () => { propagateBtn.click() })
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+  })
+
+  // Test 36: single-env rename saves correctly, no banner
+  it('single-env rename (no other env has old key) saves correctly without banner', async () => {
+    const singleEnvProject = {
+      ...multiEnvKeyProject,
+      environments: [
+        { suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'local', vars: [] },
+        { suffix: 'development', vars: [] },
+        { suffix: 'production', vars: [] },
+        { suffix: 'testing', vars: [] },
+        { suffix: 'staging', vars: [] },
+      ],
+    }
+    setupProjects([singleEnvProject])
+    mockInvoke.mockImplementation((cmd, args: any) => {
+      if (cmd === 'load_project_env') {
+        const { suffix } = args
+        if (suffix === '') return Promise.resolve('API_KEY=secret')
+        return Promise.resolve('')
+      }
+      if (cmd === 'save_project_env') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await selectVarAndRenameKey('API_TOKEN')
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ projectId: 'p1' }))
+    })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  // Test 38: renaming to same key does not trigger banner
+  it('renaming to same key name does not trigger rename banner', async () => {
+    setupProjects([multiEnvKeyProject])
+    setupMultiEnvMock()
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const varItem = screen.getByText('API_KEY').closest('[role="listitem"]') as HTMLElement
+    await act(async () => { varItem.click() })
+    await waitFor(() => expect(screen.getByLabelText(/Variable key/i)).toBeInTheDocument())
+    const keyInput = screen.getByLabelText(/Variable key/i)
+    // Change to something, then back to original
+    await act(async () => { fireEvent.change(keyInput, { target: { value: 'API_TOKEN' } }) })
+    await act(async () => { fireEvent.change(keyInput, { target: { value: 'API_KEY' } }) })
+    const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
+    await act(async () => { saveBtn.click() })
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.anything())
+    })
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
