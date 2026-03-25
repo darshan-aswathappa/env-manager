@@ -687,6 +687,8 @@ export default function App() {
         onSelectVar={setSelectedVarId}
         onAddVar={addVar}
         onDeleteVar={deleteVar}
+        onOpenImport={selectedProject ? () => { setShowExportPanel(false); setShowImportDialog(true); } : undefined}
+        onOpenExport={selectedProject ? () => { setShowImportDialog(false); setShowExportPanel(true); } : undefined}
       />
 
       {selectedProject ? (

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Search, ChevronRight, Plus, Trash2, Upload, Download } from "lucide-react";
 import type { EnvVar, Project } from "../types";
 
 interface VarListProps {
@@ -10,6 +10,8 @@ interface VarListProps {
   onSelectVar: (id: string) => void;
   onAddVar: () => void;
   onDeleteVar: (id: string) => void;
+  onOpenImport?: () => void;
+  onOpenExport?: () => void;
 }
 
 function valuePreview(v: EnvVar): string {
@@ -26,6 +28,8 @@ export default function VarList({
   onSelectVar,
   onAddVar,
   onDeleteVar,
+  onOpenImport,
+  onOpenExport,
 }: VarListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -46,6 +50,31 @@ export default function VarList({
 
   return (
     <div className="list-panel">
+      {/* Variables toolbar */}
+      <div className="varlist-toolbar">
+        <span className="varlist-toolbar__label">Variables</span>
+        <div className="varlist-toolbar__actions">
+          <button
+            className="varlist-toolbar__btn"
+            onClick={onOpenImport}
+            aria-label="Import variables"
+            title="Import variables (⌘I)"
+            disabled={!onOpenImport}
+          >
+            <Upload size={13} />
+          </button>
+          <button
+            className="varlist-toolbar__btn"
+            onClick={onOpenExport}
+            aria-label="Export variables"
+            title="Export variables (⌘E)"
+            disabled={!onOpenExport}
+          >
+            <Download size={13} />
+          </button>
+        </div>
+      </div>
+
       {/* Search */}
       <div className="search-wrap">
         <div className="search-input-wrap">

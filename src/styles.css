@@ -589,6 +589,55 @@ a {
   overflow: hidden;
 }
 
+/* ── VarList Toolbar ──────────────────────────────────────── */
+.varlist-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-separator);
+  flex-shrink: 0;
+}
+
+.varlist-toolbar__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.varlist-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.varlist-toolbar__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.varlist-toolbar__btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.varlist-toolbar__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ── Search Bar ────────────────────────────────────────────── */
 .search-wrap {
   padding: 8px 10px;

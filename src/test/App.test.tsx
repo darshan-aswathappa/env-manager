@@ -550,6 +550,61 @@ describe('App', () => {
     })
   })
 
+  // ── Import / Export button visibility and interaction ───────────────────
+  it('shows Import and Export buttons in VarList when a project is selected', async () => {
+    setupProjects([baseProject])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    expect(screen.getByRole('button', { name: /Import variables/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Export variables/i })).toBeInTheDocument()
+  })
+
+  it('clicking Import button opens the import dialog', async () => {
+    setupProjects([baseProject])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const importBtn = screen.getByRole('button', { name: /Import variables/i })
+    await act(async () => { fireEvent.click(importBtn) })
+    await waitFor(() => expect(screen.getByTestId('import-dialog-backdrop')).toBeInTheDocument())
+  })
+
+  it('clicking Export button opens the export panel', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const exportBtn = screen.getByRole('button', { name: /Export variables/i })
+    await act(async () => { fireEvent.click(exportBtn) })
+    await waitFor(() => expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument())
+  })
+
+  it('clicking Import button does not open export panel simultaneously', async () => {
+    setupProjects([baseProject])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const importBtn = screen.getByRole('button', { name: /Import variables/i })
+    await act(async () => { fireEvent.click(importBtn) })
+    await waitFor(() => expect(screen.getByTestId('import-dialog-backdrop')).toBeInTheDocument())
+    expect(screen.queryByTestId('export-panel-backdrop')).not.toBeInTheDocument()
+  })
+
+  it('clicking Export button does not open import dialog simultaneously', async () => {
+    setupProjects([projectWithVars])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const exportBtn = screen.getByRole('button', { name: /Export variables/i })
+    await act(async () => { fireEvent.click(exportBtn) })
+    await waitFor(() => expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument())
+    expect(screen.queryByTestId('import-dialog-backdrop')).not.toBeInTheDocument()
+  })
+
   it('deleteVar: removes a var from selected project', async () => {
     setupProjects([{
       ...baseProject,
