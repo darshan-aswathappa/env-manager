@@ -215,6 +215,30 @@ a {
   100% { transform: scale(1); }
 }
 
+/* Dot scale-in — "connection established" moment */
+@keyframes dotReveal {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Confirm-row slide-in — content replaces normal row */
+@keyframes confirmIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -478,6 +502,7 @@ a {
   gap: 4px;
   margin-left: auto;
   flex-shrink: 0;
+  animation: confirmIn 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .project-confirm-yes {
@@ -747,6 +772,7 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  animation: confirmIn 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .var-list-confirm-label strong {
@@ -758,6 +784,7 @@ a {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
+  animation: confirmIn 150ms cubic-bezier(0.16, 1, 0.3, 1) 30ms both;
 }
 
 .var-list-confirm-cancel,
@@ -1250,6 +1277,7 @@ a {
 
 .injection-bar__dot--active {
   background: var(--color-success);
+  animation: dotReveal 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .injection-bar__dot--inactive {
@@ -2091,6 +2119,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  animation: slideIn var(--t-entrance) both;
 }
 
 .sett-header {
@@ -2573,7 +2602,12 @@ a {
   .save-status-saved,
   .save-status-saved svg,
   .save-status-error,
-  .icon-btn--copied {
+  .icon-btn--copied,
+  .injection-bar__dot--active,
+  .sett-root,
+  .var-list-confirm-label,
+  .var-list-confirm-actions,
+  .project-confirm-row {
     animation: none;
   }
 

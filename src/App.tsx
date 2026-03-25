@@ -723,6 +723,7 @@ export default function App() {
             position: 'fixed', inset: 0, zIndex: 50,
             background: 'rgba(0,0,0,0.15)',
             display: 'flex', justifyContent: 'flex-end',
+            animation: 'fadeIn var(--t-normal) both',
           }}
           onClick={() => setShowPushPanel(false)}
           onKeyDown={(e) => { if (e.key === 'Escape') setShowPushPanel(false); }}

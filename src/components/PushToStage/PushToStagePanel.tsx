@@ -141,6 +141,7 @@ function ConflictBadge({ varKey, badge, onToggle }: ConflictBadgeProps) {
     letterSpacing: '0.02em',
     cursor: isSame ? 'default' : 'pointer',
     flexShrink: 0,
+    transition: 'background var(--t-fast), color var(--t-fast), border-color var(--t-fast)',
     background: isSame
       ? 'rgba(255,255,255,0.05)'
       : isSkip
@@ -732,6 +733,7 @@ export default function PushToStagePanel({
                 color: 'var(--text-secondary)',
                 display: 'flex',
                 gap: 12,
+                animation: 'fadeIn var(--t-fast) both',
               }}
             >
               <span>
