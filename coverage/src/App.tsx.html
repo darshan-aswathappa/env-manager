@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.32% </span>
+                <span class="strong">89.2% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>251/281</span>
+                <span class='fraction'>248/278</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.52% </span>
+                <span class="strong">96.47% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>222/230</span>
+                <span class='fraction'>219/227</span>
             </div>
         
             
@@ -672,7 +672,9 @@
 <a name='L607'></a><a href='#L607'>607</a>
 <a name='L608'></a><a href='#L608'>608</a>
 <a name='L609'></a><a href='#L609'>609</a>
-<a name='L610'></a><a href='#L610'>610</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L610'></a><a href='#L610'>610</a>
+<a name='L611'></a><a href='#L611'>611</a>
+<a name='L612'></a><a href='#L612'>612</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -916,7 +918,7 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -967,7 +969,7 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1141,7 +1143,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1230,6 +1232,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1249,6 +1252,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1524,8 +1528,8 @@ export default function App() {
       }
       setProjects((prev) =&gt; [...prev, newProject]);
       setSelectedId(newProject.id);
-    } catch (err) {
-      console.error("Failed to add project:", err);
+    } catch {
+      /* project add failed — user sees no project added */
     }
   }, []);
 &nbsp;
@@ -1575,8 +1579,8 @@ export default function App() {
         }
         setProjects((prev) =&gt; [...prev, newProject]);
         setSelectedId(newProject.id);
-      } catch (err) {
-        console.error("Failed to add sub-project:", err);
+      } catch {
+        /* sub-project add failed — user sees no project added */
       }
     },
     [projects]
@@ -1750,7 +1754,7 @@ export default function App() {
       setSaveStatus("saved");
 <span class="fstat-no" title="function not covered" >      setTimeout(() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etSaveStatus("idle"),</span> 2000);
     } catch (err) {
-      console.error("Save failed:", err);
+      /* save failed — user sees error status in footer */
       setSaveStatus("error");
 <span class="fstat-no" title="function not covered" >      setTimeout(() =&gt; <span class="cstat-no" title="statement not covered" >s</span>etSaveStatus("idle"),</span> 3000);
     }
@@ -1831,7 +1835,8 @@ export default function App() {
           className="modal-overlay"
           onClick={() =&gt; setShowShellIntegration(false)}
 <span class="fstat-no" title="function not covered" >          onKeyDown={(e</span>) =&gt; { <span class="cstat-no" title="statement not covered" >if (e.key === "Escape") <span class="cstat-no" title="statement not covered" >setShowShellIntegration(false); }}</span></span>
-          aria-label="Close shell integration dialog"
+          tabIndex={-1}
+          role="presentation"
         &gt;
           &lt;div
             ref={dialogRef}
@@ -1858,7 +1863,8 @@ export default function App() {
           className="modal-overlay"
           onClick={() =&gt; setShowSettings(false)}
 <span class="fstat-no" title="function not covered" >          onKeyDown={(e</span>) =&gt; { <span class="cstat-no" title="statement not covered" >if (e.key === "Escape") <span class="cstat-no" title="statement not covered" >setShowSettings(false); }}</span></span>
-          aria-label="Close settings dialog"
+          tabIndex={-1}
+          role="presentation"
         &gt;
           &lt;div
             role="dialog"
@@ -1897,7 +1903,7 @@ export default function App() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-25T03:20:06.735Z
+                at 2026-03-25T04:07:05.869Z
             </div>
         <script src="../prettify.js"></script>
         <script>

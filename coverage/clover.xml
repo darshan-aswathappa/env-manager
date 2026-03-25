@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1774408806748" clover="3.2.0">
-  <project timestamp="1774408806748" name="All files">
-    <metrics statements="525" coveredstatements="503" conditionals="427" coveredconditionals="352" methods="238" coveredmethods="206" elements="1190" coveredelements="1061" complexity="0" loc="525" ncloc="525" packages="3" files="11" classes="11"/>
+<coverage generated="1774411625884" clover="3.2.0">
+  <project timestamp="1774411625884" name="All files">
+    <metrics statements="522" coveredstatements="500" conditionals="429" coveredconditionals="354" methods="238" coveredmethods="206" elements="1189" coveredelements="1060" complexity="0" loc="522" ncloc="522" packages="3" files="11" classes="11"/>
     <package name="src">
-      <metrics statements="232" coveredstatements="224" conditionals="132" coveredconditionals="98" methods="110" coveredmethods="90"/>
+      <metrics statements="229" coveredstatements="221" conditionals="132" coveredconditionals="98" methods="110" coveredmethods="90"/>
       <file name="App.tsx" path="/Users/darshanaswathappa/Desktop/env-manager/src/App.tsx">
-        <metrics statements="230" coveredstatements="222" conditionals="130" coveredconditionals="96" methods="109" coveredmethods="89"/>
+        <metrics statements="227" coveredstatements="219" conditionals="130" coveredconditionals="96" methods="109" coveredmethods="89"/>
         <line num="23" count="1" type="stmt"/>
         <line num="24" count="1" type="stmt"/>
         <line num="25" count="1" type="stmt"/>
@@ -111,7 +111,6 @@
         <line num="239" count="5" type="stmt"/>
         <line num="242" count="4" type="stmt"/>
         <line num="243" count="4" type="stmt"/>
-        <line num="245" count="1" type="stmt"/>
         <line num="249" count="138" type="stmt"/>
         <line num="251" count="4" type="stmt"/>
         <line num="252" count="4" type="stmt"/>
@@ -132,7 +131,6 @@
         <line num="290" count="1" type="stmt"/>
         <line num="293" count="2" type="stmt"/>
         <line num="294" count="2" type="stmt"/>
-        <line num="296" count="1" type="stmt"/>
         <line num="302" count="138" type="stmt"/>
         <line num="303" count="2" type="stmt"/>
         <line num="306" count="138" type="stmt"/>
@@ -215,7 +213,6 @@
         <line num="466" count="2" type="stmt"/>
         <line num="467" count="1" type="stmt"/>
         <line num="468" count="1" type="stmt"/>
-        <line num="470" count="1" type="stmt"/>
         <line num="471" count="1" type="stmt"/>
         <line num="472" count="1" type="stmt"/>
         <line num="477" count="138" type="cond" truecount="2" falsecount="0"/>
@@ -228,14 +225,14 @@
         <line num="497" count="3" type="stmt"/>
         <line num="549" count="1" type="stmt"/>
         <line num="550" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="559" count="1" type="stmt"/>
-        <line num="562" count="1" type="stmt"/>
-        <line num="576" count="1" type="stmt"/>
-        <line num="577" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="585" count="3" type="stmt"/>
-        <line num="588" count="1" type="stmt"/>
-        <line num="600" count="0" type="stmt"/>
-        <line num="601" count="0" type="stmt"/>
+        <line num="560" count="1" type="stmt"/>
+        <line num="563" count="1" type="stmt"/>
+        <line num="577" count="1" type="stmt"/>
+        <line num="578" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="587" count="3" type="stmt"/>
+        <line num="590" count="1" type="stmt"/>
+        <line num="602" count="0" type="stmt"/>
+        <line num="603" count="0" type="stmt"/>
       </file>
       <file name="types.ts" path="/Users/darshanaswathappa/Desktop/env-manager/src/types.ts">
         <metrics statements="2" coveredstatements="2" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
@@ -244,7 +241,7 @@
       </file>
     </package>
     <package name="src.components">
-      <metrics statements="222" coveredstatements="210" conditionals="262" coveredconditionals="222" methods="93" coveredmethods="83"/>
+      <metrics statements="222" coveredstatements="210" conditionals="264" coveredconditionals="224" methods="93" coveredmethods="83"/>
       <file name="EnvironmentToggle.tsx" path="/Users/darshanaswathappa/Desktop/env-manager/src/components/EnvironmentToggle.tsx">
         <metrics statements="4" coveredstatements="4" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="3"/>
         <line num="11" count="115" type="stmt"/>
@@ -442,7 +439,7 @@
         <line num="254" count="235" type="stmt"/>
       </file>
       <file name="VarDetail.tsx" path="/Users/darshanaswathappa/Desktop/env-manager/src/components/VarDetail.tsx">
-        <metrics statements="18" coveredstatements="18" conditionals="33" coveredconditionals="33" methods="12" coveredmethods="11"/>
+        <metrics statements="18" coveredstatements="18" conditionals="35" coveredconditionals="35" methods="12" coveredmethods="11"/>
         <line num="36" count="37" type="stmt"/>
         <line num="38" count="37" type="stmt"/>
         <line num="39" count="2" type="stmt"/>
