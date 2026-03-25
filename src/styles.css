@@ -187,6 +187,34 @@ a {
   }
 }
 
+@keyframes checkDraw {
+  from {
+    stroke-dashoffset: 14;
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes statusSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes copyPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
 /* ── App Shell ─────────────────────────────────────────────── */
 .app-shell {
   display: flex;
@@ -614,6 +642,9 @@ a {
 .var-list-item.active {
   background: var(--bg-row-active);
   box-shadow: inset 2px 0 0 var(--accent);
+  transition:
+    background var(--t-fast),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .var-list-icon {
@@ -790,9 +821,17 @@ a {
   z-index: 2;
 }
 
+.fab-add svg {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .fab-add:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
+}
+
+.fab-add:hover svg {
+  transform: rotate(90deg);
 }
 
 .fab-add:active {
@@ -1042,6 +1081,12 @@ a {
   background: rgba(255, 255, 255, 0.09);
 }
 
+/* Copy success — brief pulse + green flash */
+.icon-btn--copied {
+  color: var(--color-success);
+  animation: copyPulse 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .icon-btn:focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 1px;
@@ -1052,7 +1097,7 @@ a {
   color: var(--color-danger);
 }
 
-/* Primary CTA — flat, muted, no gradient, no glow, no scale */
+/* Primary CTA — flat, muted, satisfying press */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -1065,7 +1110,9 @@ a {
   background: var(--accent);
   color: rgba(255, 255, 255, 0.92);
   border: none;
-  transition: background var(--t-fast);
+  transition:
+    background var(--t-fast),
+    transform 80ms cubic-bezier(0.25, 0, 0.4, 1);
   white-space: nowrap;
 }
 
@@ -1075,6 +1122,7 @@ a {
 
 .btn-primary:active {
   background: var(--accent-press);
+  transform: translateY(1px) scale(0.98);
 }
 
 .btn-primary:focus-visible {
@@ -1146,11 +1194,17 @@ a {
 .save-status-saved {
   color: var(--color-success);
   background: var(--color-success-bg);
+  animation: statusSlideIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.save-status-saved svg {
+  animation: checkDraw 280ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both;
 }
 
 .save-status-error {
   color: var(--color-danger);
   background: var(--color-danger-bg);
+  animation: statusSlideIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Spinner — used inside save status */
@@ -1188,6 +1242,7 @@ a {
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
+  animation: scaleIn 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .empty-state-title {
@@ -2391,6 +2446,7 @@ a {
   .detail-header,
   .detail-body,
   .empty-state,
+  .empty-state-icon,
   .modal-dialog,
   .ob-card,
   .ob-step,
@@ -2401,7 +2457,11 @@ a {
   .ob-feature,
   .ob-logo-img,
   .ob-spin,
-  .spinner {
+  .spinner,
+  .save-status-saved,
+  .save-status-saved svg,
+  .save-status-error,
+  .icon-btn--copied {
     animation: none;
   }
 

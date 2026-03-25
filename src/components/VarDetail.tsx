@@ -52,7 +52,7 @@ function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: 
 
   return (
     <button
-      className="icon-btn"
+      className={`icon-btn${copied ? " icon-btn--copied" : ""}`}
       onClick={handleCopy}
       aria-label={label}
       title={copied ? "Copied!" : "Copy"}
