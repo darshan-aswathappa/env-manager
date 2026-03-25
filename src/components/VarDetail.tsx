@@ -8,9 +8,6 @@ import {
   Trash2,
   Plus,
   Save,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldOff,
 } from "lucide-react";
 import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
 import { envDisplayName } from "../types";
@@ -108,18 +105,21 @@ export default function VarDetail({
         />
         <div className="detail-header-actions">
           {gitignoreStatus === 'listed' && (
-            <span className="badge badge-success" title=".env is listed in .gitignore — it won't be committed to git">
-              <ShieldCheck size={11} />
+            <span className="badge badge-success" title=".env is listed in .gitignore">
+              <span className="status-dot status-dot--success" />
+              .gitignore
             </span>
           )}
           {gitignoreStatus === 'not_listed' && (
-            <span className="badge badge-warning" title=".env is NOT listed in .gitignore — add it to avoid committing secrets">
-              <ShieldAlert size={11} />
+            <span className="badge badge-warning" title=".env is NOT in .gitignore — secrets may be committed">
+              <span className="status-dot status-dot--warning" />
+              .gitignore!
             </span>
           )}
           {gitignoreStatus === 'no_gitignore' && (
-            <span className="badge badge-warning" title="No .gitignore found in this project folder — create one to protect your secrets">
-              <ShieldOff size={11} />
+            <span className="badge badge-warning" title="No .gitignore found — create one to protect secrets">
+              <span className="status-dot status-dot--warning" />
+              no .gitignore
             </span>
           )}
         </div>
@@ -290,12 +290,9 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
 function NoVarSelected() {
   return (
     <div className="empty-state">
-      <div className="empty-state-icon">
-        <KeyRound size={24} />
-      </div>
       <h2 className="empty-state-title">No variable selected</h2>
       <p className="empty-state-desc">
-        Choose a variable from the list to edit it, or add a new one below.
+        Pick a variable from the list to edit it, or add a new one below.
       </p>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ChevronRight, Plus, FolderOpen, Trash2, Upload } from "lucide-react";
+import { Search, ChevronRight, Plus, Trash2, Upload } from "lucide-react";
 import type { EnvVar, Project } from "../types";
 
 interface VarListProps {
@@ -35,7 +35,6 @@ export default function VarList({
     return (
       <div className="list-panel" style={{ justifyContent: "center", alignItems: "center", display: "flex" }}>
         <div className="list-empty">
-          <FolderOpen size={28} className="list-empty-icon" />
           <span>Select a project</span>
         </div>
       </div>
@@ -91,9 +90,8 @@ export default function VarList({
 
         {filtered.length === 0 && !searchQuery && (
           <div className="list-empty">
-            <Plus size={22} className="list-empty-icon" />
             <span>No variables yet.</span>
-            <span>Use the + button below to add one.</span>
+            <span>Use + to add one.</span>
           </div>
         )}
 

@@ -23,7 +23,7 @@ import ShellIntegration from "./components/ShellIntegration";
 import SettingsPanel from "./components/Settings";
 import Onboarding from "./components/Onboarding";
 import PushToStagePanel from "./components/PushToStage/PushToStagePanel";
-import { FolderOpen, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 // ── Error Boundary ─────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<
@@ -633,14 +633,11 @@ export default function App() {
       ) : (
         <div className="detail-panel">
           <div className="empty-state">
-            <div className="empty-state-icon">
-              <FolderOpen size={26} />
-            </div>
             <h2 className="empty-state-title">No project selected</h2>
             <p className="empty-state-desc">
-              Choose a project folder that contains a{" "}
+              Open a project folder that contains a{" "}
               <code className="inline-code">.env</code>{" "}
-              file. Your variables will appear here.
+              file.
             </p>
             <button className="btn-primary" onClick={addProject}>
               <Plus size={14} />

@@ -893,15 +893,10 @@ a {
 }
 
 .detail-header-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  background: var(--accent-dim);
-  border: 1px solid rgba(59, 130, 246, 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-text);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -1187,36 +1182,39 @@ a {
 .badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 2px 7px;
-  border-radius: var(--radius-sm);
+  gap: 5px;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 500;
-  border: 1px solid transparent;
-  line-height: 1.4;
+  line-height: 1;
   white-space: nowrap;
-  height: 32px;
-  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  background: none;
 }
 
 .badge-success {
-  background: var(--color-success-bg);
   color: var(--color-success);
-  border-color: rgba(48, 209, 88, 0.18);
 }
 
 .badge-warning {
-  background: var(--color-warning-bg);
   color: var(--color-warning);
-  border-color: rgba(245, 165, 36, 0.18);
 }
 
 .badge-danger {
-  background: var(--color-danger-bg);
   color: var(--color-danger);
-  border-color: rgba(229, 72, 77, 0.18);
 }
+
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.status-dot--success { background: var(--color-success); }
+.status-dot--warning { background: var(--color-warning); }
+.status-dot--danger  { background: var(--color-danger); }
 
 /* Environment tier — colored left-border on dropdown */
 .env-dropdown-wrapper[data-env-tier] .env-dropdown {
@@ -1352,16 +1350,11 @@ a {
 }
 
 .empty-state-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-row-rest);
-  border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  animation: scaleIn 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  margin-bottom: 4px;
 }
 
 .empty-state-title {
