@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>.envVault — Environment Variable Manager for macOS</title>
-  <meta name="description" content="A local-first tool for managing .env files across projects. Organized, inheritable, and automatically loaded in your terminal." />
+  <meta name="description" content="A local-first tool for managing .env files across projects. Secrets live outside your project tree — invisible to git and AI agents." />
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
@@ -12,10 +12,10 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 
-  <!-- Open Graph / Facebook -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content=".envVault — Environment Variable Manager for macOS" />
-  <meta property="og:description" content="A local-first tool for managing .env files across projects. Organized, inheritable, and automatically loaded in your terminal." />
+  <meta property="og:description" content="Secrets stored outside your project tree — safe from git, safe from AI, always available in your shell." />
   <meta property="og:image" content="og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -23,7 +23,7 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content=".envVault — Environment Variable Manager for macOS" />
-  <meta name="twitter:description" content="A local-first tool for managing .env files across projects. Organized, inheritable, and automatically loaded in your terminal." />
+  <meta name="twitter:description" content="Secrets stored outside your project tree — safe from git, safe from AI, always available in your shell." />
   <meta name="twitter:image" content="og-image.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -64,9 +64,7 @@
       --t-entrance: 260ms cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--bg-base);
@@ -89,7 +87,10 @@
       display: flex;
       align-items: center;
       padding: 0 24px;
+      transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
     }
+
+    .navbar.is-scrolled { border-bottom-color: rgba(255,255,255,0.13); }
 
     .navbar-inner {
       width: 100%;
@@ -100,11 +101,7 @@
       justify-content: space-between;
     }
 
-    .navbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .navbar-brand { display: flex; align-items: center; gap: 10px; }
 
     .wordmark {
       font-family: var(--font-ui);
@@ -126,11 +123,7 @@
       letter-spacing: 0.02em;
     }
 
-    .navbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .navbar-actions { display: flex; align-items: center; gap: 10px; }
 
     /* ── Buttons ── */
     .btn {
@@ -149,29 +142,12 @@
       white-space: nowrap;
     }
 
-    .btn:hover {
-      transform: translateY(-1px);
-    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: scale(0.97) translateY(0); transition-duration: 80ms; }
 
-    .btn:active {
-      transform: scale(0.97) translateY(0);
-      transition-duration: 80ms;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      padding: 7px 14px;
-      height: 32px;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-primary:active {
-      background: var(--accent-press);
-    }
+    .btn-primary { background: var(--accent); color: #fff; padding: 7px 14px; height: 32px; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:active { background: var(--accent-press); }
 
     .btn-ghost {
       background: transparent;
@@ -180,29 +156,21 @@
       height: 32px;
       border: 1px solid var(--border-subtle);
     }
+    .btn-ghost:hover { color: var(--text-primary); border-color: var(--border-moderate); background: var(--bg-row-hover); }
 
-    .btn-ghost:hover {
-      color: var(--text-primary);
-      border-color: var(--border-moderate);
-      background: var(--bg-row-hover);
-    }
-
-    .btn-large {
-      font-size: 0.875rem;
-      padding: 10px 20px;
-      height: 40px;
-    }
+    .btn-large { font-size: 0.875rem; padding: 10px 20px; height: 40px; }
 
     /* ── Hero ── */
     .hero {
       padding: 96px 24px 80px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 24px 24px;
     }
 
-    .hero-inner {
-      max-width: 680px;
-      margin: 0 auto;
-    }
+    .hero-inner { max-width: 680px; margin: 0 auto; position: relative; }
 
     .hero-label {
       display: inline-block;
@@ -232,6 +200,11 @@
       margin: 0 auto 32px;
     }
 
+    .hero-sub strong {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
     .hero-ctas {
       display: flex;
       align-items: center;
@@ -250,19 +223,8 @@
       margin-bottom: 56px;
     }
 
-    .hero-pill {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      padding: 0 10px;
-      position: relative;
-    }
-
-    .hero-pill + .hero-pill::before {
-      content: "·";
-      position: absolute;
-      left: 0;
-      transform: translateX(-50%);
-    }
+    .hero-pill { font-size: 0.75rem; color: var(--text-tertiary); padding: 0 10px; position: relative; }
+    .hero-pill + .hero-pill::before { content: "·"; position: absolute; left: 0; transform: translateX(-50%); }
 
     /* ── Interactive App Demo ── */
     .app-mockup {
@@ -286,12 +248,7 @@
       gap: 7px;
     }
 
-    .titlebar-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-
+    .titlebar-dot { width: 10px; height: 10px; border-radius: 50%; }
     .dot-red   { background: #e5484d; }
     .dot-yellow { background: #f5a524; }
     .dot-green  { background: #30d158; }
@@ -309,21 +266,8 @@
       min-height: 280px;
     }
 
-    .mock-sidebar {
-      border-right: 1px solid var(--border-subtle);
-      padding: 10px 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .mock-sidebar-label {
-      font-family: var(--font-mono);
-      font-size: 0.625rem;
-      color: var(--text-tertiary);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 4px 14px 8px;
-    }
+    .mock-sidebar { border-right: 1px solid var(--border-subtle); padding: 10px 0; display: flex; flex-direction: column; }
+    .mock-sidebar-label { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px 8px; }
 
     .mock-project {
       display: flex;
@@ -335,15 +279,8 @@
       cursor: pointer;
       transition: background var(--t-normal), color var(--t-normal);
     }
-
-    .mock-project:hover {
-      background: var(--bg-row-hover);
-    }
-
-    .mock-project.active {
-      background: var(--accent-dim);
-      color: var(--accent-text);
-    }
+    .mock-project:hover { background: var(--bg-row-hover); }
+    .mock-project.active { background: var(--accent-dim); color: var(--accent-text); }
 
     .mock-project-dot {
       width: 5px;
@@ -353,256 +290,95 @@
       flex-shrink: 0;
       transition: background var(--t-normal);
     }
+    .mock-project.active .mock-project-dot { background: var(--accent-text); }
+    .mock-project-indent { padding-left: 28px; }
 
-    .mock-project.active .mock-project-dot {
-      background: var(--accent-text);
-    }
+    .mock-vars { padding: 10px 0; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; min-width: 0; }
+    .mock-vars-header { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px 8px; display: flex; align-items: center; justify-content: space-between; }
 
-    .mock-project-indent {
-      padding-left: 28px;
-    }
+    .mock-var-row { display: flex; align-items: center; padding: 6px 14px; gap: 8px; cursor: pointer; transition: background var(--t-normal); }
+    .mock-var-row:hover { background: var(--bg-row-hover); }
+    .mock-var-row.active { background: var(--bg-row-hover); }
 
-    .mock-vars {
-      padding: 10px 0;
-      border-right: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
+    .mock-var-key { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--accent-text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mock-var-preview { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mock-var-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-tertiary); flex-shrink: 0; transition: background var(--t-normal); }
+    .mock-var-row.active .mock-var-dot { background: var(--color-success); }
 
-    .mock-vars-header {
-      font-family: var(--font-mono);
-      font-size: 0.625rem;
-      color: var(--text-tertiary);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 4px 14px 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+    .mock-detail { padding: 12px; display: flex; flex-direction: column; gap: 0; }
+    .mock-detail-label { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+    .mock-detail-key { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-text); margin-bottom: 10px; }
+    .mock-detail-value { background: #161618; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-tertiary); letter-spacing: 0.08em; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .mock-detail-value-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .mock-var-row {
-      display: flex;
-      align-items: center;
-      padding: 6px 14px;
-      gap: 8px;
-      cursor: pointer;
-      transition: background var(--t-normal);
-    }
+    .mock-reveal-btn { background: none; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-tertiary); font-family: var(--font-mono); font-size: 0.5625rem; padding: 2px 6px; cursor: pointer; transition: color var(--t-normal), border-color var(--t-normal); white-space: nowrap; flex-shrink: 0; }
+    .mock-reveal-btn:hover { color: var(--text-secondary); border-color: var(--border-moderate); }
 
-    .mock-var-row:hover {
-      background: var(--bg-row-hover);
-    }
+    .mock-detail-badge { display: inline-block; font-family: var(--font-mono); font-size: 0.5625rem; color: var(--color-success); background: rgba(48,209,88,0.08); border: 1px solid rgba(48,209,88,0.15); border-radius: var(--radius-sm); padding: 2px 6px; }
+    .mock-detail-badge.revealed { color: var(--color-warning); background: rgba(245,165,36,0.08); border-color: rgba(245,165,36,0.15); }
 
-    .mock-var-row.active {
-      background: var(--bg-row-hover);
-    }
+    .mock-detail-empty { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.6875rem; color: var(--text-tertiary); text-align: center; padding: 20px 12px; line-height: 1.5; }
 
-    .mock-var-key {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--accent-text);
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    .mock-env-select { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--text-tertiary); background: #161618; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 2px 4px; cursor: pointer; outline: none; transition: border-color var(--t-normal); -webkit-appearance: none; appearance: none; }
+    .mock-env-select:hover, .mock-env-select:focus { border-color: var(--border-moderate); }
+    .mock-env-select option { background: #1e1e20; color: var(--text-secondary); }
 
-    .mock-var-preview {
-      font-family: var(--font-mono);
-      font-size: 0.625rem;
-      color: var(--text-tertiary);
-      max-width: 80px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .mock-var-dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--text-tertiary);
-      flex-shrink: 0;
-      transition: background var(--t-normal);
-    }
-
-    .mock-var-row.active .mock-var-dot {
-      background: var(--color-success);
-    }
-
-    /* Detail panel */
-    .mock-detail {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .mock-detail-label {
-      font-family: var(--font-mono);
-      font-size: 0.625rem;
-      color: var(--text-tertiary);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .mock-detail-key {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--accent-text);
-      margin-bottom: 10px;
-    }
-
-    .mock-detail-value {
-      background: #161618;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 6px 10px;
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .mock-detail-value-text {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .mock-reveal-btn {
-      background: none;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      color: var(--text-tertiary);
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      padding: 2px 6px;
-      cursor: pointer;
-      transition: color var(--t-normal), border-color var(--t-normal);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .mock-reveal-btn:hover {
-      color: var(--text-secondary);
-      border-color: var(--border-moderate);
-    }
-
-    .mock-detail-badge {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      color: var(--color-success);
-      background: rgba(48, 209, 88, 0.08);
-      border: 1px solid rgba(48, 209, 88, 0.15);
-      border-radius: var(--radius-sm);
-      padding: 2px 6px;
-    }
-
-    .mock-detail-badge.revealed {
-      color: var(--color-warning);
-      background: rgba(245, 165, 36, 0.08);
-      border-color: rgba(245, 165, 36, 0.15);
-    }
-
-    .mock-detail-empty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      text-align: center;
-      padding: 20px 12px;
-      line-height: 1.5;
-    }
-
-    /* Env dropdown in demo */
-    .mock-env-select {
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      color: var(--text-tertiary);
-      background: #161618;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 2px 4px;
-      cursor: pointer;
-      outline: none;
-      transition: border-color var(--t-normal);
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .mock-env-select:hover,
-    .mock-env-select:focus {
-      border-color: var(--border-moderate);
-    }
-
-    .mock-env-select option {
-      background: #1e1e20;
-      color: var(--text-secondary);
-    }
-
-    .mock-detail-divider {
-      height: 1px;
-      background: var(--border-subtle);
-      margin: 8px 0;
-    }
-
-    .mock-detail-field-label {
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      color: var(--text-tertiary);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .mock-hint {
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      color: var(--text-tertiary);
-      text-align: center;
-      padding: 8px 14px 4px;
-      margin-top: auto;
-      opacity: 0.6;
-    }
+    .mock-detail-divider { height: 1px; background: var(--border-subtle); margin: 8px 0; }
+    .mock-detail-field-label { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+    .mock-hint { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--text-tertiary); text-align: center; padding: 8px 14px 4px; margin-top: auto; opacity: 0.6; }
 
     /* ── Section wrapper ── */
-    .section {
-      padding: 80px 24px;
+    .section { padding: 80px 24px; }
+    .section-inner { max-width: 1080px; margin: 0 auto; }
+    .section-header { margin-bottom: 40px; }
+    .section-title { font-size: 1.5rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 6px; }
+    .section-sub { font-size: 0.9375rem; color: var(--text-secondary); }
+
+    /* ── Metrics Bar ── */
+    .metrics-section {
+      padding: 0 24px;
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    .section-inner {
+    .metrics-inner {
       max-width: 1080px;
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
     }
 
-    .section-header {
-      margin-bottom: 40px;
+    .metric-cell {
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
     }
 
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-primary);
+    .metric-cell + .metric-cell::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background: var(--border-subtle);
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 2.25rem;
+      font-weight: 500;
+      color: var(--accent-text);
       letter-spacing: -0.02em;
-      margin-bottom: 6px;
+      line-height: 1;
+      margin-bottom: 8px;
+      display: block;
     }
 
-    .section-sub {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      line-height: 1.4;
     }
 
     /* ── Features Grid ── */
@@ -625,29 +401,23 @@
       background: var(--bg-row-rest);
       padding: 24px 22px;
       position: relative;
+      transition: background var(--t-normal);
     }
 
-    .feature-num {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      margin-bottom: 14px;
+    .feature-card:hover { background: rgba(255,255,255,0.02); }
+
+    .feature-icon {
       display: block;
+      margin-bottom: 14px;
+      color: var(--text-tertiary);
+      transition: color var(--t-normal);
     }
 
-    .feature-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-      letter-spacing: -0.01em;
-    }
+    .feature-card:hover .feature-icon { color: var(--accent-text); }
 
-    .feature-desc {
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
+    .feature-num { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-tertiary); margin-bottom: 14px; display: block; }
+    .feature-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.01em; }
+    .feature-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6; }
 
     .feature-accent-bar {
       position: absolute;
@@ -656,16 +426,233 @@
       width: 2px;
       height: 100%;
       background: var(--accent);
-      opacity: 0;
+      opacity: 0.12;
       transition: opacity var(--t-normal);
     }
 
-    .feature-card:hover .feature-accent-bar {
-      opacity: 1;
+    .feature-card:hover .feature-accent-bar { opacity: 1; }
+
+    /* ── How It Works ── */
+    .how-section {
+      padding: 80px 24px;
+      border-top: 1px solid var(--border-subtle);
     }
 
-    .feature-card:hover {
-      background: rgba(255,255,255,0.02);
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      margin-top: 48px;
+      position: relative;
+    }
+
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: calc(16.67% + 20px);
+      right: calc(16.67% + 20px);
+      height: 1px;
+      border-top: 1px dashed var(--border-moderate);
+      pointer-events: none;
+    }
+
+    .how-step {
+      padding: 0 28px;
+      position: relative;
+    }
+
+    .how-step-num-wrap {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .how-step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-row-rest);
+      border: 1px solid var(--border-moderate);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .how-step-circle-num {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      color: var(--accent-text);
+    }
+
+    .how-step-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+    }
+
+    .how-step-desc {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    .how-step-icon {
+      margin-bottom: 6px;
+      color: var(--text-tertiary);
+    }
+
+    /* ── Mid-page CTA ── */
+    .midcta-section {
+      padding: 40px 24px;
+    }
+
+    .midcta-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      background: var(--bg-row-rest);
+      padding: 28px 32px;
+    }
+
+    .midcta-text {
+      font-size: 0.9375rem;
+      color: var(--text-secondary);
+      margin-right: 4px;
+    }
+
+    /* ── Use-Case Cards ── */
+    .usecases-section {
+      padding: 80px 24px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-top: 40px;
+    }
+
+    .usecase-card {
+      background: var(--bg-row-rest);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: background var(--t-normal);
+    }
+
+    .usecase-card:hover { background: rgba(255,255,255,0.02); }
+
+    .usecase-quote {
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    .usecase-quote::before { content: '\201C'; color: var(--accent-text); font-style: normal; font-size: 1.1em; }
+    .usecase-quote::after  { content: '\201D'; color: var(--accent-text); font-style: normal; font-size: 1.1em; }
+
+    .usecase-attr {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+      margin-top: auto;
+    }
+
+    .usecase-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      color: var(--accent-text);
+      background: var(--accent-dim);
+      border: 1px solid rgba(48,99,184,0.18);
+      border-radius: var(--radius-sm);
+      padding: 2px 7px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    /* ── FAQ ── */
+    .faq-section {
+      padding: 80px 24px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .faq-list {
+      margin-top: 40px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .faq-item {
+      background: var(--bg-row-rest);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .faq-item:last-child { border-bottom: none; }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--font-ui);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      transition: color var(--t-normal);
+    }
+
+    .faq-question:hover { color: var(--text-primary); }
+
+    .faq-icon {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      color: var(--text-tertiary);
+      transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), color var(--t-normal);
+    }
+
+    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent-text); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .faq-item.open .faq-answer { max-height: 200px; }
+
+    .faq-answer-inner {
+      padding: 0 24px 20px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
     }
 
     /* ── Changelog ── */
@@ -683,101 +670,40 @@
       overflow: hidden;
     }
 
-    .release-entry {
-      background: var(--bg-row-rest);
-      padding: 28px 28px;
-    }
+    .release-entry { background: var(--bg-row-rest); padding: 28px 28px; transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+    .release-entry:hover { background: rgba(255,255,255,0.015); }
+    .release-entry + .release-entry { border-top: 1px solid var(--border-subtle); }
 
-    .release-entry + .release-entry {
-      border-top: 1px solid var(--border-subtle);
-    }
+    .release-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .release-version { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 500; color: var(--text-primary); background: var(--bg-row-rest); border: 1px solid var(--border-moderate); border-radius: var(--radius-sm); padding: 3px 10px; }
+    .release-badge { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; border-radius: var(--radius-sm); padding: 2px 8px; }
+    .release-badge.latest { color: var(--color-success); background: rgba(48,209,88,0.08); border: 1px solid rgba(48,209,88,0.15); }
+    .release-badge.beta { color: var(--color-warning); background: rgba(245,165,36,0.08); border: 1px solid rgba(245,165,36,0.15); }
+    .release-badge.alpha { color: var(--text-tertiary); background: rgba(72,72,74,0.20); border: 1px solid var(--border-subtle); }
+    .release-date { font-size: 0.8125rem; color: var(--text-tertiary); margin-left: auto; font-variant-numeric: tabular-nums; }
 
-    .release-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
+    .release-notes { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .release-notes li { font-size: 0.8125rem; color: var(--text-secondary); display: flex; align-items: baseline; gap: 10px; line-height: 1.5; }
+    .release-notes li::before { content: "—"; color: var(--text-tertiary); flex-shrink: 0; font-family: var(--font-mono); font-size: 0.75rem; }
 
-    .release-version {
-      font-family: var(--font-mono);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      background: var(--bg-row-rest);
-      border: 1px solid var(--border-moderate);
-      border-radius: var(--radius-sm);
-      padding: 3px 10px;
-    }
-
-    .release-badge {
-      font-family: var(--font-mono);
-      font-size: 0.625rem;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border-radius: var(--radius-sm);
-      padding: 2px 8px;
-    }
-
-    .release-badge.latest {
-      color: var(--color-success);
-      background: rgba(48, 209, 88, 0.08);
-      border: 1px solid rgba(48, 209, 88, 0.15);
-    }
-
-    .release-badge.beta {
-      color: var(--color-warning);
-      background: rgba(245, 165, 36, 0.08);
-      border: 1px solid rgba(245, 165, 36, 0.15);
-    }
-
-    .release-badge.alpha {
-      color: var(--text-tertiary);
-      background: rgba(72, 72, 74, 0.20);
-      border: 1px solid var(--border-subtle);
-    }
-
-    .release-date {
-      font-size: 0.8125rem;
-      color: var(--text-tertiary);
-      margin-left: auto;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .release-notes {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .release-notes li {
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      line-height: 1.5;
-    }
-
-    .release-notes li::before {
-      content: "—";
-      color: var(--text-tertiary);
-      flex-shrink: 0;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-    }
-
-    /* ── Download CTA ── */
+    /* ── Download CTA (split layout) ── */
     .download-section {
-      text-align: center;
       padding: 80px 24px;
       background: var(--bg-row-rest);
       border-top: 1px solid var(--border-subtle);
       border-bottom: 1px solid var(--border-subtle);
     }
+
+    .download-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .download-left {}
 
     .download-title {
       font-size: 1.75rem;
@@ -790,14 +716,45 @@
     .download-sub {
       font-size: 0.9375rem;
       color: var(--text-secondary);
-      margin-bottom: 28px;
+      margin-bottom: 20px;
+    }
+
+    .download-facts {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .download-facts li {
+      font-size: 0.8125rem;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .download-facts li::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--color-success);
+      flex-shrink: 0;
+    }
+
+    .download-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
     }
 
     .download-meta {
-      margin-top: 14px;
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       color: var(--text-tertiary);
       font-family: var(--font-mono);
+      text-align: center;
     }
 
     /* ── Footer ── */
@@ -819,33 +776,11 @@
       justify-content: space-between;
     }
 
-    .footer-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .footer-copy {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-    }
-
-    .footer-links {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .footer-link {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      text-decoration: none;
-      transition: color var(--t-normal);
-    }
-
-    .footer-link:hover {
-      color: var(--text-secondary);
-    }
+    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .footer-copy { font-size: 0.75rem; color: var(--text-tertiary); }
+    .footer-links { display: flex; align-items: center; gap: 18px; }
+    .footer-link { font-size: 0.75rem; color: var(--text-tertiary); text-decoration: none; transition: color var(--t-normal); }
+    .footer-link:hover { color: var(--text-secondary); }
 
     /* ── Scroll reveal ── */
     .reveal {
@@ -854,10 +789,7 @@
       transition: opacity var(--t-entrance), transform var(--t-entrance);
     }
 
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ── Scroll progress bar ── */
     .scroll-progress {
@@ -874,169 +806,59 @@
       transition: transform 60ms linear;
     }
 
-    /* ── Navbar scroll state ── */
-    .navbar {
-      transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
+    /* ── App Logo ── */
+    .nav-logo { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+    .hero-app-icon { width: 80px; height: 80px; border-radius: 18px; object-fit: cover; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto; }
+    .footer-logo { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
 
-    .navbar.is-scrolled {
-      border-bottom-color: rgba(255, 255, 255, 0.13);
-    }
-
-    /* ── Var row transitions ── */
-    .mock-var-row {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    /* ── Feature card hover (accent bar already handles left edge) ── */
-    .feature-card {
-      transition: background var(--t-normal);
-    }
-
-    /* ── Release entry hover (releases.html shared concept) ── */
-    .release-entry {
-      transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .release-entry:hover {
-      background: rgba(255, 255, 255, 0.015);
-    }
-
-    /* ── prefers-reduced-motion: kill all motion ── */
+    /* ── prefers-reduced-motion ── */
     @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
+      *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         transition-delay: 0ms !important;
       }
-
-      .reveal {
-        opacity: 1 !important;
-        transform: none !important;
-      }
-
-      .mock-var-row {
-        opacity: 1 !important;
-        transform: none !important;
-      }
-
-      .scroll-progress {
-        display: none;
-      }
-
-      .btn:hover,
-      .btn:active {
-        transform: none !important;
-      }
+      .reveal { opacity: 1 !important; transform: none !important; }
+      .mock-var-row { opacity: 1 !important; transform: none !important; }
+      .scroll-progress { display: none; }
+      .btn:hover, .btn:active { transform: none !important; }
     }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .mockup-body {
-        grid-template-columns: 140px 1fr;
-      }
-
-      .mock-detail {
-        display: none;
-      }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .mockup-body { grid-template-columns: 140px 1fr; }
+      .mock-detail { display: none; }
+      .usecases-grid { grid-template-columns: 1fr; }
+      .metrics-inner { grid-template-columns: repeat(2, 1fr); }
+      .how-steps { grid-template-columns: 1fr; }
+      .how-steps::before { display: none; }
+      .how-step { padding: 0 0 32px; }
+      .download-inner { grid-template-columns: 1fr; text-align: center; }
+      .download-right { align-items: center; }
+      .download-facts { align-items: center; }
     }
 
     @media (max-width: 768px) {
-      .hero-title {
-        font-size: 2.5rem;
-      }
-
-      .hero-sub {
-        font-size: 1rem;
-      }
-
-      .hero {
-        padding: 64px 20px 56px;
-      }
-
-      .navbar {
-        padding: 0 16px;
-      }
-
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .mockup-body {
-        grid-template-columns: 1fr;
-      }
-
-      .mock-sidebar {
-        display: none;
-      }
-
-      .section,
-      .features-section {
-        padding: 56px 20px;
-      }
-
-      .release-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .release-date {
-        margin-left: 0;
-      }
-
-      .download-title {
-        font-size: 1.4rem;
-      }
-
-      .hero-pills {
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .hero-pill::before {
-        display: none;
-      }
-
-      .navbar-actions .btn-ghost {
-        display: none;
-      }
-    }
-
-    /* ── App Logo ── */
-    .nav-logo {
-      width: 22px;
-      height: 22px;
-      border-radius: 5px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-
-    .hero-app-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: 18px;
-      object-fit: cover;
-      margin-bottom: 24px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .footer-logo {
-      width: 18px;
-      height: 18px;
-      border-radius: 4px;
-      object-fit: cover;
-      flex-shrink: 0;
+      .hero-title { font-size: 2.5rem; }
+      .hero-sub { font-size: 1rem; }
+      .hero { padding: 64px 20px 56px; }
+      .navbar { padding: 0 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .mockup-body { grid-template-columns: 1fr; }
+      .mock-sidebar { display: none; }
+      .section, .features-section { padding: 56px 20px; }
+      .release-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .release-date { margin-left: 0; }
+      .download-title { font-size: 1.4rem; }
+      .hero-pills { flex-direction: column; gap: 4px; }
+      .hero-pill::before { display: none; }
+      .navbar-actions .btn-ghost { display: none; }
+      .metrics-inner { grid-template-columns: repeat(2, 1fr); }
+      .metric-cell { padding: 24px 16px; }
+      .metric-value { font-size: 1.75rem; }
+      .midcta-inner { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
@@ -1055,7 +877,7 @@
       <div class="navbar-actions">
         <a href="releases.html" class="btn btn-ghost">Release notes</a>
         <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary">Download for macOS</a>
+        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary">Download free for macOS</a>
       </div>
     </div>
   </nav>
@@ -1067,18 +889,18 @@
       <span class="hero-label reveal">Environment Variable Manager</span>
       <h1 class="hero-title reveal">.envVault</h1>
       <p class="hero-sub reveal">
-        Your secrets live in the vault — not in your project folders.
-        Git can't leak them. AI agents can't scan them.
-        And managing env across a dozen microservices finally makes sense.
+        Your secrets, <strong>outside the reach of git and AI.</strong><br />
+        Shell-loaded. Masked by default. Local forever.
       </p>
       <div class="hero-ctas reveal">
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download for macOS — v1.0.1</a>
+        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download free for macOS</a>
         <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost btn-large" target="_blank" rel="noopener">View on GitHub</a>
       </div>
       <div class="hero-pills reveal">
-        <span class="hero-pill">macOS only</span>
-        <span class="hero-pill">Keys stored outside your project tree</span>
+        <span class="hero-pill">macOS 13+</span>
+        <span class="hero-pill">Apple Silicon &amp; Intel</span>
         <span class="hero-pill">Open source</span>
+        <span class="hero-pill">~6 MB</span>
       </div>
 
       <!-- Interactive App Demo -->
@@ -1092,7 +914,6 @@
         <div class="mockup-body">
           <div class="mock-sidebar" id="demo-sidebar">
             <div class="mock-sidebar-label">Projects</div>
-            <!-- Rendered by JS -->
           </div>
           <div class="mock-vars" id="demo-vars">
             <div class="mock-vars-header">
@@ -1109,6 +930,28 @@
     </div>
   </section>
 
+  <!-- Security Metrics Bar -->
+  <section class="metrics-section" aria-label="Security impact metrics">
+    <div class="metrics-inner">
+      <div class="metric-cell reveal">
+        <span class="metric-value" data-counter="0" data-suffix="">0</span>
+        <span class="metric-label">secrets committed<br/>to git</span>
+      </div>
+      <div class="metric-cell reveal">
+        <span class="metric-value" data-counter="0" data-suffix="">0</span>
+        <span class="metric-label">AI agents with<br/>access to your keys</span>
+      </div>
+      <div class="metric-cell reveal">
+        <span class="metric-value" data-counter="6" data-suffix="">6</span>
+        <span class="metric-label">environments<br/>per project</span>
+      </div>
+      <div class="metric-cell reveal">
+        <span class="metric-value" data-counter="100" data-suffix="%">100%</span>
+        <span class="metric-label">stored outside<br/>your project</span>
+      </div>
+    </div>
+  </section>
+
   <!-- Features -->
   <section class="features-section" aria-labelledby="features-heading">
     <div class="section-inner">
@@ -1117,54 +960,281 @@
         <p class="section-sub">Four things that keep happening to developers. .envVault stops all of them.</p>
       </div>
       <div class="features-grid">
+
+        <!-- 01 -->
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <!-- Lock body -->
+            <rect x="4" y="9" width="12" height="9" rx="1.5" />
+            <!-- Shackle -->
+            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
+            <!-- Keyhole -->
+            <circle cx="10" cy="13.5" r="1" />
+            <line x1="10" y1="14.5" x2="10" y2="16" />
+          </svg>
           <span class="feature-num">01</span>
           <h3 class="feature-title">No more accidental git leaks</h3>
           <p class="feature-desc">Secrets are stored in the app's data directory — outside your project tree entirely. There's no <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code> file to accidentally commit, no gitignore rule to forget, no late-night key rotation.</p>
         </div>
+
+        <!-- 02 -->
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <!-- Eye outline -->
+            <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" />
+            <circle cx="10" cy="10" r="2" />
+            <!-- Slash -->
+            <line x1="3" y1="3" x2="17" y2="17" class="eye-slash" style="stroke-dasharray:20;stroke-dashoffset:0;transition:stroke-dashoffset 180ms cubic-bezier(0.16,1,0.3,1);" />
+          </svg>
           <span class="feature-num">02</span>
           <h3 class="feature-title">Invisible to AI agents</h3>
           <p class="feature-desc">Copilot, Claude, Cursor — they all index your file tree. Because your keys aren't in files, they're never in context. Agents work on your code without ever seeing a secret.</p>
         </div>
+
+        <!-- 03 -->
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="13" width="16" height="4" rx="1" />
+            <rect x="2" y="8"  width="16" height="4" rx="1" />
+            <rect x="2" y="3"  width="16" height="4" rx="1" />
+          </svg>
           <span class="feature-num">03</span>
           <h3 class="feature-title">Multi-environment support</h3>
-          <p class="feature-desc">Switch between <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.local</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.production</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.staging</code>, and more — per project. Each environment has its own set of variables. No more juggling files or copy-pasting between configs.</p>
+          <p class="feature-desc">Switch between <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.local</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.production</code>, staging, and more — per project. No more juggling files or copy-pasting between configs.</p>
         </div>
+
+        <!-- 04 -->
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10" cy="10" r="2" />
+            <circle cx="10" cy="3"  r="1.5" />
+            <circle cx="10" cy="17" r="1.5" />
+            <circle cx="3"  cy="10" r="1.5" />
+            <circle cx="17" cy="10" r="1.5" />
+            <line x1="10" y1="5"  x2="10" y2="8" />
+            <line x1="10" y1="12" x2="10" y2="15" />
+            <line x1="5"  y1="10" x2="8"  y2="10" />
+            <line x1="12" y1="10" x2="15" y2="10" />
+          </svg>
           <span class="feature-num">04</span>
           <h3 class="feature-title">Microservices without the mess</h3>
           <p class="feature-desc">Manage env across dozens of services in one place. Sub-projects inherit from parents — shared infra vars live once, services override only what differs. No copy-paste drift.</p>
         </div>
+
+        <!-- 05 -->
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="16" height="12" rx="2" />
+            <path d="M6 10 l3 3 l5-5" style="stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;" />
+          </svg>
           <span class="feature-num">05</span>
           <h3 class="feature-title">Shell auto-load</h3>
           <p class="feature-desc">A one-time hook in your shell config auto-injects the right vars when you <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">cd</code> into a project. No manual sourcing, no forgotten exports, no wrong environment.</p>
         </div>
+
+        <!-- 06 -->
         <div class="feature-card reveal">
           <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="5"  cy="8"  r="1.5" />
+            <circle cx="10" cy="8"  r="1.5" />
+            <circle cx="15" cy="8"  r="1.5" />
+            <circle cx="5"  cy="13" r="1.5" />
+            <circle cx="10" cy="13" r="1.5" />
+            <circle cx="15" cy="13" r="1.5" />
+          </svg>
           <span class="feature-num">06</span>
           <h3 class="feature-title">Masked by default</h3>
           <p class="feature-desc">Values are hidden at rest, revealed individually on demand. Configurable inactivity timeout re-masks after a period of no interaction. Safe for screen sharing.</p>
         </div>
+
       </div>
     </div>
   </section>
 
-  <!-- Download CTA -->
-  <section class="download-section" id="download" aria-labelledby="download-heading">
-    <h2 class="download-title reveal" id="download-heading">Ready to manage your environment?</h2>
-    <p class="download-sub reveal">Download for macOS. No account required.</p>
-    <div class="reveal">
-      <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download .envVault — v1.0.1</a>
+  <!-- How It Works -->
+  <section class="how-section" aria-labelledby="how-heading">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <h2 class="section-title" id="how-heading">How it works</h2>
+        <p class="section-sub">Three steps. One shell hook. Zero leaks — from that moment on.</p>
+      </div>
+      <div class="how-steps">
+
+        <div class="how-step reveal" style="transition-delay:0ms">
+          <div class="how-step-num-wrap">
+            <div class="how-step-circle">
+              <span class="how-step-circle-num">01</span>
+            </div>
+          </div>
+          <svg class="how-step-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 7l9-4 9 4v10l-9 4-9-4V7z" />
+            <line x1="12" y1="3" x2="12" y2="21" />
+            <line x1="3" y1="7" x2="21" y2="7" />
+          </svg>
+          <h3 class="how-step-title">Add your project</h3>
+          <p class="how-step-desc">Point .envVault at a directory. It scans for existing <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code> files and imports them automatically. Secrets move to the vault — your project folder has nothing to commit.</p>
+        </div>
+
+        <div class="how-step reveal" style="transition-delay:80ms">
+          <div class="how-step-num-wrap">
+            <div class="how-step-circle">
+              <span class="how-step-circle-num">02</span>
+            </div>
+          </div>
+          <svg class="how-step-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            <circle cx="12" cy="16" r="1.5" />
+          </svg>
+          <h3 class="how-step-title">Manage your secrets</h3>
+          <p class="how-step-desc">Edit variables in the app. Switch environments with a dropdown. Values are masked at rest and revealed individually on demand — safe for screen sharing and pair programming.</p>
+        </div>
+
+        <div class="how-step reveal" style="transition-delay:160ms">
+          <div class="how-step-num-wrap">
+            <div class="how-step-circle">
+              <span class="how-step-circle-num">03</span>
+            </div>
+          </div>
+          <svg class="how-step-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M8 12l3 3 5-5" />
+          </svg>
+          <h3 class="how-step-title">cd and code</h3>
+          <p class="how-step-desc">The shell hook detects when you change directory and injects the right vars. No manual sourcing. The correct environment is always active — in every terminal window.</p>
+        </div>
+
+      </div>
     </div>
-    <p class="download-meta reveal">macOS 13+ &nbsp;·&nbsp; Apple Silicon &amp; Intel &nbsp;·&nbsp; ~6 MB</p>
+  </section>
+
+  <!-- Mid-page CTA -->
+  <section class="midcta-section" aria-label="Download prompt">
+    <div class="midcta-inner reveal">
+      <span class="midcta-text">Ready to stop leaking secrets?</span>
+      <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download free for macOS</a>
+      <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost btn-large" target="_blank" rel="noopener">View source →</a>
+    </div>
+  </section>
+
+  <!-- Use-Case Cards -->
+  <section class="usecases-section" aria-labelledby="usecases-heading">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <h2 class="section-title" id="usecases-heading">Built for developers who've been burned</h2>
+        <p class="section-sub">Representative scenarios from developers who needed a better answer to the .env problem.</p>
+      </div>
+      <div class="usecases-grid">
+
+        <div class="usecase-card reveal">
+          <span class="usecase-tag">git leak</span>
+          <p class="usecase-quote">I stopped rotating leaked keys after the third time it happened. Now the folder simply doesn't have the file.</p>
+          <span class="usecase-attr">Microservices developer · 4+ projects managed</span>
+        </div>
+
+        <div class="usecase-card reveal">
+          <span class="usecase-tag">AI workflow</span>
+          <p class="usecase-quote">I use Cursor and Claude daily. Knowing my API keys are never in context is a baseline requirement now.</p>
+          <span class="usecase-attr">Full-stack developer · AI-native workflow</span>
+        </div>
+
+        <div class="usecase-card reveal">
+          <span class="usecase-tag">team onboarding</span>
+          <p class="usecase-quote">Shell hook setup takes 30 seconds. New machines are up and running before the Homebrew install finishes.</p>
+          <span class="usecase-attr">Engineering lead · Distributed team</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section" aria-labelledby="faq-heading">
+    <div class="section-inner">
+      <div class="section-header reveal">
+        <h2 class="section-title" id="faq-heading">Questions &amp; answers</h2>
+        <p class="section-sub">The short answers to the things you're already wondering.</p>
+      </div>
+      <div class="faq-list reveal" role="list">
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false">
+            <span>Why macOS only?</span>
+            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p class="faq-answer-inner">The app is built with Tauri and ships as a native macOS binary. The shell hook works with zsh and bash. Linux and Windows support are on the roadmap — the core architecture is platform-agnostic.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false">
+            <span>Where are my secrets actually stored?</span>
+            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p class="faq-answer-inner">In the macOS app data directory — the same location apps like 1Password use for local data. Not in your project folder, not in iCloud, not on any server. The path is the Tauri app data directory, which is sandboxed to the app.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false">
+            <span>Does it work with existing .env files?</span>
+            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p class="faq-answer-inner">Yes. When you add a project, .envVault scans the directory and imports any existing .env, .env.local, .env.production, and other suffixed files automatically. Nothing is deleted from your project until you explicitly remove it.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false">
+            <span>What happens to my data if I uninstall?</span>
+            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p class="faq-answer-inner">Your secrets remain in the app data directory until you delete them. The app does not auto-delete on uninstall. You can export at any time from within the app before uninstalling.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false">
+            <span>Is there a cloud sync or account required?</span>
+            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p class="faq-answer-inner">No. Everything is local. There is no account, no cloud, no telemetry. The app data never leaves your machine unless you explicitly copy or export it.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Download CTA (split layout) -->
+  <section class="download-section" id="download" aria-labelledby="download-heading">
+    <div class="download-inner">
+      <div class="download-left reveal">
+        <h2 class="download-title" id="download-heading">Your .env files belong in a vault.</h2>
+        <p class="download-sub">Free. Local. Open source. No account required.</p>
+        <ul class="download-facts">
+          <li>~6 MB install — no background services</li>
+          <li>No account, no cloud, no telemetry</li>
+          <li>macOS 13+ · Apple Silicon &amp; Intel</li>
+          <li>MIT licensed — read every line on GitHub</li>
+        </ul>
+      </div>
+      <div class="download-right reveal">
+        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download .envVault — v1.0.1</a>
+        <p class="download-meta">macOS 13+ &nbsp;·&nbsp; Free forever</p>
+      </div>
+    </div>
   </section>
 
   <!-- Footer -->
@@ -1193,6 +1263,7 @@
         document.documentElement.classList.add('js-motion');
       }
 
+      /* ── Scroll progress ── */
       var progressBar = document.querySelector('.scroll-progress');
       function updateProgress() {
         if (!progressBar || prefersReduced) return;
@@ -1203,6 +1274,7 @@
       }
       window.addEventListener('scroll', updateProgress, { passive: true });
 
+      /* ── Navbar scroll state ── */
       var navbarEl = document.querySelector('.navbar');
       function updateNavbar() {
         if (!navbarEl) return;
@@ -1210,17 +1282,65 @@
       }
       window.addEventListener('scroll', updateNavbar, { passive: true });
 
+      /* ── Metrics counter animation ── */
+      function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
+      function animateCounter(el) {
+        var target = parseInt(el.getAttribute('data-counter'), 10);
+        var suffix = el.getAttribute('data-suffix') || '';
+        if (prefersReduced || target === 0) return;
+        var start = null;
+        var duration = 800;
+        function step(timestamp) {
+          if (!start) start = timestamp;
+          var elapsed = timestamp - start;
+          var progress = Math.min(elapsed / duration, 1);
+          var value = Math.round(easeOutExpo(progress) * target);
+          el.textContent = value + suffix;
+          if (progress < 1) requestAnimationFrame(step);
+          else el.textContent = target + suffix;
+        }
+        requestAnimationFrame(step);
+      }
+
+      /* ── Scroll reveal ── */
+      var metricsAnimated = false;
+
       var revealObserver = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
             revealObserver.unobserve(entry.target);
+            /* trigger counter if this is a metric value */
+            var counter = entry.target.querySelector('[data-counter]');
+            if (counter && !metricsAnimated) {
+              var allCounters = document.querySelectorAll('[data-counter]');
+              allCounters.forEach(animateCounter);
+              metricsAnimated = true;
+            }
           }
         });
       }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
 
-      /* ── Interactive Demo Data (all hardcoded, no user input) ── */
+      /* ── FAQ accordion ── */
+      document.querySelectorAll('.faq-question').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var item = btn.closest('.faq-item');
+          var isOpen = item.classList.contains('open');
+          /* close all */
+          document.querySelectorAll('.faq-item.open').forEach(function (openItem) {
+            openItem.classList.remove('open');
+            openItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+          });
+          /* open clicked if it wasn't open */
+          if (!isOpen) {
+            item.classList.add('open');
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
 
+      /* ── Interactive Demo Data ── */
       var DEMO_DATA = {
         'api-service': {
           name: 'api-service', indent: false,
@@ -1284,14 +1404,8 @@
 
       var PROJECT_ORDER = ['api-service', 'web-app', 'staging', 'mobile'];
 
-      var demoState = {
-        project: 'web-app',
-        env: '.env',
-        varIdx: null,
-        revealed: {}
-      };
+      var demoState = { project: 'web-app', env: '.env', varIdx: null, revealed: {} };
 
-      /* Helpers that build DOM without innerHTML to avoid XSS patterns */
       function el(tag, attrs, children) {
         var node = document.createElement(tag);
         if (attrs) Object.keys(attrs).forEach(function (k) {
@@ -1416,7 +1530,6 @@
       }
 
       /* ── Init ── */
-
       function init() {
         var heroEls = Array.from(document.querySelectorAll('.hero .reveal'));
         heroEls.forEach(function (el, i) { el.style.transitionDelay = (i * 75) + 'ms'; });
@@ -1429,6 +1542,13 @@
         var grid = document.querySelector('.features-grid');
         if (grid) {
           Array.from(grid.querySelectorAll('.reveal')).forEach(function (card, i) {
+            card.style.transitionDelay = (i * 48) + 'ms';
+          });
+        }
+
+        var usecasesGrid = document.querySelector('.usecases-grid');
+        if (usecasesGrid) {
+          Array.from(usecasesGrid.querySelectorAll('.reveal')).forEach(function (card, i) {
             card.style.transitionDelay = (i * 48) + 'ms';
           });
         }
