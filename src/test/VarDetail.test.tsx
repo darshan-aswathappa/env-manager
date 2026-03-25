@@ -149,7 +149,7 @@ describe('VarDetail', () => {
 
   it('shows error status', () => {
     render(<VarDetail {...defaultProps} saveStatus="error" />)
-    expect(screen.getByText(/Save failed/i)).toBeInTheDocument()
+    expect(screen.getByText(/Couldn't save/i)).toBeInTheDocument()
   })
 
   it('disables save button when saving', () => {

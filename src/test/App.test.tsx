@@ -264,7 +264,7 @@ describe('App', () => {
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
     const saveBtn = screen.getByRole('button', { name: /Save .env file to disk/i })
     await act(async () => { saveBtn.click() })
-    await waitFor(() => expect(screen.getByText(/Save failed/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Couldn't save/i)).toBeInTheDocument())
   })
 
   it('addSubProject: does nothing when dialog is cancelled', async () => {

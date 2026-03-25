@@ -119,7 +119,7 @@ export default function SettingsPanel({
           <div className="sett-row-info">
             <div className="sett-row-name">Default mode for new projects</div>
             <div className="sett-row-desc">
-              How child projects resolve vars from their parent
+              How sub-projects inherit variables from their parent
             </div>
           </div>
           <select
@@ -132,24 +132,24 @@ export default function SettingsPanel({
             }
             aria-label="Default inheritance mode"
           >
-            <option value="merge-child-wins">Merge — child wins</option>
-            <option value="merge-parent-wins">Merge — parent wins</option>
-            <option value="isolated">Isolated</option>
+            <option value="merge-child-wins">Sub-project overrides parent</option>
+            <option value="merge-parent-wins">Parent overrides sub-project</option>
+            <option value="isolated">Independent (no inheritance)</option>
           </select>
         </div>
 
         <div className="sett-note">
-          When a child project shares a variable name with its parent, this
-          controls whose value wins.
+          When a sub-project and its parent share the same variable name, this
+          controls which value takes effect.
           <br />
           <span className="sett-note-item">
-            <strong>Child wins</strong> — child overrides parent.
+            <strong>Sub-project overrides</strong> — sub-project's value wins.
           </span>
           <span className="sett-note-item">
-            <strong>Parent wins</strong> — parent overrides child.
+            <strong>Parent overrides</strong> — parent's value wins.
           </span>
           <span className="sett-note-item">
-            <strong>Isolated</strong> — parent is ignored entirely.
+            <strong>Independent</strong> — sub-project only uses its own variables.
           </span>
         </div>
       </section>
@@ -163,9 +163,9 @@ export default function SettingsPanel({
 
         <div className="sett-row">
           <div className="sett-row-info">
-            <div className="sett-row-name">Auto-mask after inactivity</div>
+            <div className="sett-row-name">Hide values after inactivity</div>
             <div className="sett-row-desc">
-              Re-hide revealed values after N minutes. 0 = never.
+              Automatically re-hide revealed values. 0 = off.
             </div>
           </div>
           <div className="sett-number-row">
@@ -188,9 +188,9 @@ export default function SettingsPanel({
 
         <div className="sett-row">
           <div className="sett-row-info">
-            <div className="sett-row-name">Clipboard clear delay</div>
+            <div className="sett-row-name">Clear clipboard after copying</div>
             <div className="sett-row-desc">
-              Clear clipboard after copying a value. 0 = never.
+              Auto-clear clipboard after copying a secret. 0 = off.
             </div>
           </div>
           <div className="sett-number-row">

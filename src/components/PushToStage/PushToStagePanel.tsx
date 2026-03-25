@@ -170,7 +170,7 @@ function ConflictBadge({ varKey, badge, onToggle }: ConflictBadgeProps) {
       onClick={handleClick}
       title={isSame ? 'Identical value — will be skipped' : isSkip ? 'Click to overwrite' : 'Click to skip'}
     >
-      {isSame ? '≡' : isSkip ? 'skip' : 'overwrite'}
+      {isSame ? 'same' : isSkip ? 'skip' : 'overwrite'}
     </span>
   )
 }

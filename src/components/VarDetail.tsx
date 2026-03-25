@@ -132,11 +132,11 @@ export default function VarDetail({
         {shellStatus !== 'not_found' ? (
           <span>
             <span className="injection-bar__env">{envDisplayName(activeEnv)}</span>
-            {' '}injected via {shellLabel(shellStatus)}
+            {' '}loaded via {shellLabel(shellStatus)}
           </span>
         ) : (
           <span>
-            Shell hook not installed
+            Auto-load not configured
             {' · '}
             <button className="injection-bar__link" onClick={onOpenShellIntegration}>Set up</button>
           </span>
@@ -183,7 +183,7 @@ export default function VarDetail({
         )}
         {saveStatus === "error" && (
           <span className="save-status save-status-error" role="alert" aria-live="assertive">
-            Save failed — check file permissions
+            Couldn't save — check folder write access
           </span>
         )}
 
@@ -245,7 +245,7 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
         </div>
         {!v.key.trim() && (
           <span className="detail-warn" role="alert">
-            Key is empty — this variable will be skipped when saving
+            Add a key name — this variable won't be saved without one
           </span>
         )}
       </div>
@@ -296,7 +296,7 @@ function NoVarSelected() {
       </div>
       <h2 className="empty-state-title">No variable selected</h2>
       <p className="empty-state-desc">
-        Select a variable from the list to view or edit it, or use the button below to add one.
+        Choose a variable from the list to edit it, or add a new one below.
       </p>
     </div>
   );

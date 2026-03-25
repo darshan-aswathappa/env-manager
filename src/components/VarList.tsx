@@ -93,7 +93,7 @@ export default function VarList({
           <div className="list-empty">
             <Plus size={22} className="list-empty-icon" />
             <span>No variables yet.</span>
-            <span>Click + to add one.</span>
+            <span>Use the + button below to add one.</span>
           </div>
         )}
 
