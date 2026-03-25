@@ -158,6 +158,39 @@ describe('ShellIntegration', () => {
     await waitFor(() => expect(screen.getByText(/retried hook/i)).toBeInTheDocument())
   })
 
+  it('switches back to mac tab after switching to windows', async () => {
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'generate_shell_hook') return Promise.resolve('# hook')
+      if (cmd === 'get_app_data_dir') return Promise.resolve('/tmp')
+      return Promise.resolve(null)
+    })
+    render(<ShellIntegration />)
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Windows/i })).toBeInTheDocument())
+    // Switch to Windows
+    await act(async () => { screen.getByRole('tab', { name: /Windows/i }).click() })
+    expect(screen.queryByRole('tablist', { name: /Shell/i })).not.toBeInTheDocument()
+    // Switch back to Mac
+    await act(async () => { screen.getByRole('tab', { name: /macOS/i }).click() })
+    // Shell tabs should reappear
+    expect(screen.getByRole('tablist', { name: /Shell/i })).toBeInTheDocument()
+  })
+
+  it('switches back to zsh tab after switching to bash', async () => {
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'generate_shell_hook') return Promise.resolve('# hook content')
+      if (cmd === 'get_app_data_dir') return Promise.resolve('/tmp')
+      return Promise.resolve(null)
+    })
+    render(<ShellIntegration />)
+    await waitFor(() => expect(screen.getByRole('tab', { name: /bash$/ })).toBeInTheDocument())
+    // Switch to bash
+    await act(async () => { screen.getByRole('tab', { name: /bash$/ }).click() })
+    // Switch back to zsh
+    await act(async () => { screen.getByRole('tab', { name: /zsh \(default\)/ }).click() })
+    const bodyText = document.body.textContent || ''
+    expect(bodyText).toMatch(/\.zshrc/)
+  })
+
   it('shows loading initially before data loads', async () => {
     let resolveHook: (v: string) => void = () => {}
     let resolveDir: (v: string) => void = () => {}

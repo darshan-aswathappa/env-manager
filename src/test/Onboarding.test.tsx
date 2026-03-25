@@ -461,6 +461,85 @@ describe('Onboarding', () => {
     expect(localStorage.getItem('dotenv_mgr_onboarding')).toBe('complete')
   })
 
+  // ── Enter key navigation ──────────────────────────
+
+  it('Enter key on welcome step navigates to install', () => {
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.keyDown(window, { key: 'Enter' })
+    advanceTransition()
+    expect(screen.getByText('Set up shell integration')).toBeInTheDocument()
+  })
+
+  it('Enter key on install step navigates to verify', () => {
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.click(screen.getByText('Get Started'))
+    advanceTransition()
+
+    fireEvent.keyDown(window, { key: 'Enter' })
+    advanceTransition()
+    expect(screen.getByText('Verify your setup')).toBeInTheDocument()
+  })
+
+  it('Enter key on verify step (idle) triggers check', async () => {
+    mockedCheck.mockReturnValue(new Promise(() => {})) // never resolves
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.click(screen.getByText('Get Started'))
+    advanceTransition()
+    fireEvent.click(screen.getByText("I've added the snippet"))
+    advanceTransition()
+
+    await act(async () => { fireEvent.keyDown(window, { key: 'Enter' }) })
+    expect(screen.getByText('Checking shell config...')).toBeInTheDocument()
+  })
+
+  it('Enter key on verify step (found) completes onboarding', async () => {
+    mockedCheck.mockResolvedValue('zsh')
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.click(screen.getByText('Get Started'))
+    advanceTransition()
+    fireEvent.click(screen.getByText("I've added the snippet"))
+    advanceTransition()
+
+    await act(async () => { fireEvent.click(screen.getByText('Check Integration')) })
+    expect(screen.getByText(/Hook detected in/)).toBeInTheDocument()
+
+    fireEvent.keyDown(window, { key: 'Enter' })
+    expect(onComplete).toHaveBeenCalled()
+  })
+
+  it('Enter key with metaKey does not trigger navigation', () => {
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.keyDown(window, { key: 'Enter', metaKey: true })
+    // Still on welcome step
+    expect(screen.getByText('Welcome to .envVault')).toBeInTheDocument()
+    expect(screen.queryByText('Set up shell integration')).not.toBeInTheDocument()
+  })
+
+  it('Enter key with ctrlKey does not trigger navigation', () => {
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true })
+    expect(screen.getByText('Welcome to .envVault')).toBeInTheDocument()
+    expect(screen.queryByText('Set up shell integration')).not.toBeInTheDocument()
+  })
+
+  it('Enter key on verify step (not_found) does not trigger anything extra', async () => {
+    mockedCheck.mockResolvedValue('not_found')
+    render(<Onboarding onComplete={onComplete} />)
+    fireEvent.click(screen.getByText('Get Started'))
+    advanceTransition()
+    fireEvent.click(screen.getByText("I've added the snippet"))
+    advanceTransition()
+
+    await act(async () => { fireEvent.click(screen.getByText('Check Integration')) })
+    expect(screen.getByText('Hook not detected')).toBeInTheDocument()
+
+    // Enter key when verifyStatus is 'not_found' should do nothing (no else branch)
+    fireEvent.keyDown(window, { key: 'Enter' })
+    expect(onComplete).not.toHaveBeenCalled()
+    // Still on verify step
+    expect(screen.getByText('Hook not detected')).toBeInTheDocument()
+  })
+
   // ── aria-current on stepper dots ──────────────────
 
   it('sets aria-current=step on the active step dot', () => {
