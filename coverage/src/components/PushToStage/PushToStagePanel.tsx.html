@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.17% </span>
+                <span class="strong">93.23% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>191/205</span>
+                <span class='fraction'>193/207</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.54% </span>
+                <span class="strong">94.64% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>52/55</span>
+                <span class='fraction'>53/56</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.24% </span>
+                <span class="strong">98.26% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>168/171</span>
+                <span class='fraction'>170/173</span>
             </div>
         
             
@@ -833,7 +833,16 @@
 <a name='L768'></a><a href='#L768'>768</a>
 <a name='L769'></a><a href='#L769'>769</a>
 <a name='L770'></a><a href='#L770'>770</a>
-<a name='L771'></a><a href='#L771'>771</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L771'></a><a href='#L771'>771</a>
+<a name='L772'></a><a href='#L772'>772</a>
+<a name='L773'></a><a href='#L773'>773</a>
+<a name='L774'></a><a href='#L774'>774</a>
+<a name='L775'></a><a href='#L775'>775</a>
+<a name='L776'></a><a href='#L776'>776</a>
+<a name='L777'></a><a href='#L777'>777</a>
+<a name='L778'></a><a href='#L778'>778</a>
+<a name='L779'></a><a href='#L779'>779</a>
+<a name='L780'></a><a href='#L780'>780</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -993,6 +1002,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -1027,6 +1037,11 @@
 <span class="cline-any cline-yes">149x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">149x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">149x</span>
+<span class="cline-any cline-yes">58x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">149x</span>
@@ -1507,6 +1522,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1528,6 +1545,7 @@
 <span class="cline-any cline-yes">213x</span>
 <span class="cline-any cline-yes">213x</span>
 <span class="cline-any cline-yes">213x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1628,7 +1646,7 @@ type PushStatus = 'idle' | 'pushing' | 'success' | 'error'
 &nbsp;
 function valuePreview(v: EnvVar): string {
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!v.val) <span class="cstat-no" title="statement not covered" >return ''</span>
-  if (!v.revealed) return '•••••••'
+  if (!v.revealed) return '••••••••'
   return v.val.length &gt; 24 ? v.val.slice(0, 24) + '…' : <span class="branch-1 cbranch-no" title="branch not covered" >v.val</span>
 }
 &nbsp;
@@ -1746,6 +1764,7 @@ function ConflictBadge({ varKey, badge, onToggle }: ConflictBadgeProps) {
     letterSpacing: '0.02em',
     cursor: isSame ? 'default' : 'pointer',
     flexShrink: 0,
+    transition: 'background var(--t-fast), color var(--t-fast), border-color var(--t-fast)',
     background: isSame
       ? 'rgba(255,255,255,0.05)'
       : isSkip
@@ -1775,7 +1794,7 @@ function ConflictBadge({ varKey, badge, onToggle }: ConflictBadgeProps) {
       onClick={handleClick}
       title={isSame ? 'Identical value — will be skipped' : isSkip ? 'Click to overwrite' : 'Click to skip'}
     &gt;
-      {isSame ? '≡' : isSkip ? 'skip' : 'overwrite'}
+      {isSame ? 'same' : isSkip ? 'skip' : 'overwrite'}
     &lt;/span&gt;
   )
 }
@@ -1797,6 +1816,11 @@ export default function PushToStagePanel({
   const [errorMsg, setErrorMsg] = useState&lt;string | null&gt;(null)
 &nbsp;
   const panelRef = useRef&lt;HTMLDivElement&gt;(null)
+&nbsp;
+  // Auto-focus panel on mount so keyboard users are not stranded
+  useEffect(() =&gt; {
+    panelRef.current?.focus()
+  }, [])
 &nbsp;
   // ── Derived: filtered vars ──────────────────────────────────────────────
   const q = searchQuery.trim().toLowerCase()
@@ -2068,6 +2092,7 @@ export default function PushToStagePanel({
     &lt;div
       ref={panelRef}
       data-testid="push-to-stage-panel"
+      className="push-panel"
       style={{
         position: 'fixed',
         top: 0,
@@ -2079,7 +2104,6 @@ export default function PushToStagePanel({
         display: 'flex',
         flexDirection: 'column',
         zIndex: 200,
-        animation: 'slideInRight 260ms cubic-bezier(0.16,1,0.3,1) both',
       }}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
@@ -2250,6 +2274,8 @@ export default function PushToStagePanel({
             background: 'var(--color-danger-bg)',
             borderTop: '1px solid rgba(229,72,77,0.15)',
             flexShrink: 0,
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
           }}
         &gt;
           {errorMsg}
@@ -2330,6 +2356,7 @@ export default function PushToStagePanel({
                 color: 'var(--text-secondary)',
                 display: 'flex',
                 gap: 12,
+                animation: 'fadeIn var(--t-fast) both',
               }}
             &gt;
               &lt;span&gt;
@@ -2380,7 +2407,7 @@ export default function PushToStagePanel({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-25T06:13:10.665Z
+                at 2026-03-25T06:48:21.060Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
