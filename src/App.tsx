@@ -170,6 +170,7 @@ export default function App() {
     suffix: string;
     snapshot: string;
   } | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pendingKeyRename, setPendingKeyRename] = useState<{
     varId: string;
     oldKey: string;
@@ -791,17 +792,25 @@ export default function App() {
     }
   }, [])
 
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message)
+    setTimeout(() => setToastMessage(null), 3000)
+  }, [])
+
   const triggerExampleImport = useCallback(async (project: Project) => {
     try {
       const exampleFile = await checkEnvExample(project.path).catch(() => null)
-      if (!exampleFile) return
+      if (!exampleFile) {
+        showToast('No .env.example file found in this project.')
+        return
+      }
       const plan = buildExampleImportPlan(exampleFile, project.vars)
       if (plan.newCount === 0) return
       setPendingExampleImport({ project, exampleFile })
     } catch {
       // silently swallow
     }
-  }, [])
+  }, [showToast])
 
   /* ── Derived state ───────────────────────────────────── */
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null;
@@ -1057,6 +1066,30 @@ export default function App() {
           onDismiss={handleExampleDismiss}
           onClose={() => setPendingExampleImport(null)}
         />
+      )}
+      {toastMessage && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 2000,
+            background: 'var(--bg-sidebar)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-md)',
+            padding: '10px 16px',
+            fontSize: '0.8125rem',
+            color: 'var(--text-secondary)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+            whiteSpace: 'nowrap',
+            animation: 'fadeInUp 180ms cubic-bezier(0.16, 1, 0.3, 1) both',
+          }}
+        >
+          {toastMessage}
+        </div>
       )}
     </div>
     </ErrorBoundary>

@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Plus, GitBranch, Terminal, Settings, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Plus, GitBranch, Terminal, Settings, ChevronRight, PanelLeftClose, PanelLeftOpen, MoreHorizontal, FileCode } from "lucide-react";
 import type { ProjectTreeNode, Project } from "../types";
 import logo from "../assets/logo.png";
 
@@ -41,6 +42,24 @@ function ProjectNodeItem({
   const hasChildren = children.length > 0;
   const [collapsed, setCollapsed] = useState(false);
   const confirming = pendingDeleteId === project.id;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: MouseEvent) => {
+      if (
+        menuRef.current && !menuRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [menuOpen]);
 
   return (
     <>
@@ -91,33 +110,6 @@ function ProjectNodeItem({
         <div className="project-info">
           <div className="project-name">{project.name}</div>
         </div>
-        <span className="project-count" aria-label={`${project.vars.length} variables`}>
-          {project.vars.length === 1 ? "1 var" : project.vars.length > 0 ? `${project.vars.length} vars` : ""}
-        </span>
-        <button
-          className="project-delete"
-          style={{ marginLeft: "2px" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddSubProject(project.id);
-          }}
-          aria-label={`Add sub-project under ${project.name}`}
-          title="Add sub-project"
-        >
-          <GitBranch size={11} />
-        </button>
-        <button
-          className="project-delete"
-          style={{ marginLeft: "2px" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onImportFromExample(project);
-          }}
-          aria-label={`Import from .env.example for ${project.name}`}
-          title="Import from .env.example"
-        >
-          <span style={{ fontSize: '10px', fontFamily: 'monospace', lineHeight: 1 }}>.ex</span>
-        </button>
         {confirming ? (
           <div className="project-confirm-row" onClick={(e) => e.stopPropagation()}>
             <button
@@ -136,17 +128,77 @@ function ProjectNodeItem({
             </button>
           </div>
         ) : (
-          <button
-            className="project-delete"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRequestDelete(project.id);
-            }}
-            aria-label={`Remove project ${project.name}`}
-            title="Remove project"
-          >
-            ×
-          </button>
+          <>
+            <span className="project-count" aria-label={`${project.vars.length} variables`}>
+              {project.vars.length === 1 ? "1 var" : project.vars.length > 0 ? `${project.vars.length} vars` : ""}
+            </span>
+            <div className="project-overflow-wrapper">
+              <button
+                ref={btnRef}
+                className="project-delete project-overflow-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!menuOpen && btnRef.current) {
+                    const rect = btnRef.current.getBoundingClientRect();
+                    setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                  }
+                  setMenuOpen((o) => !o);
+                }}
+                aria-label="More options"
+                title="More options"
+              >
+                <MoreHorizontal size={11} />
+              </button>
+              {menuOpen && menuPos && createPortal(
+                <>
+                  <div
+                    className="project-overflow-backdrop"
+                    onClick={(e) => { e.stopPropagation(); setMenuOpen(false); }}
+                  />
+                  <div
+                    ref={menuRef}
+                    className="project-overflow-menu"
+                    style={{ top: menuPos.top, right: menuPos.right }}
+                  >
+                    <button
+                      className="project-overflow-menu-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onAddSubProject(project.id);
+                      }}
+                    >
+                      <GitBranch size={11} />
+                      Add sub-project
+                    </button>
+                    <button
+                      className="project-overflow-menu-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onImportFromExample(project);
+                      }}
+                    >
+                      <FileCode size={11} />
+                      Import .env.example
+                    </button>
+                    <div className="project-overflow-menu-divider" />
+                    <button
+                      className="project-overflow-menu-item project-overflow-menu-item--danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onRequestDelete(project.id);
+                      }}
+                    >
+                      Remove project
+                    </button>
+                  </div>
+                </>,
+                document.body
+              )}
+            </div>
+          </>
         )}
       </div>
       {!collapsed &&

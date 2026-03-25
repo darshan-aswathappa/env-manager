@@ -159,7 +159,8 @@ describe('App', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    const deleteBtn = screen.getByRole('button', { name: /Remove project MyProject/i })
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const deleteBtn = screen.getAllByRole('button', { name: /Remove project/i }).find(el => el.tagName === 'BUTTON')!
     await act(async () => { deleteBtn.click() })
     const confirmBtn = screen.getByRole('button', { name: /Confirm remove MyProject/i })
     await act(async () => { confirmBtn.click() })
@@ -246,7 +247,8 @@ describe('App', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    const addSubBtn = screen.getByRole('button', { name: /Add sub-project under MyProject/i })
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const addSubBtn = screen.getAllByRole('button', { name: /Add sub-project/i }).find(el => el.tagName === 'BUTTON')!
     await act(async () => { addSubBtn.click() })
     await waitFor(() => {
       expect(mockOpen).toHaveBeenCalled()
@@ -272,7 +274,8 @@ describe('App', () => {
     mockOpen.mockResolvedValue(null)
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    const addSubBtn = screen.getByRole('button', { name: /Add sub-project under MyProject/i })
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const addSubBtn = screen.getAllByRole('button', { name: /Add sub-project/i }).find(el => el.tagName === 'BUTTON')!
     await act(async () => { addSubBtn.click() })
     expect(mockInvoke).not.toHaveBeenCalledWith('register_project', expect.anything())
   })
@@ -288,7 +291,8 @@ describe('App', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    const addSubBtn = screen.getByRole('button', { name: /Add sub-project under MyProject/i })
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const addSubBtn = screen.getAllByRole('button', { name: /Add sub-project/i }).find(el => el.tagName === 'BUTTON')!
     await act(async () => { addSubBtn.click() })
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.objectContaining({ content: expect.stringContaining('CHILD_KEY') }))
@@ -377,7 +381,8 @@ describe('App', () => {
     mockOpen.mockRejectedValue(new Error('dialog error'))
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    const addSubBtn = screen.getByRole('button', { name: /Add sub-project under MyProject/i })
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const addSubBtn = screen.getAllByRole('button', { name: /Add sub-project/i }).find(el => el.tagName === 'BUTTON')!
     await act(async () => { addSubBtn.click() })
     expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0)
   })
@@ -1596,19 +1601,14 @@ describe('App – .env.example import prompt', () => {
     })
     render(<App />)
     await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
-    // Find the per-project "Import from .env.example" button in the Sidebar
-    // (uses "for <project-name>" suffix to distinguish from other buttons with similar labels)
-    const menuItem = screen.queryByRole('button', { name: /import from \.env\.example for /i })
-    if (menuItem) {
-      await act(async () => { fireEvent.click(menuItem) })
-      await waitFor(() => {
-        expect(screen.getByTestId('example-prompt-dialog')).toBeInTheDocument()
-      })
-    } else {
-      // If there is no such menu item yet — the test is pending implementation
-      // The test expects this element to exist once the feature is implemented
-      expect(menuItem).not.toBeNull()
-    }
+    // Open the overflow menu to access "Import .env.example"
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const menuItem = screen.getAllByRole('button', { name: /Import \.env\.example/i }).find(el => el.tagName === 'BUTTON')
+    expect(menuItem).not.toBeUndefined()
+    await act(async () => { fireEvent.click(menuItem!) })
+    await waitFor(() => {
+      expect(screen.getByTestId('example-prompt-dialog')).toBeInTheDocument()
+    })
   })
 
   // 5.9: check_env_example error is swallowed — no crash

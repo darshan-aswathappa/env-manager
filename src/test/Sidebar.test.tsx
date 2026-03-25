@@ -46,20 +46,33 @@ describe('Sidebar', () => {
     expect(item?.className).toContain('active')
   })
 
-  it('calls onDelete when remove button is clicked and confirmed', async () => {
+  it('calls onDelete when remove is chosen from overflow menu and confirmed', async () => {
     const onDelete = vi.fn()
     const tree = [makeNode('p1', 'my-project')]
     render(<Sidebar projectTree={tree} selectedId={null} onSelect={vi.fn()} onDelete={onDelete} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} onOpenSettings={vi.fn()} onImportFromExample={vi.fn()} />)
-    await act(async () => { screen.getByRole('button', { name: /Remove project my-project/i }).click() })
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const removeBtn = screen.getAllByRole('button', { name: /Remove project/i }).find(el => el.tagName === 'BUTTON')!
+    await act(async () => { removeBtn.click() })
     await act(async () => { screen.getByRole('button', { name: /Confirm remove my-project/i }).click() })
     expect(onDelete).toHaveBeenCalledWith('p1')
   })
 
-  it('calls onAddSubProject when sub-project button is clicked', () => {
+  it('renders overflow menu as a portal in document.body', async () => {
+    const tree = [makeNode('p1', 'my-project')]
+    render(<Sidebar projectTree={tree} selectedId={null} onSelect={vi.fn()} onDelete={vi.fn()} onAdd={vi.fn()} onAddSubProject={vi.fn()} onOpenShellIntegration={vi.fn()} onOpenSettings={vi.fn()} onImportFromExample={vi.fn()} />)
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const menu = document.querySelector('.project-overflow-menu')
+    expect(menu).toBeInTheDocument()
+    expect(menu?.parentElement).toBe(document.body)
+  })
+
+  it('calls onAddSubProject when chosen from overflow menu', async () => {
     const onAddSubProject = vi.fn()
     const tree = [makeNode('p1', 'my-project')]
     render(<Sidebar projectTree={tree} selectedId={null} onSelect={vi.fn()} onDelete={vi.fn()} onAdd={vi.fn()} onAddSubProject={onAddSubProject} onOpenShellIntegration={vi.fn()} onOpenSettings={vi.fn()} onImportFromExample={vi.fn()} />)
-    screen.getByRole('button', { name: /Add sub-project under my-project/i }).click()
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const subBtn = screen.getAllByRole('button', { name: /Add sub-project/i }).find(el => el.tagName === 'BUTTON')!
+    await act(async () => { subBtn.click() })
     expect(onAddSubProject).toHaveBeenCalledWith('p1')
   })
 
