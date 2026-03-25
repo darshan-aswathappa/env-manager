@@ -4,12 +4,13 @@ import type { Environment } from '../types'
 interface EnvironmentToggleProps {
   environments: Environment[];
   activeEnv: string;
+  envTier?: 'base' | 'dev' | 'warn' | 'prod';
   onSwitch: (suffix: string) => void;
 }
 
-export default function EnvironmentToggle({ environments, activeEnv, onSwitch }: EnvironmentToggleProps) {
+export default function EnvironmentToggle({ environments, activeEnv, envTier, onSwitch }: EnvironmentToggleProps) {
   return (
-    <div className="env-dropdown-wrapper">
+    <div className="env-dropdown-wrapper" data-env-tier={envTier}>
       <select
         className="env-dropdown"
         value={activeEnv}

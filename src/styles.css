@@ -1173,6 +1173,79 @@ a {
   border-color: rgba(229, 72, 77, 0.18);
 }
 
+/* Environment tier — colored left-border on dropdown */
+.env-dropdown-wrapper[data-env-tier] .env-dropdown {
+  border-left-width: 2px;
+  border-left-style: solid;
+  transition: border-color var(--t-fast), background-color var(--t-fast);
+}
+.env-dropdown-wrapper[data-env-tier="base"] .env-dropdown { border-left-color: var(--text-tertiary); }
+.env-dropdown-wrapper[data-env-tier="dev"] .env-dropdown  { border-left-color: var(--color-info); }
+.env-dropdown-wrapper[data-env-tier="warn"] .env-dropdown { border-left-color: var(--color-warning); }
+.env-dropdown-wrapper[data-env-tier="prod"] .env-dropdown { border-left-color: var(--color-danger); }
+
+/* Environment tier — tinted env name in subtitle */
+.env-hint { transition: color var(--t-fast); }
+.env-hint--base { color: var(--text-secondary); }
+.env-hint--dev  { color: var(--color-info); }
+.env-hint--warn { color: var(--color-warning); }
+.env-hint--prod { color: var(--color-danger); }
+
+/* ══════════════════════════════════════════════════════════════
+   SHELL INJECTION STATUS BAR
+══════════════════════════════════════════════════════════════ */
+.injection-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 22px;
+  height: 28px;
+  border-bottom: 1px solid var(--border-separator);
+  background: rgba(255, 255, 255, 0.015);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+  letter-spacing: 0.01em;
+}
+
+.injection-bar__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background var(--t-fast);
+}
+
+.injection-bar__dot--active {
+  background: var(--color-success);
+}
+
+.injection-bar__dot--inactive {
+  background: var(--text-muted);
+}
+
+.injection-bar__env {
+  color: var(--text-secondary);
+}
+
+.injection-bar__link {
+  color: var(--accent-text);
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-color: rgba(122, 163, 212, 0.3);
+  text-underline-offset: 2px;
+  transition: color var(--t-fast);
+}
+
+.injection-bar__link:hover {
+  color: var(--accent-hover);
+}
+
 /* ══════════════════════════════════════════════════════════════
    SAVE STATUS
 ══════════════════════════════════════════════════════════════ */

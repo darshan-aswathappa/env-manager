@@ -33,6 +33,8 @@ const defaultProps = {
   onAddVar: vi.fn(),
   onSave: vi.fn(),
   onSwitchEnvironment: vi.fn(),
+  shellStatus: 'zsh' as const,
+  onOpenShellIntegration: vi.fn(),
 }
 
 describe('VarDetail', () => {
@@ -126,13 +128,13 @@ describe('VarDetail', () => {
   })
 
   it('shows active env name in subtitle', () => {
-    render(<VarDetail {...defaultProps} activeEnv="production" />)
-    expect(screen.getByText('/myproject/.env.production')).toBeInTheDocument()
+    const { container } = render(<VarDetail {...defaultProps} activeEnv="production" />)
+    expect(container.querySelector('.env-hint')).toHaveTextContent('.env.production')
   })
 
   it('shows base env name in subtitle when activeEnv is empty', () => {
-    render(<VarDetail {...defaultProps} activeEnv="" />)
-    expect(screen.getByText('/myproject/.env')).toBeInTheDocument()
+    const { container } = render(<VarDetail {...defaultProps} activeEnv="" />)
+    expect(container.querySelector('.env-hint')).toHaveTextContent('.env')
   })
 
   it('shows saving status', () => {

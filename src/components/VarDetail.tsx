@@ -16,6 +16,8 @@ import type { EnvVar, Project, GitignoreStatus, Environment } from "../types";
 import { envDisplayName } from "../types";
 import EnvironmentToggle from "./EnvironmentToggle";
 
+type ShellIntegrationStatus = 'zsh' | 'bash' | 'both' | 'not_found';
+
 interface VarDetailProps {
   project: Project;
   selectedVar: EnvVar | null;
@@ -24,12 +26,14 @@ interface VarDetailProps {
   clipboardClearSeconds?: number;
   environments: Environment[];
   activeEnv: string;
+  shellStatus: ShellIntegrationStatus;
   onUpdateVar: (varId: string, field: keyof EnvVar, value: string | boolean) => void;
   onDeleteVar: (varId: string) => void;
   onToggleReveal: (varId: string) => void;
   onAddVar: () => void;
   onSave: () => void;
   onSwitchEnvironment: (suffix: string) => void;
+  onOpenShellIntegration: () => void;
 }
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -62,6 +66,11 @@ function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: 
   );
 }
 
+function shellLabel(status: ShellIntegrationStatus): string {
+  if (status === 'both') return 'zsh + bash';
+  return status;
+}
+
 export default function VarDetail({
   project,
   selectedVar,
@@ -70,12 +79,14 @@ export default function VarDetail({
   clipboardClearSeconds = 0,
   environments,
   activeEnv,
+  shellStatus,
   onUpdateVar,
   onDeleteVar,
   onToggleReveal,
   onAddVar,
   onSave,
   onSwitchEnvironment,
+  onOpenShellIntegration,
 }: VarDetailProps) {
   return (
     <div className="detail-panel">
@@ -86,11 +97,14 @@ export default function VarDetail({
         </div>
         <div className="detail-header-info">
           <div className="detail-header-title">{project.name}</div>
-          <div className="detail-header-sub">{project.path}/{envDisplayName(activeEnv)}</div>
+          <div className="detail-header-sub">
+            {project.path}/<span className={`env-hint env-hint--${activeEnv === 'production' ? 'prod' : activeEnv === 'staging' || activeEnv === 'testing' ? 'warn' : activeEnv === 'development' || activeEnv === 'local' ? 'dev' : 'base'}`}>{envDisplayName(activeEnv)}</span>
+          </div>
         </div>
         <EnvironmentToggle
           environments={environments}
           activeEnv={activeEnv}
+          envTier={activeEnv === 'production' ? 'prod' : activeEnv === 'staging' || activeEnv === 'testing' ? 'warn' : activeEnv === 'development' || activeEnv === 'local' ? 'dev' : 'base'}
           onSwitch={onSwitchEnvironment}
         />
         <div className="detail-header-actions">
@@ -110,6 +124,23 @@ export default function VarDetail({
             </span>
           )}
         </div>
+      </div>
+
+      {/* Shell injection status */}
+      <div className="injection-bar">
+        <span className={`injection-bar__dot ${shellStatus !== 'not_found' ? 'injection-bar__dot--active' : 'injection-bar__dot--inactive'}`} />
+        {shellStatus !== 'not_found' ? (
+          <span>
+            <span className="injection-bar__env">{envDisplayName(activeEnv)}</span>
+            {' '}injected via {shellLabel(shellStatus)}
+          </span>
+        ) : (
+          <span>
+            Shell hook not installed
+            {' · '}
+            <button className="injection-bar__link" onClick={onOpenShellIntegration}>Set up</button>
+          </span>
+        )}
       </div>
 
       {/* Body */}

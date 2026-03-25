@@ -8,7 +8,9 @@ import {
   unregisterProject,
   checkGitignoreStatus,
   writeEnvSignal,
+  checkShellIntegration,
 } from "./lib/envFile";
+import type { ShellIntegrationStatus } from "./lib/envFile";
 import { buildProjectTree } from "./lib/projectTree";
 import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment } from "./types";
 import { ENV_SUFFIXES } from "./types";
@@ -105,6 +107,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [gitignoreStatus, setGitignoreStatus] = useState<GitignoreStatus>('no_gitignore');
   const [showShellIntegration, setShowShellIntegration] = useState(false);
+  const [shellStatus, setShellStatus] = useState<ShellIntegrationStatus>("not_found");
   const [showSettings, setShowSettings] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings>(loadSettings);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -119,6 +122,13 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
   }, [appSettings]);
+
+  /* Check shell integration status */
+  useEffect(() => {
+    checkShellIntegration()
+      .then(setShellStatus)
+      .catch(() => setShellStatus("not_found"));
+  }, [selectedId]);
 
   /* Auto-mask revealed values after inactivity */
   useEffect(() => {
@@ -516,12 +526,14 @@ export default function App() {
           clipboardClearSeconds={appSettings.clipboardClearSeconds}
           environments={selectedProject.environments}
           activeEnv={selectedProject.activeEnv}
+          shellStatus={shellStatus}
           onSwitchEnvironment={switchEnvironment}
           onUpdateVar={updateVar}
           onDeleteVar={deleteVar}
           onToggleReveal={toggleReveal}
           onAddVar={addVar}
           onSave={saveToFile}
+          onOpenShellIntegration={() => setShowShellIntegration(true)}
         />
       ) : (
         <div className="detail-panel">
