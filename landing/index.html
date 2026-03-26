@@ -251,7 +251,7 @@
       }
 
       .hero-title {
-        font-size: 3.5rem;
+        font-size: clamp(1.875rem, 5.5vw, 3.5rem);
         font-weight: 600;
         letter-spacing: -0.03em;
         color: var(--text-primary);
@@ -1347,7 +1347,12 @@
           display: none;
         }
         .section,
-        .features-section {
+        .features-section,
+        .how-section,
+        .usecases-section,
+        .faq-section,
+        .changelog-section,
+        .download-section {
           padding: 56px 20px;
         }
         .release-header {
@@ -1384,6 +1389,75 @@
           flex-direction: column;
           text-align: center;
         }
+        .btn-large {
+          min-height: 44px;
+          height: auto;
+        }
+        .faq-item.open .faq-answer {
+          max-height: 480px;
+        }
+      }
+
+      /* ── Footer stacking ── */
+      @media (max-width: 600px) {
+        .footer {
+          height: auto;
+          padding: 14px 16px;
+        }
+        .footer-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+      }
+
+      /* ── Small mobile (≤480px) ── */
+      .btn-text-short {
+        display: none;
+      }
+
+      @media (max-width: 480px) {
+        .hero {
+          padding: 48px 16px 40px;
+        }
+        .hero-sub {
+          font-size: 0.9375rem;
+        }
+        .hero-ctas {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .hero-ctas .btn {
+          width: 100%;
+          text-align: center;
+        }
+        .section,
+        .features-section,
+        .how-section,
+        .usecases-section,
+        .faq-section,
+        .changelog-section,
+        .download-section {
+          padding: 48px 16px;
+        }
+        .metrics-inner {
+          grid-template-columns: 1fr;
+        }
+        .metric-cell + .metric-cell::before {
+          display: none;
+        }
+        .metric-cell + .metric-cell {
+          border-top: 1px solid var(--border-subtle);
+        }
+        .midcta-inner {
+          padding: 20px 16px;
+        }
+        .btn-text-short {
+          display: inline;
+        }
+        .btn-text-long {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -1415,7 +1489,7 @@
           <a
             href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.2.0/envVault_1.2.0_aarch64.dmg"
             class="btn btn-primary"
-            >Download free for macOS</a
+            ><span class="btn-text-long">Download free for macOS</span><span class="btn-text-short" aria-hidden="true">Download</span></a
           >
         </div>
       </div>

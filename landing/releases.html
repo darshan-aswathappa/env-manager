@@ -199,7 +199,7 @@
     }
 
     .page-title {
-      font-size: 2rem;
+      font-size: clamp(1.5rem, 5vw, 2rem);
       font-weight: 600;
       letter-spacing: -0.025em;
       color: var(--text-primary);
@@ -563,6 +563,9 @@
       }
     }
 
+    /* ── btn-text short/long ── */
+    .btn-text-short { display: none; }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .timeline {
@@ -600,6 +603,56 @@
       .navbar-actions .btn-ghost:not(:last-child) {
         display: none;
       }
+
+      .btn-download {
+        min-height: 44px;
+        height: auto;
+        padding: 10px 14px;
+      }
+    }
+
+    /* ── Footer stacking ── */
+    @media (max-width: 600px) {
+      .footer {
+        height: auto;
+        padding: 14px 16px;
+      }
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+
+    /* ── Small mobile (≤480px) ── */
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 0 16px;
+      }
+      .navbar-actions .btn-ghost {
+        display: none;
+      }
+      .btn-text-short { display: inline; }
+      .btn-text-long  { display: none; }
+
+      .page-header {
+        padding: 32px 16px 24px;
+      }
+
+      .releases-body {
+        padding: 24px 16px 48px;
+      }
+
+      .release-download {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .release-download .btn-download {
+        align-self: stretch;
+        justify-content: center;
+      }
     }
 
     /* ── App Logo ── */
@@ -635,7 +688,7 @@
       <div class="navbar-actions">
         <a href="index.html" class="btn btn-ghost">← Back</a>
         <a href="https://github.com" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
-        <a href="#download" class="btn btn-primary">Download for macOS</a>
+        <a href="#download" class="btn btn-primary"><span class="btn-text-long">Download for macOS</span><span class="btn-text-short" aria-hidden="true">Download</span></a>
       </div>
     </div>
   </nav>
