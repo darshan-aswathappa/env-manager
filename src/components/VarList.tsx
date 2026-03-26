@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, ChevronRight, Plus, Trash2, Upload, Download } from "lucide-react";
 import type { EnvVar, Project } from "../types";
 
@@ -34,6 +34,10 @@ export default function VarList({
   onImportFromExample,
 }: VarListProps) {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingDeleteId(null);
+  }, [project?.id]);
 
   if (!project) {
     return (
@@ -106,20 +110,12 @@ export default function VarList({
         {filtered.length === 0 && !searchQuery && (
           <div className="list-empty">
             <span>No variables yet.</span>
-            <span>Use + to add one.</span>
+            <span>Click + below to add one.</span>
             {onImportFromExample && (
               <button
+                className="list-empty-action"
                 onClick={onImportFromExample}
-                style={{
-                  marginTop: 8,
-                  background: 'none',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-secondary)',
-                  borderRadius: 4,
-                  padding: '4px 10px',
-                  fontSize: '0.75rem',
-                  cursor: 'pointer',
-                }}
+                style={{ marginTop: 4 }}
                 aria-label="Import from .env.example"
               >
                 Import from .env.example

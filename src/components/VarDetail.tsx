@@ -189,7 +189,7 @@ export default function VarDetail({
               >
                 <span className="header-signal__dot" />
                 <span className="header-signal__text">
-                  {gitignoreStatus === 'not_listed' ? '!.gitignore' : 'no .gitignore'}
+                  {gitignoreStatus === 'not_listed' ? 'not .gitignored' : 'no .gitignore'}
                 </span>
               </span>
             )}
@@ -270,8 +270,8 @@ export default function VarDetail({
 
         <button
           className="btn-primary"
-          onClick={() => { if (!duplicateReport.hasDuplicates) onSave(); }}
-          disabled={saveStatus === "saving"}
+          onClick={onSave}
+          disabled={saveStatus === "saving" || duplicateReport.hasDuplicates}
           aria-disabled={duplicateReport.hasDuplicates ? "true" : undefined}
           aria-label={`Save ${envDisplayName(activeEnv)} file to disk`}
         >

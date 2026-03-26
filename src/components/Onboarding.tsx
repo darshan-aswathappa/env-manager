@@ -129,6 +129,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   }
 
   async function handleVerify() {
+    if (verifyStatus === "checking") return;
     setVerifyStatus("checking");
     try {
       const result = await checkShellIntegration();
@@ -268,7 +269,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                   {verifyStatus === "idle" && (
                     <div className="ob-verify-idle">
                       <button className="ob-btn-check" onClick={handleVerify}>
-                        Check Integration
+                        Check integration
                       </button>
                       <kbd className="ob-kbd-hint">Enter</kbd>
                     </div>

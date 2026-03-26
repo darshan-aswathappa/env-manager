@@ -97,7 +97,7 @@ function ProjectNodeItem({
               size={11}
               style={{
                 transform: collapsed ? "rotate(0deg)" : "rotate(90deg)",
-                transition: "transform 150ms ease",
+                transition: "transform 150ms cubic-bezier(0.16, 1, 0.3, 1)",
               }}
             />
           </button>

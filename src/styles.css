@@ -279,6 +279,18 @@ a {
   }
 }
 
+/* Overflow / context menu — scales from top-right anchor point */
+@keyframes overflowMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 /* ── App Shell ─────────────────────────────────────────────── */
 .app-shell {
   display: flex;
@@ -550,6 +562,8 @@ a {
   padding: 4px;
   min-width: 168px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transform-origin: top right;
+  animation: overflowMenuIn 140ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .project-overflow-menu-item {
@@ -720,7 +734,7 @@ a {
 
 .varlist-toolbar__btn:hover:not(:disabled) {
   color: var(--text-primary);
-  background: var(--bg-hover);
+  background: var(--bg-row-hover);
 }
 
 .varlist-toolbar__btn:disabled {
@@ -972,6 +986,35 @@ a {
   color: var(--text-muted);
   opacity: 0.4;
   margin-bottom: 4px;
+}
+
+/* Small outlined button inside empty states */
+.list-empty-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition:
+    border-color var(--t-fast),
+    color var(--t-fast),
+    background var(--t-fast);
+}
+
+.list-empty-action:hover {
+  border-color: var(--border-moderate);
+  color: var(--text-primary);
+  background: var(--bg-row-hover);
+}
+
+.list-empty-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ── FAB — flat, no glow, no gradient ─────────────────────── */
@@ -1459,6 +1502,7 @@ a {
   color: var(--color-warning);
   margin-top: 5px;
   line-height: 1.4;
+  animation: slideIn 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Slide-in animation for variable detail content */
@@ -1739,6 +1783,7 @@ a {
 .save-status-saving {
   color: var(--accent-text);
   background: var(--accent-dim);
+  animation: statusSlideIn var(--t-normal) both;
 }
 
 .save-status-saved {
@@ -3036,6 +3081,7 @@ a {
   .ob-logo-img,
   .ob-spin,
   .spinner,
+  .save-status-saving,
   .save-status-saved,
   .save-status-saved svg,
   .save-status-error,
@@ -3044,7 +3090,9 @@ a {
   .sett-root,
   .var-list-confirm-label,
   .var-list-confirm-actions,
-  .project-confirm-row {
+  .project-confirm-row,
+  .project-overflow-menu,
+  .detail-warn {
     animation: none;
   }
 

@@ -731,7 +731,7 @@ describe('App keyboard and modal edge cases', () => {
       act(() => { vi.advanceTimersByTime(240) })
 
       // Trigger shell check (promise resolves immediately)
-      await act(async () => { fireEvent.click(screen.getByText('Check Integration')) })
+      await act(async () => { fireEvent.click(screen.getByText('Check integration')) })
 
       // Complete onboarding
       fireEvent.click(screen.getByText('Enter .envVault'))
@@ -1555,11 +1555,11 @@ describe('App – .env.example import prompt', () => {
     await act(async () => { addBtns[0].click() })
     await waitFor(() => expect(screen.getByTestId('example-prompt-dialog')).toBeInTheDocument())
     // Advance to preview
-    const useBtn = screen.getByRole('button', { name: /use as template/i })
+    const useBtn = screen.getByRole('button', { name: /preview & import/i })
     await act(async () => { fireEvent.click(useBtn) })
     // Confirm import
-    await waitFor(() => screen.getByRole('button', { name: /import \d+ keys?/i }))
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /import \d+ keys?/i })) })
+    await waitFor(() => screen.getByRole('button', { name: /import \d+ variables?/i }))
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /import \d+ variables?/i })) })
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('save_project_env', expect.anything())
     })
@@ -1579,10 +1579,10 @@ describe('App – .env.example import prompt', () => {
     const addBtns = screen.getAllByRole('button', { name: /Add project folder/i })
     await act(async () => { addBtns[0].click() })
     await waitFor(() => expect(screen.getByTestId('example-prompt-dialog')).toBeInTheDocument())
-    const useBtn = screen.getByRole('button', { name: /use as template/i })
+    const useBtn = screen.getByRole('button', { name: /preview & import/i })
     await act(async () => { fireEvent.click(useBtn) })
-    await waitFor(() => screen.getByRole('button', { name: /import \d+ keys?/i }))
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /import \d+ keys?/i })) })
+    await waitFor(() => screen.getByRole('button', { name: /import \d+ variables?/i }))
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /import \d+ variables?/i })) })
     await waitFor(() => {
       expect(screen.queryByTestId('example-prompt-dialog')).not.toBeInTheDocument()
       expect(screen.queryByTestId('example-preview-dialog')).not.toBeInTheDocument()

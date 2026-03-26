@@ -155,19 +155,19 @@ describe('Onboarding', () => {
     expect(screen.getByText('Verify your setup')).toBeInTheDocument()
   })
 
-  it('shows Check Integration button on verify step (idle state)', () => {
+  it('shows Check integration button on verify step (idle state)', () => {
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
     advanceTransition()
     fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
-    expect(screen.getByText('Check Integration')).toBeInTheDocument()
+    expect(screen.getByText('Check integration')).toBeInTheDocument()
   })
 
   // ── Verify: checking state ────────────────────────
 
-  it('shows checking state when Check Integration is clicked', async () => {
+  it('shows checking state when Check integration is clicked', async () => {
     mockedCheck.mockReturnValue(new Promise(() => {})) // never resolves
     render(<Onboarding onComplete={onComplete} />)
     fireEvent.click(screen.getByText('Get Started'))
@@ -176,7 +176,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('Checking shell config...')).toBeInTheDocument()
@@ -193,7 +193,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('zsh')).toBeInTheDocument()
@@ -209,7 +209,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('bash')).toBeInTheDocument()
@@ -224,7 +224,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('zsh and bash')).toBeInTheDocument()
@@ -239,7 +239,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('Enter .envVault')).toBeInTheDocument()
@@ -256,7 +256,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('Hook not detected')).toBeInTheDocument()
@@ -271,7 +271,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText(/Paste the snippet into/)).toBeInTheDocument()
@@ -288,7 +288,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('Check again')).toBeInTheDocument()
@@ -304,7 +304,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     expect(screen.getByText('Hook not detected')).toBeInTheDocument()
@@ -319,7 +319,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     fireEvent.click(screen.getByText('Back to instructions'))
@@ -338,7 +338,7 @@ describe('Onboarding', () => {
 
     // First attempt: not found
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
     expect(screen.getByText('Hook not detected')).toBeInTheDocument()
 
@@ -361,7 +361,7 @@ describe('Onboarding', () => {
     advanceTransition()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
 
     fireEvent.click(screen.getByText('Enter .envVault'))
@@ -451,7 +451,7 @@ describe('Onboarding', () => {
     // Step 3: Verify
     expect(screen.getByText('Verify your setup')).toBeInTheDocument()
     await act(async () => {
-      fireEvent.click(screen.getByText('Check Integration'))
+      fireEvent.click(screen.getByText('Check integration'))
     })
     expect(screen.getByText('zsh and bash')).toBeInTheDocument()
 
@@ -500,7 +500,7 @@ describe('Onboarding', () => {
     fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
-    await act(async () => { fireEvent.click(screen.getByText('Check Integration')) })
+    await act(async () => { fireEvent.click(screen.getByText('Check integration')) })
     expect(screen.getByText(/Hook detected in/)).toBeInTheDocument()
 
     fireEvent.keyDown(window, { key: 'Enter' })
@@ -530,7 +530,7 @@ describe('Onboarding', () => {
     fireEvent.click(screen.getByText("I've added the snippet"))
     advanceTransition()
 
-    await act(async () => { fireEvent.click(screen.getByText('Check Integration')) })
+    await act(async () => { fireEvent.click(screen.getByText('Check integration')) })
     expect(screen.getByText('Hook not detected')).toBeInTheDocument()
 
     // Enter key when verifyStatus is 'not_found' should do nothing (no else branch)

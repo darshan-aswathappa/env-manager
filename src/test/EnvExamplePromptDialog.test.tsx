@@ -92,7 +92,7 @@ describe('EnvExamplePromptDialog – prompt step', () => {
       />
     )
     expect(screen.getByText(/5/)).toBeInTheDocument()
-    expect(screen.getByText(/key/i)).toBeInTheDocument()
+    expect(screen.getByText(/variable/i)).toBeInTheDocument()
   })
 
   it('3.3: shows new-key count when project has some existing vars', () => {
@@ -169,7 +169,7 @@ describe('EnvExamplePromptDialog – prompt step', () => {
         onClose={onClose}
       />
     )
-    const useBtn = screen.getByRole('button', { name: /use as template/i })
+    const useBtn = screen.getByRole('button', { name: /preview & import/i })
     fireEvent.click(useBtn)
     await waitFor(() => {
       // Preview step should now be rendered; key names visible
@@ -188,7 +188,7 @@ describe('EnvExamplePromptDialog – prompt step', () => {
         onClose={onClose}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: /use as template/i }))
+    fireEvent.click(screen.getByRole('button', { name: /preview & import/i }))
     await waitFor(() => {
       expect(screen.getByRole('combobox')).toBeInTheDocument()
     })
@@ -213,7 +213,7 @@ describe('EnvExamplePromptDialog – prompt step', () => {
         onClose={onClose}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: /use as template/i }))
+    fireEvent.click(screen.getByRole('button', { name: /preview & import/i }))
     await waitFor(() => {
       const select = screen.getByRole('combobox') as HTMLSelectElement
       expect(select.value).toBe('local')
@@ -231,9 +231,9 @@ describe('EnvExamplePromptDialog – prompt step', () => {
         onClose={onClose}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: /use as template/i }))
-    await waitFor(() => screen.getByRole('button', { name: /import \d+ keys?/i }))
-    fireEvent.click(screen.getByRole('button', { name: /import \d+ keys?/i }))
+    fireEvent.click(screen.getByRole('button', { name: /preview & import/i }))
+    await waitFor(() => screen.getByRole('button', { name: /import \d+ variables?/i }))
+    fireEvent.click(screen.getByRole('button', { name: /import \d+ variables?/i }))
     await waitFor(() => {
       expect(onImportComplete).toHaveBeenCalledWith(
         expect.any(String),
@@ -253,12 +253,12 @@ describe('EnvExamplePromptDialog – prompt step', () => {
         onClose={onClose}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: /use as template/i }))
+    fireEvent.click(screen.getByRole('button', { name: /preview & import/i }))
     await waitFor(() => screen.getByRole('button', { name: /back/i }))
     fireEvent.click(screen.getByRole('button', { name: /back/i }))
     await waitFor(() => {
       expect(screen.getByTestId('example-prompt-dialog')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /use as template/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /preview & import/i })).toBeInTheDocument()
     })
   })
 
@@ -305,7 +305,7 @@ describe('EnvExamplePromptDialog – preview key list', () => {
         onClose={onClose}
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: /use as template/i }))
+    fireEvent.click(screen.getByRole('button', { name: /preview & import/i }))
     await waitFor(() => {
       // Preview is visible when a key from the example is displayed
       expect(screen.getByRole('combobox')).toBeInTheDocument()
@@ -400,7 +400,7 @@ describe('EnvExamplePromptDialog – preview key list', () => {
     const exampleFile = makeExampleFile(['EXISTING1', 'EXISTING2', 'NEW1', 'NEW2', 'NEW3'])
     await renderInPreview(projectWith2, exampleFile)
     // Should mention 3 somewhere (3 new keys to import)
-    expect(screen.getByText(/3 keys? to import/i)).toBeInTheDocument()
+    expect(screen.getByText(/3 variables? to import/i)).toBeInTheDocument()
   })
 
   it('4.9: already-set keys visually dimmed — check CSS class or aria-disabled', async () => {
@@ -484,7 +484,7 @@ describe('EnvExamplePromptDialog – edge cases (Phase 6)', () => {
         />
       )
     ).not.toThrow()
-    const useBtn = screen.queryByRole('button', { name: /use as template/i })
+    const useBtn = screen.queryByRole('button', { name: /preview & import/i })
     if (useBtn) {
       expect(useBtn).toBeDisabled()
     }
@@ -508,7 +508,7 @@ describe('EnvExamplePromptDialog – edge cases (Phase 6)', () => {
         />
       )
     ).not.toThrow()
-    const useBtn = screen.queryByRole('button', { name: /use as template/i })
+    const useBtn = screen.queryByRole('button', { name: /preview & import/i })
     if (useBtn) {
       expect(useBtn).toBeDisabled()
     }
@@ -541,16 +541,16 @@ describe('EnvExamplePromptDialog – edge cases (Phase 6)', () => {
         onClose={onClose}
       />
     )
-    const useBtn = screen.queryByRole('button', { name: /use as template/i })
+    const useBtn = screen.queryByRole('button', { name: /preview & import/i })
     if (useBtn) {
       if ((useBtn as HTMLButtonElement).disabled) {
-        // All keys already set — Use as Template button is disabled
+        // All variables already set — Preview & import button is disabled
         expect(useBtn).toBeDisabled()
       } else {
         fireEvent.click(useBtn)
         await waitFor(() => {
           const nothingNew = screen.queryByText(/nothing new/i)
-          const importBtn = screen.queryByRole('button', { name: /import \d+ keys?/i })
+          const importBtn = screen.queryByRole('button', { name: /import \d+ variables?/i })
           const allSet = nothingNew !== null || (importBtn !== null && importBtn.hasAttribute('disabled'))
           expect(allSet).toBe(true)
         })
@@ -572,7 +572,7 @@ describe('EnvExamplePromptDialog – edge cases (Phase 6)', () => {
         />
       )
     ).not.toThrow()
-    const useBtn = screen.queryByRole('button', { name: /use as template/i })
+    const useBtn = screen.queryByRole('button', { name: /preview & import/i })
     if (useBtn) {
       fireEvent.click(useBtn)
       await waitFor(() => {
@@ -594,7 +594,7 @@ describe('EnvExamplePromptDialog – edge cases (Phase 6)', () => {
         onClose={onClose}
       />
     )
-    const useBtn = screen.queryByRole('button', { name: /use as template/i })
+    const useBtn = screen.queryByRole('button', { name: /preview & import/i })
     if (useBtn) {
       expect(() => fireEvent.click(useBtn)).not.toThrow()
       await waitFor(() => {

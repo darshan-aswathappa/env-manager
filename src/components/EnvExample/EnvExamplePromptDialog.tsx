@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X } from 'lucide-react'
+import { X, CheckCircle2 } from 'lucide-react'
 import type { Project, EnvVar, EnvExampleFile, ExampleImportStep } from '../../types'
 import { ENV_SUFFIXES, envDisplayName } from '../../types'
 import { buildExampleImportPlan, applyExampleImport } from '../../lib/envFormats'
@@ -67,6 +67,7 @@ export default function EnvExamplePromptDialog({
 
   const dialogStyle: React.CSSProperties = {
     width: 560,
+    maxWidth: 'calc(100vw - 32px)',
     maxHeight: 520,
     background: 'var(--bg-sidebar)',
     border: '1px solid var(--border-subtle)',
@@ -91,6 +92,7 @@ export default function EnvExamplePromptDialog({
           aria-modal="true"
           aria-label=".env.example detected"
           onClick={e => e.stopPropagation()}
+          onKeyDown={e => { if (e.key === 'Escape') onClose(); }}
           data-testid="example-prompt-dialog"
         >
           {/* Header */}
@@ -135,13 +137,13 @@ export default function EnvExamplePromptDialog({
             }}>
               This project includes a .env.example file with{' '}
               <strong style={{ color: 'var(--text-primary)' }}>
-                {exampleFile.totalKeyCount} keys
+                {exampleFile.totalKeyCount} variables
               </strong>.
             </p>
             <p style={{
               margin: '0 0 8px',
               fontSize: '0.75rem',
-              fontFamily: 'monospace',
+              fontFamily: 'var(--font-mono)',
               color: 'var(--text-tertiary)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -157,7 +159,7 @@ export default function EnvExamplePromptDialog({
                 fontSize: '0.75rem',
                 color: 'var(--text-tertiary)',
               }}>
-                {plan.newCount} of {exampleFile.totalKeyCount} keys are new
+                {plan.newCount} of {exampleFile.totalKeyCount} variables are new
               </p>
             )}
           </div>
@@ -202,7 +204,7 @@ export default function EnvExamplePromptDialog({
                 background: 'none',
                 border: '1px solid var(--border-subtle)',
                 color: 'var(--text-secondary)',
-                borderRadius: 6,
+                borderRadius: 'var(--radius-xl)',
                 padding: '6px 14px',
                 fontSize: '0.8125rem',
                 cursor: 'pointer',
@@ -213,18 +215,19 @@ export default function EnvExamplePromptDialog({
             <button
               onClick={() => setStep('preview')}
               disabled={plan.newCount === 0}
-              aria-label="Use as Template"
+              aria-disabled={plan.newCount === 0 ? 'true' : undefined}
+              aria-label="Preview & import"
               style={{
-                background: plan.newCount === 0 ? 'var(--bg-hover)' : 'var(--color-accent)',
+                background: plan.newCount === 0 ? 'var(--bg-row-hover)' : 'var(--accent)',
                 border: 'none',
                 color: plan.newCount === 0 ? 'var(--text-tertiary)' : '#fff',
-                borderRadius: 6,
+                borderRadius: 'var(--radius-xl)',
                 padding: '6px 14px',
                 fontSize: '0.8125rem',
                 cursor: plan.newCount === 0 ? 'not-allowed' : 'pointer',
               }}
             >
-              Use as Template
+              Preview & import
             </button>
           </div>
         </div>
@@ -259,8 +262,9 @@ export default function EnvExamplePromptDialog({
           style={dialogStyle}
           role="dialog"
           aria-modal="true"
-          aria-label="Import as template"
+          aria-label="Import from .env.example"
           onClick={e => e.stopPropagation()}
+          onKeyDown={e => { if (e.key === 'Escape') onClose(); }}
           data-testid="example-preview-dialog"
         >
           {/* Header */}
@@ -276,7 +280,7 @@ export default function EnvExamplePromptDialog({
               fontWeight: 600,
               color: 'var(--text-primary)',
             }}>
-              Import as template
+              Import from .env.example
             </h2>
             <button
               onClick={onClose}
@@ -350,7 +354,7 @@ export default function EnvExamplePromptDialog({
               fontSize: '0.75rem',
               color: 'var(--text-tertiary)',
             }}>
-              {plan.existsCount} keys already set — shown but not imported
+              {plan.existsCount} variables already set — shown but not imported
             </p>
           )}
 
@@ -418,7 +422,7 @@ export default function EnvExamplePromptDialog({
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontFamily: 'monospace',
+                      fontFamily: 'var(--font-mono)',
                       fontSize: '0.8125rem',
                       color: 'var(--text-primary)',
                       overflow: 'hidden',
@@ -438,7 +442,7 @@ export default function EnvExamplePromptDialog({
                     )}
                   </div>
                   <span style={{
-                    fontFamily: 'monospace',
+                    fontFamily: 'var(--font-mono)',
                     fontSize: '0.75rem',
                     color: 'var(--text-tertiary)',
                     flexShrink: 0,
@@ -481,7 +485,7 @@ export default function EnvExamplePromptDialog({
             borderTop: '1px solid var(--border-subtle)',
           }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-              {plan.newCount} key{plan.newCount !== 1 ? 's' : ''} to import
+              {plan.newCount} variable{plan.newCount !== 1 ? 's' : ''} to import
             </span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -491,7 +495,7 @@ export default function EnvExamplePromptDialog({
                   background: 'none',
                   border: '1px solid var(--border-subtle)',
                   color: 'var(--text-secondary)',
-                  borderRadius: 6,
+                  borderRadius: 'var(--radius-xl)',
                   padding: '6px 14px',
                   fontSize: '0.8125rem',
                   cursor: 'pointer',
@@ -502,18 +506,19 @@ export default function EnvExamplePromptDialog({
               <button
                 onClick={handleImport}
                 disabled={plan.newCount === 0}
-                aria-label={`Import ${plan.newCount} key${plan.newCount !== 1 ? 's' : ''}`}
+                aria-disabled={plan.newCount === 0 ? 'true' : undefined}
+                aria-label={`Import ${plan.newCount} variable${plan.newCount !== 1 ? 's' : ''}`}
                 style={{
-                  background: plan.newCount === 0 ? 'var(--bg-hover)' : 'var(--color-accent)',
+                  background: plan.newCount === 0 ? 'var(--bg-row-hover)' : 'var(--accent)',
                   border: 'none',
                   color: plan.newCount === 0 ? 'var(--text-tertiary)' : '#fff',
-                  borderRadius: 6,
+                  borderRadius: 'var(--radius-xl)',
                   padding: '6px 14px',
                   fontSize: '0.8125rem',
                   cursor: plan.newCount === 0 ? 'not-allowed' : 'pointer',
                 }}
               >
-                Import {plan.newCount} key{plan.newCount !== 1 ? 's' : ''}
+                Import {plan.newCount} variable{plan.newCount !== 1 ? 's' : ''}
               </button>
             </div>
           </div>
@@ -538,11 +543,12 @@ export default function EnvExamplePromptDialog({
         data-testid="example-done-dialog"
       >
         <div style={{
-          fontSize: 32,
           marginBottom: 12,
           color: 'var(--color-success)',
+          display: 'flex',
+          alignItems: 'center',
         }}>
-          ✓
+          <CheckCircle2 size={32} aria-hidden="true" />
         </div>
         <div style={{
           fontSize: '0.9375rem',
