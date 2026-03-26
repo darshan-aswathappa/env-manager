@@ -64,6 +64,133 @@ describe('ImportDialog', () => {
     expect(screen.getByText(/Choose File/i)).toBeInTheDocument()
   })
 
+  // ── Paste mode ─────────────────────────────────────────────────────────
+
+  it('renders From File and Paste Text toggle buttons', () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /From File/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Paste Text/i })).toBeInTheDocument()
+  })
+
+  it('defaults to file mode — textarea is not visible initially', () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    expect(screen.queryByPlaceholderText(/Paste .env content/i)).not.toBeInTheDocument()
+  })
+
+  it('clicking Paste Text shows textarea and hides file picker', () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    expect(screen.getByPlaceholderText(/Paste .env content/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Choose File/i })).not.toBeInTheDocument()
+  })
+
+  it('Preview Import button is disabled when textarea is empty', () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    expect(screen.getByRole('button', { name: /Preview Import/i })).toBeDisabled()
+  })
+
+  it('Preview Import button enables after typing in textarea', () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: 'KEY=value' },
+    })
+    expect(screen.getByRole('button', { name: /Preview Import/i })).not.toBeDisabled()
+  })
+
+  it('clicking Preview Import with valid env content advances to preview step', async () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: 'PASTED_KEY=pasted-value' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview Import/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Detected:/i)).toBeInTheDocument()
+      expect(screen.getByText('PASTED_KEY')).toBeInTheDocument()
+    })
+  })
+
+  it('paste mode shows New badge for keys not in existing env', async () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: 'BRAND_NEW=value' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview Import/i }))
+    await waitFor(() => {
+      expect(screen.getByText('New')).toBeInTheDocument()
+    })
+  })
+
+  it('paste mode shows Conflict badge for keys with different values', async () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: 'EXISTING=different-value' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview Import/i }))
+    await waitFor(() => {
+      expect(screen.getByText('Conflict')).toBeInTheDocument()
+    })
+  })
+
+  it('paste mode supports JSON format detection', async () => {
+    render(<ImportDialog project={emptyProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: '{"JSON_KEY": "json-value"}' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview Import/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Detected:.*json/i)).toBeInTheDocument()
+      expect(screen.getByText('JSON_KEY')).toBeInTheDocument()
+    })
+  })
+
+  it('paste mode shows parse error for invalid JSON', async () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: '{invalid json' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview Import/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid JSON/i)).toBeInTheDocument()
+    })
+  })
+
+  it('switching back to From File resets paste text and shows file picker', () => {
+    render(<ImportDialog project={baseProject} onImportComplete={vi.fn()} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: 'KEY=value' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /From File/i }))
+    expect(screen.queryByPlaceholderText(/Paste .env content/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Choose File/i })).toBeInTheDocument()
+  })
+
+  it('paste mode full flow: paste → preview → import → done', async () => {
+    const onImportComplete = vi.fn()
+    render(
+      <ImportDialog project={baseProject} onImportComplete={onImportComplete} onClose={vi.fn()} />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Paste Text/i }))
+    fireEvent.change(screen.getByPlaceholderText(/Paste .env content/i), {
+      target: { value: 'NEW_PASTED=pasted-val' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview Import/i }))
+    await waitFor(() => screen.getByRole('button', { name: /^Import/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Import/i }))
+    await waitFor(() => {
+      expect(onImportComplete).toHaveBeenCalled()
+      const merged: { key: string; val: string }[] = onImportComplete.mock.calls[0][0]
+      expect(merged.some(v => v.key === 'NEW_PASTED' && v.val === 'pasted-val')).toBe(true)
+    })
+  })
+
   // ── Step 2 (preview) ────────────────────────────────────────────────────
 
   it('advances to step 2 after file selection', async () => {

@@ -46,6 +46,8 @@ function StatusBadge({ status }: { status: 'new' | 'same' | 'conflict' }) {
 
 export default function ImportDialog({ project, onImportComplete, onClose }: ImportDialogProps) {
   const [step, setStep] = useState<ImportStep>('pick')
+  const [pickMode, setPickMode] = useState<'file' | 'paste'>('file')
+  const [pasteText, setPasteText] = useState('')
   const [rawContent, setRawContent] = useState('')
   const [_filename, setFilename] = useState('')
   const [detectedFormat, setDetectedFormat] = useState<ExportFormat>('env')
@@ -112,6 +114,28 @@ export default function ImportDialog({ project, onImportComplete, onClose }: Imp
       }
     }
   }, [project.id])
+
+  // ── Paste handler ────────────────────────────────────────────────────────
+  const handlePreviewPaste = useCallback(() => {
+    const fmt = detectFormat('', pasteText)
+    setRawContent(pasteText)
+    setDetectedFormat(fmt)
+    setOverrideFormat(null)
+    setRevealValues(false)
+
+    try {
+      const result = parseByFormat(pasteText, fmt, project.id)
+      setParseResult(result)
+      setParseError(null)
+      setStep('preview')
+    } catch (e) {
+      if (e instanceof FormatParseError) {
+        setParseError(e.message)
+        setParseResult(null)
+        setStep('preview')
+      }
+    }
+  }, [pasteText, project.id])
 
   // ── Commit handler ───────────────────────────────────────────────────────
   const handleImport = useCallback(() => {
@@ -436,7 +460,7 @@ export default function ImportDialog({ project, onImportComplete, onClose }: Imp
     )
   }
 
-  // Step 1: Pick file
+  // Step 1: Pick file or paste
   return (
     <div style={overlayStyle} onClick={onClose} role="presentation" tabIndex={-1}>
       <div style={dialogStyle} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Import variables">
@@ -449,25 +473,94 @@ export default function ImportDialog({ project, onImportComplete, onClose }: Imp
           </button>
         </div>
 
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, gap: 16 }}>
-          <div style={{
-            border: '2px dashed var(--border-subtle)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '40px 60px',
-            textAlign: 'center',
-            width: '100%',
-          }}>
-            <Upload size={32} style={{ color: 'var(--text-tertiary)', marginBottom: 12 }} />
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: 16 }}>
-              Choose a file to import variables from
-            </p>
-            <button className="btn-primary" onClick={handleChooseFile}>
-              Choose File
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 40px 32px', gap: 20 }}>
+          {/* Mode toggle */}
+          <div style={{ display: 'flex', gap: 4, alignSelf: 'center', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)', padding: 3 }}>
+            <button
+              onClick={() => { setPickMode('file'); setPasteText('') }}
+              style={{
+                padding: '6px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                border: 'none',
+                background: pickMode === 'file' ? 'var(--bg-sidebar)' : 'transparent',
+                color: pickMode === 'file' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                transition: 'background 200ms, color 200ms',
+              }}
+            >
+              From File
             </button>
-            <p style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: 12 }}>
-              Supported: .env, .json, .yaml, .yml, .csv, .sh
-            </p>
+            <button
+              onClick={() => setPickMode('paste')}
+              style={{
+                padding: '6px 16px',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8125rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                border: 'none',
+                background: pickMode === 'paste' ? 'var(--bg-sidebar)' : 'transparent',
+                color: pickMode === 'paste' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                transition: 'background 200ms, color 200ms',
+              }}
+            >
+              Paste Text
+            </button>
           </div>
+
+          {pickMode === 'file' ? (
+            <div style={{
+              border: '2px dashed var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '40px 60px',
+              textAlign: 'center',
+              width: '100%',
+            }}>
+              <Upload size={32} style={{ color: 'var(--text-tertiary)', marginBottom: 12 }} />
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: 16 }}>
+                Choose a file to import variables from
+              </p>
+              <button className="btn-primary" onClick={handleChooseFile}>
+                Choose File
+              </button>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: 12 }}>
+                Supported: .env, .json, .yaml, .yml, .csv, .sh
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
+              <textarea
+                value={pasteText}
+                onChange={e => setPasteText(e.target.value)}
+                placeholder={'Paste .env content here…\nKEY=value\nDATABASE_URL=postgres://...'}
+                rows={10}
+                style={{
+                  background: 'var(--bg-base)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.8125rem',
+                  resize: 'vertical',
+                  padding: '10px 12px',
+                  width: '100%',
+                  minHeight: 160,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <button
+                className="btn-primary"
+                onClick={handlePreviewPaste}
+                disabled={pasteText.trim().length === 0}
+                style={{ alignSelf: 'flex-end' }}
+              >
+                Preview Import
+              </button>
+            </div>
+          )}
         </div>
 
         <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-separator)', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>

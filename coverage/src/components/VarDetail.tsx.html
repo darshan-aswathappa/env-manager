@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">90.09% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>91/101</span>
+                <span class='fraction'>100/111</span>
             </div>
         
             
@@ -536,7 +536,20 @@
 <a name='L471'></a><a href='#L471'>471</a>
 <a name='L472'></a><a href='#L472'>472</a>
 <a name='L473'></a><a href='#L473'>473</a>
-<a name='L474'></a><a href='#L474'>474</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a>
+<a name='L476'></a><a href='#L476'>476</a>
+<a name='L477'></a><a href='#L477'>477</a>
+<a name='L478'></a><a href='#L478'>478</a>
+<a name='L479'></a><a href='#L479'>479</a>
+<a name='L480'></a><a href='#L480'>480</a>
+<a name='L481'></a><a href='#L481'>481</a>
+<a name='L482'></a><a href='#L482'>482</a>
+<a name='L483'></a><a href='#L483'>483</a>
+<a name='L484'></a><a href='#L484'>484</a>
+<a name='L485'></a><a href='#L485'>485</a>
+<a name='L486'></a><a href='#L486'>486</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -612,6 +625,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">813x</span>
 <span class="cline-any cline-yes">813x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -680,6 +694,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -984,6 +1003,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1050,6 +1074,7 @@ interface VarDetailProps {
   } | null;
   onPropagateRename?: () =&gt; void;
   onDismissRename?: () =&gt; void;
+  hasVarsWithEmptyKey?: boolean;
 }
 &nbsp;
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -1108,6 +1133,7 @@ export default function VarDetail({
   renamePrompt = null,
   onPropagateRename,
   onDismissRename,
+  hasVarsWithEmptyKey = false,
 }: VarDetailProps) {
   const envTier = activeEnv === 'production'
     ? 'prod'
@@ -1278,12 +1304,17 @@ export default function VarDetail({
             Couldn't save — check folder write access
           &lt;/span&gt;
         )}
+        {hasVarsWithEmptyKey &amp;&amp; saveStatus === "idle" &amp;&amp; (
+          &lt;span className="save-status save-status-error" role="alert" aria-live="polite"&gt;
+            All variables must have a key before saving
+          &lt;/span&gt;
+        )}
 &nbsp;
         &lt;button
           className="btn-primary"
           onClick={onSave}
-          disabled={saveStatus === "saving" || duplicateReport.hasDuplicates}
-          aria-disabled={duplicateReport.hasDuplicates ? "true" : undefined}
+          disabled={saveStatus === "saving" || duplicateReport.hasDuplicates || hasVarsWithEmptyKey}
+          aria-disabled={duplicateReport.hasDuplicates || hasVarsWithEmptyKey ? "true" : undefined}
           aria-label={`Save ${envDisplayName(activeEnv)} file to disk`}
         &gt;
           &lt;Save size={13} /&gt;
@@ -1444,6 +1475,11 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             &lt;CopyButton text={v.val} label="Copy value" clearAfterSecs={clipboardClearSeconds} /&gt;
           &lt;/div&gt;
         &lt;/div&gt;
+        {v.key.trim() &amp;&amp; !v.val &amp;&amp; (
+<span class="branch-2 cbranch-no" title="branch not covered" >          &lt;span className="detail-warn" role="alert"&gt;</span>
+            Value is empty — this variable will be saved with a blank value
+          &lt;/span&gt;
+        )}
       &lt;/div&gt;
 &nbsp;
       &lt;div className="detail-divider" /&gt;
@@ -1489,7 +1525,7 @@ function NoVarSelected() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-26T03:36:20.839Z
+                at 2026-03-26T21:16:13.850Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

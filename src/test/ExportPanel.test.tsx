@@ -161,13 +161,13 @@ describe('ExportPanel', () => {
     })
   })
 
-  it('Save File calls write_text_to_path with correct path after dialog', async () => {
+  it('Save File calls write_file with correct path after dialog', async () => {
     mockSave.mockResolvedValue('/chosen/path/.env')
     render(<ExportPanel project={baseProject} onClose={vi.fn()} onSaveComplete={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /Save File/i }))
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith(
-        'write_text_to_path',
+        'write_file',
         expect.objectContaining({ path: '/chosen/path/.env' })
       )
     })
@@ -183,12 +183,12 @@ describe('ExportPanel', () => {
     })
   })
 
-  it('does not call write_text_to_path when save dialog is cancelled', async () => {
+  it('does not call write_file when save dialog is cancelled', async () => {
     mockSave.mockResolvedValue(null)
     render(<ExportPanel project={baseProject} onClose={vi.fn()} onSaveComplete={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: /Save File/i }))
     await waitFor(() => expect(mockSave).toHaveBeenCalled())
-    expect(mockInvoke).not.toHaveBeenCalledWith('write_text_to_path', expect.anything())
+    expect(mockInvoke).not.toHaveBeenCalledWith('write_file', expect.anything())
   })
 
   // ── Save flow — ZIP ──────────────────────────────────────────────────────

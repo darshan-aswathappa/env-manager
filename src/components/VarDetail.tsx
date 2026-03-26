@@ -39,6 +39,7 @@ interface VarDetailProps {
   } | null;
   onPropagateRename?: () => void;
   onDismissRename?: () => void;
+  hasVarsWithEmptyKey?: boolean;
 }
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
@@ -97,6 +98,7 @@ export default function VarDetail({
   renamePrompt = null,
   onPropagateRename,
   onDismissRename,
+  hasVarsWithEmptyKey = false,
 }: VarDetailProps) {
   const envTier = activeEnv === 'production'
     ? 'prod'
@@ -267,12 +269,17 @@ export default function VarDetail({
             Couldn't save — check folder write access
           </span>
         )}
+        {hasVarsWithEmptyKey && saveStatus === "idle" && (
+          <span className="save-status save-status-error" role="alert" aria-live="polite">
+            All variables must have a key before saving
+          </span>
+        )}
 
         <button
           className="btn-primary"
           onClick={onSave}
-          disabled={saveStatus === "saving" || duplicateReport.hasDuplicates}
-          aria-disabled={duplicateReport.hasDuplicates ? "true" : undefined}
+          disabled={saveStatus === "saving" || duplicateReport.hasDuplicates || hasVarsWithEmptyKey}
+          aria-disabled={duplicateReport.hasDuplicates || hasVarsWithEmptyKey ? "true" : undefined}
           aria-label={`Save ${envDisplayName(activeEnv)} file to disk`}
         >
           <Save size={13} />
@@ -433,6 +440,11 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             <CopyButton text={v.val} label="Copy value" clearAfterSecs={clipboardClearSeconds} />
           </div>
         </div>
+        {v.key.trim() && !v.val && (
+          <span className="detail-warn" role="alert">
+            Value is empty — this variable will be saved with a blank value
+          </span>
+        )}
       </div>
 
       <div className="detail-divider" />

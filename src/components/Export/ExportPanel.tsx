@@ -75,7 +75,7 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
       }
       // Serialize real values (not masked)
       const { content } = serializeByFormat(project.vars, format)
-      await invoke('write_text_to_path', { path, content })
+      await invoke('write_file', { path, content })
       onSaveComplete()
     } catch {
       // Silent — isSaving will be reset

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, Component } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, Component } from "react";
 import type { ReactNode } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
@@ -14,6 +14,7 @@ import {
   findKeyAcrossEnvironments,
   propagateKeyRenameToEnvironments,
   checkEnvExample,
+  computeDuplicateReport,
 } from "./lib/envFile";
 import { buildExampleImportPlan } from "./lib/envFormats";
 import EnvExamplePromptDialog from "./components/EnvExample/EnvExamplePromptDialog";
@@ -354,6 +355,11 @@ export default function App() {
       });
       if (!selected) return;
       const dirPath = selected as string;
+      if (projects.some((p) => p.path === dirPath)) {
+        setToastMessage("This project folder is already added.");
+        setTimeout(() => setToastMessage(null), 3000);
+        return;
+      }
       const segments = dirPath.replace(/\\/g, "/").split("/");
       const name = segments[segments.length - 1] || "Project";
       // Import all env files from the project directory
@@ -408,7 +414,7 @@ export default function App() {
     } catch {
       /* project add failed — user sees no project added */
     }
-  }, []);
+  }, [projects]);
 
   const addSubProject = useCallback(
     async (parentId: string) => {
@@ -420,6 +426,10 @@ export default function App() {
         });
         if (!selected) return;
         const dirPath = selected as string;
+        if (projects.some((p) => p.path === dirPath)) {
+          showToast("This project folder is already added.");
+          return;
+        }
         const segments = dirPath.replace(/\\/g, "/").split("/");
         const name = segments[segments.length - 1] || "Project";
         const parent = projects.find((p) => p.id === parentId);
@@ -823,6 +833,16 @@ export default function App() {
     selectedProject?.vars.find((v) => v.id === selectedVarId) ?? null;
   const projectTree: ProjectTreeNode[] = buildProjectTree(projects);
 
+  const duplicateReport = useMemo(
+    () => selectedProject
+      ? computeDuplicateReport(selectedProject.vars)
+      : { hasDuplicates: false, entries: [], affectedIds: new Set<string>() },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedProject?.vars]
+  );
+
+  const hasVarsWithEmptyKey = selectedProject?.vars.some((v) => !v.key.trim()) ?? false;
+
   /* ── Render ──────────────────────────────────────────── */
   if (!onboardingComplete) {
     return (
@@ -882,6 +902,8 @@ export default function App() {
               ? () => { setShowPushPanel(false); setShowDiffPanel(true); }
               : null
           }
+          duplicateReport={duplicateReport}
+          hasVarsWithEmptyKey={hasVarsWithEmptyKey}
           renamePrompt={pendingKeyRename ? {
             oldKey: pendingKeyRename.oldKey,
             newKey: pendingKeyRename.newKey,

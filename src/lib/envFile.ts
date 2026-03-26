@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { readTextFile } from '@tauri-apps/plugin-fs'
-import type { EnvVar, Project, Environment, EnvExampleFile } from '../types'
+import type { EnvVar, Project, Environment, EnvExampleFile, DuplicateReport, DuplicateEntry } from '../types'
 import type { ConflictReport, ConflictStrategy, PushSummary, AtomicWriteResult, PushVarsRequest, PushResult } from '../types'
 import { parseEnvExampleContent } from './envFormats'
 
@@ -306,6 +306,38 @@ export function propagateKeyRenameToEnvironments(
       ? { ...env, vars: renameKeyInEnvironment(oldKey, newKey, env.vars) }
       : env
   )
+}
+
+// ── Duplicate Key Detection ──────────────────────────────────────
+
+/**
+ * Pure function: scans vars for duplicate keys (case-sensitive).
+ * Skips entries with empty keys.
+ */
+export function computeDuplicateReport(vars: EnvVar[]): DuplicateReport {
+  const keyMap = new Map<string, { ids: string[]; firstSeenIndex: number }>()
+
+  vars.forEach((v, index) => {
+    const key = v.key.trim()
+    if (!key) return
+    if (!keyMap.has(key)) {
+      keyMap.set(key, { ids: [v.id], firstSeenIndex: index })
+    } else {
+      keyMap.get(key)!.ids.push(v.id)
+    }
+  })
+
+  const entries: DuplicateEntry[] = []
+  const affectedIds = new Set<string>()
+
+  for (const [key, { ids, firstSeenIndex }] of keyMap) {
+    if (ids.length > 1) {
+      entries.push({ key, ids, firstSeenIndex })
+      ids.forEach(id => affectedIds.add(id))
+    }
+  }
+
+  return { hasDuplicates: entries.length > 0, entries, affectedIds }
 }
 
 // ── .env.example Check ──────────────────────────────────────────
