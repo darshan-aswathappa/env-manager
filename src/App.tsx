@@ -18,7 +18,7 @@ import {
 import { buildExampleImportPlan } from "./lib/envFormats";
 import EnvExamplePromptDialog from "./components/EnvExample/EnvExamplePromptDialog";
 import type { ShellIntegrationStatus } from "./lib/envFile";
-import { buildProjectTree } from "./lib/projectTree";
+import { buildProjectTree, getDescendantIds } from "./lib/projectTree";
 import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment, EnvExampleFile } from "./types";
 import { ENV_SUFFIXES } from "./types";
 import Sidebar from "./components/Sidebar";
@@ -483,11 +483,12 @@ export default function App() {
   }, []);
 
   const deleteProject = useCallback((id: string) => {
-    unregisterProject(id).catch(() => {});
     setProjects((prev) => {
-      const updated = prev.filter((p) => p.id !== id);
+      const toDelete = new Set([id, ...getDescendantIds(id, prev)]);
+      toDelete.forEach((pid) => unregisterProject(pid).catch(() => {}));
+      const updated = prev.filter((p) => !toDelete.has(p.id));
       setSelectedId((cur) => {
-        if (cur !== id) return cur;
+        if (!toDelete.has(cur ?? '')) return cur;
         return updated[0]?.id ?? null;
       });
       return updated;

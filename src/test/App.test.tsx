@@ -169,6 +169,35 @@ describe('App', () => {
     })
   })
 
+  it('deleteProject: also removes all child and descendant projects', async () => {
+    const parent = { ...baseProject, id: 'parent', name: 'Parent', path: '/parent', parentId: null }
+    const child = { ...baseProject, id: 'child', name: 'Child', path: '/parent/child', parentId: 'parent' }
+    const grandchild = { ...baseProject, id: 'grand', name: 'Grand', path: '/parent/child/grand', parentId: 'child' }
+    setupProjects([parent, child, grandchild])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'unregister_project') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('Parent').length).toBeGreaterThan(0))
+    // Open more-options menu on the parent project
+    const moreButtons = screen.getAllByRole('button', { name: /More options/i })
+    await act(async () => { moreButtons[0].click() })
+    const deleteBtn = screen.getAllByRole('button', { name: /Remove project/i }).find(el => el.tagName === 'BUTTON')!
+    await act(async () => { deleteBtn.click() })
+    const confirmBtn = screen.getByRole('button', { name: /Confirm remove Parent/i })
+    await act(async () => { confirmBtn.click() })
+    await waitFor(() => {
+      // Parent, child, and grandchild should all be unregistered
+      expect(mockInvoke).toHaveBeenCalledWith('unregister_project', { projectId: 'parent' })
+      expect(mockInvoke).toHaveBeenCalledWith('unregister_project', { projectId: 'child' })
+      expect(mockInvoke).toHaveBeenCalledWith('unregister_project', { projectId: 'grand' })
+    })
+    // None of the three should remain in the sidebar
+    expect(screen.queryByText('Child')).not.toBeInTheDocument()
+    expect(screen.queryByText('Grand')).not.toBeInTheDocument()
+  })
+
   it('saveToFile: calls saveProjectEnv with current project vars', async () => {
     setupProjects([projectWithVars])
     mockInvoke.mockImplementation((cmd) => {

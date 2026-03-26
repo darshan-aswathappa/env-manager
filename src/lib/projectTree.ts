@@ -18,6 +18,21 @@ export function buildProjectTree(projects: Project[]): ProjectTreeNode[] {
     .map(p => buildNode(p, 0, []))
 }
 
+export function getDescendantIds(projectId: string, projects: Project[]): Set<string> {
+  const result = new Set<string>()
+  const queue = [projectId]
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    for (const p of projects) {
+      if (p.parentId === current) {
+        result.add(p.id)
+        queue.push(p.id)
+      }
+    }
+  }
+  return result
+}
+
 export function getAncestorChain(projectId: string, projects: Project[]): Project[] {
   const byId = new Map(projects.map(p => [p.id, p]))
   const chain: Project[] = []

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildProjectTree, getAncestorChain, computeEffectiveVars, getActiveVars } from '../lib/projectTree'
+import { buildProjectTree, getAncestorChain, computeEffectiveVars, getActiveVars, getDescendantIds } from '../lib/projectTree'
 import type { Project, EnvVar } from '../types'
 
 const makeProject = (id: string, path: string, parentId: string | null = null): Project => ({
@@ -166,5 +166,61 @@ describe('getActiveVars', () => {
       inheritanceMode: 'merge-child-wins', sortOrder: 0,
     }
     expect(getActiveVars(project)).toEqual([])
+  })
+})
+
+describe('getDescendantIds', () => {
+  it('returns empty set for a leaf project with no children', () => {
+    const projects = [makeProject('root', '/root')]
+    expect(getDescendantIds('root', projects).size).toBe(0)
+  })
+
+  it('returns direct children ids', () => {
+    const projects = [
+      makeProject('root', '/root'),
+      makeProject('child1', '/root/child1', 'root'),
+      makeProject('child2', '/root/child2', 'root'),
+    ]
+    const ids = getDescendantIds('root', projects)
+    expect(ids).toEqual(new Set(['child1', 'child2']))
+  })
+
+  it('returns all descendants recursively', () => {
+    const projects = [
+      makeProject('root', '/root'),
+      makeProject('child', '/root/child', 'root'),
+      makeProject('grand', '/root/child/grand', 'child'),
+      makeProject('great', '/root/child/grand/great', 'grand'),
+    ]
+    const ids = getDescendantIds('root', projects)
+    expect(ids).toEqual(new Set(['child', 'grand', 'great']))
+  })
+
+  it('returns descendants of a mid-level node only', () => {
+    const projects = [
+      makeProject('root', '/root'),
+      makeProject('child', '/root/child', 'root'),
+      makeProject('grand', '/root/child/grand', 'child'),
+    ]
+    const ids = getDescendantIds('child', projects)
+    expect(ids).toEqual(new Set(['grand']))
+    expect(ids.has('root')).toBe(false)
+  })
+
+  it('handles multiple branches correctly', () => {
+    const projects = [
+      makeProject('root', '/root'),
+      makeProject('a', '/root/a', 'root'),
+      makeProject('b', '/root/b', 'root'),
+      makeProject('a1', '/root/a/a1', 'a'),
+      makeProject('b1', '/root/b/b1', 'b'),
+    ]
+    const ids = getDescendantIds('root', projects)
+    expect(ids).toEqual(new Set(['a', 'b', 'a1', 'b1']))
+  })
+
+  it('returns empty set for unknown project id', () => {
+    const projects = [makeProject('root', '/root')]
+    expect(getDescendantIds('nonexistent', projects).size).toBe(0)
   })
 })
