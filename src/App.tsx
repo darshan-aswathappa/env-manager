@@ -602,6 +602,8 @@ export default function App() {
     await saveProjectEnv(project.id, project.activeEnv, validVars).catch(() => {});
     // Load new env vars
     const newVars = await loadProjectEnv(project.id, suffix).catch(() => []);
+    // Ensure the new env file exists on disk so the shell hook can source it
+    await saveProjectEnv(project.id, suffix, newVars.filter((v) => v.key.trim() !== "")).catch(() => {});
     // Update project immutably
     setProjects((prev) =>
       prev.map((p) =>
@@ -648,6 +650,8 @@ export default function App() {
     try {
       const varsToSave = project.vars.filter((v) => v.key.trim() !== "");
       await saveProjectEnv(project.id, project.activeEnv, varsToSave);
+      // Notify shell hook that env file changed
+      await writeEnvSignal().catch(() => {});
       // Detect key rename after saving active env
       if (selectedVarId && selectedVarOriginalKey !== null && selectedVarOriginalKey.trim() !== "") {
         const renamedVar = project.vars.find((v) => v.id === selectedVarId);
