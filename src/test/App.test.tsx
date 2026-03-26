@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { invoke } from '@tauri-apps/api/core'
-import { open } from '@tauri-apps/plugin-dialog'
+import { open, save } from '@tauri-apps/plugin-dialog'
 import App from '../App'
 
 const mockInvoke = vi.mocked(invoke)
 const mockOpen = vi.mocked(open)
+const mockSave = vi.mocked(save)
 
 const baseProject = {
   id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
@@ -1660,6 +1661,23 @@ describe('App – .env.example import prompt', () => {
     expect(screen.queryByRole('dialog', { name: /\.env\.example/i })).not.toBeInTheDocument()
   })
 
+  // 5.11: triggerExampleImport shows toast when no .env.example found
+  it('5.11: Import .env.example menu item shows toast when no example file exists', async () => {
+    setupProjects([baseProject])
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === 'check_env_example') return Promise.resolve(null)
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => { screen.getByRole('button', { name: /More options/i }).click() })
+    const menuItem = screen.getAllByRole('button', { name: /Import \.env\.example/i }).find(el => el.tagName === 'BUTTON')!
+    await act(async () => { fireEvent.click(menuItem) })
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+  })
+
   // 5.10: newCount === 0 does not show prompt
   it('5.10: prompt is not shown when all example keys already exist in project vars', async () => {
     const projectWithKeys = {
@@ -1698,5 +1716,364 @@ describe('App – .env.example import prompt', () => {
     })
     // Prompt should not appear since newCount === 0
     expect(screen.queryByText(/\.env\.example/i)).not.toBeInTheDocument()
+  })
+})
+
+// ── App backdrop/overlay interaction coverage ─────────────────────────────────
+
+describe('App backdrop and panel interaction coverage', () => {
+  const projectWith2Envs = {
+    id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
+    vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+    environments: [
+      { suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'staging', vars: [{ id: 'v2', key: 'STAGE_VAR', val: '', revealed: false, sourceProjectId: 'p1' }] },
+      { suffix: 'production', vars: [] },
+      { suffix: 'local', vars: [] },
+      { suffix: 'development', vars: [] },
+      { suffix: 'testing', vars: [] },
+    ],
+    activeEnv: '',
+    inheritanceMode: 'merge-child-wins',
+    sortOrder: 0,
+  }
+
+  const projectWithVarsLocal = {
+    id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
+    vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+    environments: [{ suffix: '', vars: [{ id: 'v1', key: 'API_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] }],
+    activeEnv: '',
+    inheritanceMode: 'merge-child-wins',
+    sortOrder: 0,
+  }
+
+  beforeEach(() => {
+    mockInvoke.mockReset()
+    mockOpen.mockReset()
+    mockSave.mockReset()
+    localStorage.clear()
+    localStorage.setItem('dotenv_mgr_onboarding', 'complete')
+    mockInvoke.mockResolvedValue('')
+  })
+
+  // ── Diff panel backdrop ────────────────────────────────────────────────────
+
+  it('clicking diff-panel-backdrop closes the diff panel', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+    const backdrop = screen.getByTestId('diff-panel-backdrop')
+    await act(async () => { fireEvent.click(backdrop) })
+    await waitFor(() => expect(screen.queryByTestId('diff-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  it('pressing Escape on diff-panel-backdrop closes the diff panel', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+    const backdrop = screen.getByTestId('diff-panel-backdrop')
+    await act(async () => { fireEvent.keyDown(backdrop, { key: 'Escape' }) })
+    await waitFor(() => expect(screen.queryByTestId('diff-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  it('clicking inside diff panel content does not close the panel (stopPropagation)', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+    const backdrop = screen.getByTestId('diff-panel-backdrop')
+    const innerWrapper = backdrop.firstElementChild!
+    await act(async () => { fireEvent.click(innerWrapper) })
+    expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument()
+  })
+
+  // ── VarDetail "Compare Environments" button (line 902 coverage) ───────────
+
+  it('clicking Compare Environments button in VarDetail opens diff panel and closes push panel', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByTestId('compare-env-btn')).toBeInTheDocument())
+    // First open push panel
+    const pushBtn = screen.getByTestId('promote-to-env-btn')
+    await act(async () => { fireEvent.click(pushBtn) })
+    await waitFor(() => expect(screen.getByTestId('push-panel-backdrop')).toBeInTheDocument())
+    // Click Compare — should close push panel and open diff panel
+    const compareBtn = screen.getByTestId('compare-env-btn')
+    await act(async () => { fireEvent.click(compareBtn) })
+    await waitFor(() => {
+      expect(screen.queryByTestId('push-panel-backdrop')).not.toBeInTheDocument()
+      expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument()
+    })
+  })
+
+  it('clicking Compare Environments button opens diff panel when push panel is not open', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByTestId('compare-env-btn')).toBeInTheDocument())
+    await act(async () => { fireEvent.click(screen.getByTestId('compare-env-btn')) })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+  })
+
+  // ── Import dialog backdrop ────────────────────────────────────────────────
+
+  it('clicking import-dialog-backdrop closes the import dialog', async () => {
+    setupProjects([projectWithVarsLocal])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const importBtn = screen.getByRole('button', { name: /Import variables/i })
+    await act(async () => { fireEvent.click(importBtn) })
+    await waitFor(() => expect(screen.getByTestId('import-dialog-backdrop')).toBeInTheDocument())
+    await act(async () => { fireEvent.click(screen.getByTestId('import-dialog-backdrop')) })
+    await waitFor(() => expect(screen.queryByTestId('import-dialog-backdrop')).not.toBeInTheDocument())
+  })
+
+  it('clicking inside import dialog content does not close dialog (stopPropagation)', async () => {
+    setupProjects([projectWithVarsLocal])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const importBtn = screen.getByRole('button', { name: /Import variables/i })
+    await act(async () => { fireEvent.click(importBtn) })
+    await waitFor(() => expect(screen.getByTestId('import-dialog-backdrop')).toBeInTheDocument())
+    const backdrop = screen.getByTestId('import-dialog-backdrop')
+    const innerWrapper = backdrop.firstElementChild!
+    await act(async () => { fireEvent.click(innerWrapper) })
+    expect(screen.getByTestId('import-dialog-backdrop')).toBeInTheDocument()
+  })
+
+  // ── Export panel backdrop ─────────────────────────────────────────────────
+
+  it('clicking export-panel-backdrop closes the export panel', async () => {
+    setupProjects([projectWithVarsLocal])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const exportBtn = screen.getByRole('button', { name: /Export variables/i })
+    await act(async () => { fireEvent.click(exportBtn) })
+    await waitFor(() => expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument())
+    await act(async () => { fireEvent.click(screen.getByTestId('export-panel-backdrop')) })
+    await waitFor(() => expect(screen.queryByTestId('export-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  it('clicking inside export panel content does not close panel (stopPropagation)', async () => {
+    setupProjects([projectWithVarsLocal])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const exportBtn = screen.getByRole('button', { name: /Export variables/i })
+    await act(async () => { fireEvent.click(exportBtn) })
+    await waitFor(() => expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument())
+    const backdrop = screen.getByTestId('export-panel-backdrop')
+    const innerWrapper = backdrop.firstElementChild!
+    await act(async () => { fireEvent.click(innerWrapper) })
+    expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument()
+  })
+
+  // ── ImportDialog internal close button (line 1060 coverage) ──────────────
+
+  it('clicking Close button inside ImportDialog calls onClose and closes it', async () => {
+    setupProjects([projectWithVarsLocal])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const importBtn = screen.getByRole('button', { name: /Import variables/i })
+    await act(async () => { fireEvent.click(importBtn) })
+    await waitFor(() => expect(screen.getByTestId('import-dialog-backdrop')).toBeInTheDocument())
+    // The ImportDialog itself has a Close button (aria-label="Close")
+    const closeBtns = screen.getAllByRole('button', { name: /^Close$/i })
+    await act(async () => { fireEvent.click(closeBtns[closeBtns.length - 1]) })
+    await waitFor(() => expect(screen.queryByTestId('import-dialog-backdrop')).not.toBeInTheDocument())
+  })
+
+  // ── ExportPanel internal close button (line 1082 coverage) ───────────────
+
+  it('clicking Close button inside ExportPanel calls onClose and closes it', async () => {
+    setupProjects([projectWithVarsLocal])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const exportBtn = screen.getByRole('button', { name: /Export variables/i })
+    await act(async () => { fireEvent.click(exportBtn) })
+    await waitFor(() => expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument())
+    const closeBtn = screen.getByRole('button', { name: /^Close$/i })
+    await act(async () => { fireEvent.click(closeBtn) })
+    await waitFor(() => expect(screen.queryByTestId('export-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  // ── ExportPanel save complete (line 1083 coverage) ────────────────────────
+
+  it('saving a file from ExportPanel calls onSaveComplete and closes the panel', async () => {
+    setupProjects([projectWithVarsLocal])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      if (cmd === 'write_file') return Promise.resolve(undefined)
+      return Promise.resolve('')
+    })
+    mockSave.mockResolvedValue('/tmp/test.env')
+    render(<App />)
+    await waitFor(() => expect(screen.getByText('API_KEY')).toBeInTheDocument())
+    const exportBtn = screen.getByRole('button', { name: /Export variables/i })
+    await act(async () => { fireEvent.click(exportBtn) })
+    await waitFor(() => expect(screen.getByTestId('export-panel-backdrop')).toBeInTheDocument())
+    const saveFileBtn = screen.getByRole('button', { name: /Save File/i })
+    await act(async () => { fireEvent.click(saveFileBtn) })
+    await waitFor(() => expect(screen.queryByTestId('export-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  // ── DiffViewPanel internal close button (line 1038 coverage) ─────────────
+
+  it('clicking Close panel inside DiffViewPanel calls onClose and closes it', async () => {
+    setupProjects([projectWith2Envs])
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'load_project_env') return Promise.resolve('API_KEY=abc')
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+    const closeBtn = screen.getByRole('button', { name: /Close panel/i })
+    await act(async () => { fireEvent.click(closeBtn) })
+    await waitFor(() => expect(screen.queryByTestId('diff-panel-backdrop')).not.toBeInTheDocument())
+  })
+
+  // ── VarList "Import from .env.example" button (line 880 coverage) ─────────
+
+  it('clicking Import from .env.example in VarList triggers triggerExampleImport', async () => {
+    setupProjects([baseProject])
+    mockInvoke.mockImplementation((cmd: string) => {
+      if (cmd === 'check_env_example') return Promise.resolve({ rawContent: 'NEW_KEY=' })
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    const importExampleBtn = screen.getByRole('button', { name: /Import from \.env\.example/i })
+    await act(async () => { fireEvent.click(importExampleBtn) })
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('check_env_example', expect.anything())
+    })
+  })
+
+  // ── handleImportComplete via paste flow (lines 765-778 coverage) ──────────
+
+  it('completing an import via paste calls handleImportComplete and closes dialog', async () => {
+    setupProjects([baseProject])
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    // Open import dialog
+    const importBtn = screen.getByRole('button', { name: /Import variables/i })
+    await act(async () => { fireEvent.click(importBtn) })
+    await waitFor(() => expect(screen.getByRole('dialog', { name: /Import variables/i })).toBeInTheDocument())
+    // Switch to paste mode
+    const pasteTabBtn = screen.getByRole('button', { name: /Paste Text/i })
+    await act(async () => { fireEvent.click(pasteTabBtn) })
+    // Type env content
+    const textarea = screen.getByPlaceholderText(/Paste .env content here/i)
+    await act(async () => { fireEvent.change(textarea, { target: { value: 'IMPORTED_KEY=hello' } }) })
+    // Click "Preview Import"
+    const previewBtn = screen.getByRole('button', { name: /Preview Import/i })
+    await act(async () => { fireEvent.click(previewBtn) })
+    // Click "Import X variables"
+    await waitFor(() => expect(screen.getByRole('button', { name: /Import \d+ variables?/i })).toBeInTheDocument())
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Import \d+ variables?/i })) })
+    // Dialog should close (import-dialog-backdrop is removed)
+    await waitFor(() => expect(screen.queryByTestId('import-dialog-backdrop')).not.toBeInTheDocument())
+  })
+
+  // ── handleDiffPushComplete via diff push flow (lines 749-757 coverage) ────
+
+  it('completing a push inside DiffViewPanel calls handleDiffPushComplete', async () => {
+    // Use '' and 'local' as the two envs with vars — 'local' is ENV_SUFFIXES[1],
+    // so DiffViewPanel defaults rightSuffix to 'local' when leftSuffix is ''
+    const projectWith2EnvsVars = {
+      id: 'p1', name: 'MyProject', path: '/myproject', parentId: null,
+      vars: [{ id: 'v1', key: 'BASE_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+      environments: [
+        { suffix: '', vars: [{ id: 'v1', key: 'BASE_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'local', vars: [{ id: 'v2', key: 'LOCAL_KEY', val: '', revealed: false, sourceProjectId: 'p1' }] },
+        { suffix: 'development', vars: [] },
+        { suffix: 'production', vars: [] },
+        { suffix: 'testing', vars: [] },
+        { suffix: 'staging', vars: [] },
+      ],
+      activeEnv: '',
+      inheritanceMode: 'merge-child-wins',
+      sortOrder: 0,
+    }
+    setupProjects([projectWith2EnvsVars])
+    // Return empty string so loadAllVars preserves initial env.vars arrays
+    mockInvoke.mockImplementation((cmd) => {
+      if (cmd === 'push_vars_to_stage') return Promise.resolve({
+        updatedVars: [{ id: 'v1', key: 'BASE_KEY', val: '', revealed: false, sourceProjectId: 'p1' }],
+        snapshot: null,
+      })
+      return Promise.resolve('')
+    })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByText('MyProject').length).toBeGreaterThan(0))
+    // Ensure all load calls have completed (loadAllVars runs on mount)
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('load_project_env', expect.anything())
+    })
+    await act(async () => {}) // flush remaining state updates
+    // Open diff panel (project has 2 envs with vars from initial setup)
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', metaKey: true, bubbles: true }))
+    })
+    await waitFor(() => expect(screen.getByTestId('diff-panel-backdrop')).toBeInTheDocument())
+    // Wait for diff row with BASE_KEY (status='removed', canPush=true)
+    // BASE_KEY in '' but not 'local' → removed; LOCAL_KEY in 'local' but not '' → added
+    await waitFor(() => expect(screen.getByTestId('diff-row-BASE_KEY')).toBeInTheDocument())
+    const diffRow = screen.getByTestId('diff-row-BASE_KEY')
+    // Click the push button inside the row
+    const pushBtn = diffRow.querySelector('[aria-label="Push key to other env"]') as HTMLElement
+    expect(pushBtn).not.toBeNull()
+    await act(async () => { fireEvent.click(pushBtn) })
+    // Confirm push
+    await waitFor(() => expect(screen.getByRole('button', { name: /Confirm push/i })).toBeInTheDocument())
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Confirm push/i })) })
+    await waitFor(() => {
+      expect(mockInvoke).toHaveBeenCalledWith('push_vars_to_stage', expect.anything())
+    })
   })
 })
