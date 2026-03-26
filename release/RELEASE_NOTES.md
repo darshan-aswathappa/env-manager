@@ -1,30 +1,40 @@
-# .envVault v1.0.1 — Multi-Environment Support
+# .envVault v1.2.0 — Diff Viewer, Import/Export & Project Context Menu
 
-**March 24, 2026**
+**March 25, 2026**
 
-This patch release adds support for managing multiple environment files per project — `.env`, `.env.local`, `.env.production`, and any other `.env.*` variant.
+This release adds an environment diff viewer, multi-format import/export, variable duplication, rename propagation across environments, and a right-click project context menu.
 
 ---
 
 ## What's new
 
-### Multi-Environment Support
+### Environment Diff Viewer
 
-- Each project now detects and manages all `.env.*` files (`.env`, `.env.local`, `.env.production`, `.env.staging`, etc.).
-- New environment toggle dropdown in the variable detail view lets you switch between environments without leaving the project.
-- Variable counts are displayed per environment in the dropdown for quick orientation.
-- The Rust backend now reads and writes to the correct `.env.*` file based on the active environment selection.
+- Compare any two environments side-by-side in a unified diff view.
+- Push individual variables from one environment to another directly from the diff panel.
 
-### UI Improvements
+### Import & Export
 
-- Sidebar and variable list layout refinements.
-- Variable detail view updated to scope variables to the selected environment.
+- Export variables from any environment in 5 formats: ENV, JSON, YAML, CSV, and Shell.
+- Import with conflict resolution — choose to overwrite, skip, or merge on a per-key basis.
+
+### Variable Duplication
+
+- Clone any variable with a single click — key, value, and metadata are copied instantly.
+
+### Rename Propagation
+
+- Renaming a variable key now propagates the change across all environments in the project automatically.
+
+### Project Context Menu
+
+- Right-click any project in the sidebar for quick actions: rename, delete, and create a sub-project.
 
 ---
 
-## Upgrading from v1.0.0
+## Upgrading from v1.0.1
 
-No data migration required. Existing projects will automatically detect additional `.env.*` files on next load. Your existing `.env` data is untouched.
+No data migration required. All existing projects and environments load without changes.
 
 ---
 

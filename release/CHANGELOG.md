@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-25
+
+### Added
+
+- Environment diff viewer — compare any two envs side-by-side and push individual vars across.
+- Import & export — 5 formats supported (ENV, JSON, YAML, CSV, Shell) with conflict resolution.
+- Variable duplication — clone any variable with one click.
+- Rename propagation — renaming a key updates it across all environments automatically.
+- Project context menu — right-click actions for rename, delete, and sub-project creation.
+
 ## [1.0.1] - 2026-03-24
 
 ### Added
