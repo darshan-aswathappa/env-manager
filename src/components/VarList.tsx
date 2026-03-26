@@ -67,7 +67,8 @@ export default function VarList({
             title="Import variables (⌘I)"
             disabled={!onOpenImport}
           >
-            <Upload size={13} />
+            <Upload size={12} />
+            <span className="varlist-toolbar__btn-label">Import</span>
           </button>
           <button
             className="varlist-toolbar__btn"
@@ -76,7 +77,8 @@ export default function VarList({
             title="Export variables (⌘E)"
             disabled={!onOpenExport}
           >
-            <Download size={13} />
+            <Download size={12} />
+            <span className="varlist-toolbar__btn-label">Export</span>
           </button>
         </div>
       </div>

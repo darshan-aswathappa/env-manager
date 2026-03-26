@@ -179,6 +179,116 @@ describe('VarList', () => {
   })
 })
 
+describe('VarList toolbar import/export labels', () => {
+  it('shows visible "Import" text label on the import button', () => {
+    const project = makeProject([makeVar('KEY', 'val')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+        onOpenImport={vi.fn()}
+        onOpenExport={vi.fn()}
+      />
+    )
+    expect(screen.getByRole('button', { name: /Import variables/i })).toHaveTextContent('Import')
+  })
+
+  it('shows visible "Export" text label on the export button', () => {
+    const project = makeProject([makeVar('KEY', 'val')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+        onOpenImport={vi.fn()}
+        onOpenExport={vi.fn()}
+      />
+    )
+    expect(screen.getByRole('button', { name: /Export variables/i })).toHaveTextContent('Export')
+  })
+
+  it('calls onOpenImport when Import button is clicked', () => {
+    const onOpenImport = vi.fn()
+    const project = makeProject([makeVar('KEY', 'val')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+        onOpenImport={onOpenImport}
+        onOpenExport={vi.fn()}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Import variables/i }))
+    expect(onOpenImport).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls onOpenExport when Export button is clicked', () => {
+    const onOpenExport = vi.fn()
+    const project = makeProject([makeVar('KEY', 'val')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+        onOpenImport={vi.fn()}
+        onOpenExport={onOpenExport}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Export variables/i }))
+    expect(onOpenExport).toHaveBeenCalledTimes(1)
+  })
+
+  it('disables Import button when onOpenImport is not provided', () => {
+    const project = makeProject([makeVar('KEY', 'val')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+      />
+    )
+    expect(screen.getByRole('button', { name: /Import variables/i })).toBeDisabled()
+  })
+
+  it('disables Export button when onOpenExport is not provided', () => {
+    const project = makeProject([makeVar('KEY', 'val')])
+    render(
+      <VarList
+        project={project}
+        selectedVarId={null}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onSelectVar={vi.fn()}
+        onAddVar={vi.fn()}
+        onDeleteVar={vi.fn()}
+      />
+    )
+    expect(screen.getByRole('button', { name: /Export variables/i })).toBeDisabled()
+  })
+})
+
 describe('VarList search toolbar', () => {
   it('does not render a push-to-stage button (moved to VarDetail header)', () => {
     const project = makeProject([makeVar('API_KEY', 'secret')])
