@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.18% </span>
+                <span class="strong">91.52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>54/55</span>
+                <span class='fraction'>54/59</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.71% </span>
+                <span class="strong">81.53% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>50/57</span>
+                <span class='fraction'>53/65</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.44% </span>
+                <span class="strong">85% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>17/18</span>
+                <span class='fraction'>17/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">96.15% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>50/50</span>
+                <span class='fraction'>50/52</span>
             </div>
         
             
@@ -620,7 +620,13 @@
 <a name='L555'></a><a href='#L555'>555</a>
 <a name='L556'></a><a href='#L556'>556</a>
 <a name='L557'></a><a href='#L557'>557</a>
-<a name='L558'></a><a href='#L558'>558</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L558'></a><a href='#L558'>558</a>
+<a name='L559'></a><a href='#L559'>559</a>
+<a name='L560'></a><a href='#L560'>560</a>
+<a name='L561'></a><a href='#L561'>561</a>
+<a name='L562'></a><a href='#L562'>562</a>
+<a name='L563'></a><a href='#L563'>563</a>
+<a name='L564'></a><a href='#L564'>564</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -700,6 +706,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">58x</span>
 <span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -713,6 +720,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -855,6 +863,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -883,6 +892,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1145,6 +1155,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1177,8 +1188,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useState, useEffect, useMemo } from 'react'
-import { X } from 'lucide-react'
+import { X, CheckCircle2 } from 'lucide-react'
 import type { Project, EnvVar, EnvExampleFile, ExampleImportStep } from '../../types'
 import { ENV_SUFFIXES, envDisplayName } from '../../types'
 import { buildExampleImportPlan, applyExampleImport } from '../../lib/envFormats'
@@ -1246,6 +1258,7 @@ export default function EnvExamplePromptDialog({
 &nbsp;
   const dialogStyle: React.CSSProperties = {
     width: 560,
+    maxWidth: 'calc(100vw - 32px)',
     maxHeight: 520,
     background: 'var(--bg-sidebar)',
     border: '1px solid var(--border-subtle)',
@@ -1270,6 +1283,7 @@ export default function EnvExamplePromptDialog({
           aria-modal="true"
           aria-label=".env.example detected"
           onClick={e =&gt; e.stopPropagation()}
+<span class="fstat-no" title="function not covered" >          onKeyDown={e</span> =&gt; { <span class="cstat-no" title="statement not covered" >if (e.key === 'Escape') <span class="cstat-no" title="statement not covered" >onClose(); }}</span></span>
           data-testid="example-prompt-dialog"
         &gt;
           {/* Header */}
@@ -1314,13 +1328,13 @@ export default function EnvExamplePromptDialog({
             }}&gt;
               This project includes a .env.example file with{' '}
               &lt;strong style={{ color: 'var(--text-primary)' }}&gt;
-                {exampleFile.totalKeyCount} keys
+                {exampleFile.totalKeyCount} variables
               &lt;/strong&gt;.
             &lt;/p&gt;
             &lt;p style={{
               margin: '0 0 8px',
               fontSize: '0.75rem',
-              fontFamily: 'monospace',
+              fontFamily: 'var(--font-mono)',
               color: 'var(--text-tertiary)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -1336,7 +1350,7 @@ export default function EnvExamplePromptDialog({
                 fontSize: '0.75rem',
                 color: 'var(--text-tertiary)',
               }}&gt;
-                {plan.newCount} of {exampleFile.totalKeyCount} keys are new
+                {plan.newCount} of {exampleFile.totalKeyCount} variables are new
               &lt;/p&gt;
             )}
           &lt;/div&gt;
@@ -1381,7 +1395,7 @@ export default function EnvExamplePromptDialog({
                 background: 'none',
                 border: '1px solid var(--border-subtle)',
                 color: 'var(--text-secondary)',
-                borderRadius: 6,
+                borderRadius: 'var(--radius-xl)',
                 padding: '6px 14px',
                 fontSize: '0.8125rem',
                 cursor: 'pointer',
@@ -1392,18 +1406,19 @@ export default function EnvExamplePromptDialog({
             &lt;button
               onClick={() =&gt; setStep('preview')}
               disabled={plan.newCount === 0}
-              aria-label="Use as Template"
+              aria-disabled={plan.newCount === 0 ? 'true' : undefined}
+              aria-label="Preview &amp; import"
               style={{
-                background: plan.newCount === 0 ? 'var(--bg-hover)' : 'var(--color-accent)',
+                background: plan.newCount === 0 ? 'var(--bg-row-hover)' : 'var(--accent)',
                 border: 'none',
                 color: plan.newCount === 0 ? 'var(--text-tertiary)' : '#fff',
-                borderRadius: 6,
+                borderRadius: 'var(--radius-xl)',
                 padding: '6px 14px',
                 fontSize: '0.8125rem',
                 cursor: plan.newCount === 0 ? 'not-allowed' : 'pointer',
               }}
             &gt;
-              Use as Template
+              Preview &amp; import
             &lt;/button&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -1438,8 +1453,9 @@ export default function EnvExamplePromptDialog({
           style={dialogStyle}
           role="dialog"
           aria-modal="true"
-          aria-label="Import as template"
+          aria-label="Import from .env.example"
           onClick={e =&gt; e.stopPropagation()}
+<span class="fstat-no" title="function not covered" >          onKeyDown={e</span> =&gt; { <span class="cstat-no" title="statement not covered" >if (e.key === 'Escape') <span class="cstat-no" title="statement not covered" >onClose(); }}</span></span>
           data-testid="example-preview-dialog"
         &gt;
           {/* Header */}
@@ -1455,7 +1471,7 @@ export default function EnvExamplePromptDialog({
               fontWeight: 600,
               color: 'var(--text-primary)',
             }}&gt;
-              Import as template
+              Import from .env.example
             &lt;/h2&gt;
             &lt;button
               onClick={onClose}
@@ -1529,7 +1545,7 @@ export default function EnvExamplePromptDialog({
               fontSize: '0.75rem',
               color: 'var(--text-tertiary)',
             }}&gt;
-              {plan.existsCount} keys already set — shown but not imported
+              {plan.existsCount} variables already set — shown but not imported
             &lt;/p&gt;
           )}
 &nbsp;
@@ -1597,7 +1613,7 @@ export default function EnvExamplePromptDialog({
                 &gt;
                   &lt;div style={{ flex: 1, minWidth: 0 }}&gt;
                     &lt;div style={{
-                      fontFamily: 'monospace',
+                      fontFamily: 'var(--font-mono)',
                       fontSize: '0.8125rem',
                       color: 'var(--text-primary)',
                       overflow: 'hidden',
@@ -1617,7 +1633,7 @@ export default function EnvExamplePromptDialog({
                     )}
                   &lt;/div&gt;
                   &lt;span style={{
-                    fontFamily: 'monospace',
+                    fontFamily: 'var(--font-mono)',
                     fontSize: '0.75rem',
                     color: 'var(--text-tertiary)',
                     flexShrink: 0,
@@ -1660,7 +1676,7 @@ export default function EnvExamplePromptDialog({
             borderTop: '1px solid var(--border-subtle)',
           }}&gt;
             &lt;span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}&gt;
-              {plan.newCount} key{plan.newCount !== 1 ? 's' : ''} to import
+              {plan.newCount} variable{plan.newCount !== 1 ? 's' : ''} to import
             &lt;/span&gt;
             &lt;div style={{ display: 'flex', gap: 8 }}&gt;
               &lt;button
@@ -1670,7 +1686,7 @@ export default function EnvExamplePromptDialog({
                   background: 'none',
                   border: '1px solid var(--border-subtle)',
                   color: 'var(--text-secondary)',
-                  borderRadius: 6,
+                  borderRadius: 'var(--radius-xl)',
                   padding: '6px 14px',
                   fontSize: '0.8125rem',
                   cursor: 'pointer',
@@ -1681,18 +1697,19 @@ export default function EnvExamplePromptDialog({
               &lt;button
                 onClick={handleImport}
                 disabled={plan.newCount === 0}
-                aria-label={`Import ${plan.newCount} key${plan.newCount !== 1 ? 's' : ''}`}
+                aria-disabled={plan.newCount === 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >'true' : u</span>ndefined}
+                aria-label={`Import ${plan.newCount} variable${plan.newCount !== 1 ? 's' : ''}`}
                 style={{
-                  background: plan.newCount === 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >'var(--bg-hover)' : '</span>var(--color-accent)',
+                  background: plan.newCount === 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >'var(--bg-row-hover)' : '</span>var(--accent)',
                   border: 'none',
                   color: plan.newCount === 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >'var(--text-tertiary)' : '</span>#fff',
-                  borderRadius: 6,
+                  borderRadius: 'var(--radius-xl)',
                   padding: '6px 14px',
                   fontSize: '0.8125rem',
                   cursor: plan.newCount === 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >'not-allowed' : '</span>pointer',
                 }}
               &gt;
-                Import {plan.newCount} key{plan.newCount !== 1 ? 's' : ''}
+                Import {plan.newCount} variable{plan.newCount !== 1 ? 's' : ''}
               &lt;/button&gt;
             &lt;/div&gt;
           &lt;/div&gt;
@@ -1717,11 +1734,12 @@ export default function EnvExamplePromptDialog({
         data-testid="example-done-dialog"
       &gt;
         &lt;div style={{
-          fontSize: 32,
           marginBottom: 12,
           color: 'var(--color-success)',
+          display: 'flex',
+          alignItems: 'center',
         }}&gt;
-          ✓
+          &lt;CheckCircle2 size={32} aria-hidden="true" /&gt;
         &lt;/div&gt;
         &lt;div style={{
           fontSize: '0.9375rem',
@@ -1741,7 +1759,7 @@ export default function EnvExamplePromptDialog({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-03-25T23:12:24.323Z
+                at 2026-03-26T01:58:29.589Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
