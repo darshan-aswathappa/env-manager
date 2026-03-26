@@ -104,7 +104,7 @@ function WindowsInstructions({ rcFile }: { rcFile: string }) {
       <div className="si-step">
         <div className="si-step-num">3</div>
         <div className="si-step-content">
-          Copy the snippet above, paste it at the bottom.
+          Copy the snippet from step 1, paste it at the bottom.
           <br />
           <span className="si-secondary">
             In Git Bash / WSL terminal: right-click → Paste, or{" "}
@@ -202,7 +202,7 @@ export default function ShellIntegration() {
   const rcFile = shell === "zsh" ? "~/.zshrc" : "~/.bashrc";
 
   if (loading) {
-    return <div className="si-state">Loading shell hook...</div>;
+    return <div className="si-state">Loading shell hook…</div>;
   }
 
   if (error) {
@@ -299,7 +299,20 @@ export default function ShellIntegration() {
       {/* App data dir */}
       {appDataDir && (
         <div className="si-storage">
-          Variables stored at: <code>{appDataDir}</code>
+          Variables stored at:{' '}
+          <code
+            title={appDataDir}
+            style={{
+              display: 'inline-block',
+              maxWidth: '100%',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              verticalAlign: 'bottom',
+            }}
+          >
+            {appDataDir}
+          </code>
         </div>
       )}
 

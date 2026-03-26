@@ -191,6 +191,7 @@ export default function PushToStagePanel({
   const [conflictDecisions, setConflictDecisions] = useState<Map<string, ConflictStrategy>>(new Map())
   const [pushStatus, setPushStatus] = useState<PushStatus>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [previewWarning, setPreviewWarning] = useState<string | null>(null)
 
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -296,6 +297,7 @@ export default function PushToStagePanel({
       setConflictReport(null)
       setConflictDecisions(new Map())
       setErrorMsg(null)
+      setPreviewWarning(null)
 
       if (!newSuffix) return
 
@@ -306,6 +308,7 @@ export default function PushToStagePanel({
       } catch {
         // Non-fatal: preview failed, continue without conflict info
         setConflictReport({ newKeys: [], conflictSame: [], conflictDifferent: [] })
+        setPreviewWarning('Could not load conflict preview — conflicts will be overwritten by default.')
       }
     },
     [project.id, project.vars]
@@ -640,6 +643,23 @@ export default function PushToStagePanel({
         </div>
       )}
 
+      {/* Preview warning (non-fatal) */}
+      {previewWarning && (
+        <div
+          style={{
+            padding: '6px 16px',
+            fontSize: '0.75rem',
+            color: 'var(--color-warning)',
+            background: 'var(--color-warning-bg)',
+            borderTop: '1px solid rgba(245,165,36,0.15)',
+            flexShrink: 0,
+            wordBreak: 'break-word',
+          }}
+        >
+          {previewWarning}
+        </div>
+      )}
+
       {/* Error message */}
       {errorMsg && (
         <div
@@ -750,7 +770,7 @@ export default function PushToStagePanel({
                     fontWeight: summary.overwriteCount > 0 ? 500 : 400,
                   }}
                 >
-                  {summary.overwriteCount} overwrite
+                  {summary.overwriteCount} overwrite{summary.overwriteCount !== 1 ? 's' : ''}
                 </span>
               </span>
               <span style={{ color: 'var(--text-tertiary)' }}>·</span>

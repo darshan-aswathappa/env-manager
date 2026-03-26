@@ -36,6 +36,7 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
   const [scope, setScope] = useState<ExportScope>('active')
   const [revealValues, setRevealValues] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -62,6 +63,7 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
 
   const handleSaveFile = useCallback(async () => {
     setIsSaving(true)
+    setSaveError(null)
     try {
       const ext = FORMAT_EXTENSIONS[format]
       const defaultName = `.env${ext === 'env' ? '' : `.${ext}`}`
@@ -77,8 +79,8 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
       const { content } = serializeByFormat(project.vars, format)
       await invoke('write_file', { path, content })
       onSaveComplete()
-    } catch {
-      // Silent — isSaving will be reset
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save file. Check write permissions.')
     } finally {
       setIsSaving(false)
     }
@@ -86,6 +88,7 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
 
   const handleSaveZip = useCallback(async () => {
     setIsSaving(true)
+    setSaveError(null)
     try {
       // Build file entries from all environments
       const files = project.environments
@@ -101,8 +104,9 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
 
       const bytes = await invoke<Uint8Array>('export_envs_to_zip', { files })
 
+      const safeName = (project.name || 'envs').replace(/[/\\:*?"<>|]/g, '_')
       const path = await save({
-        defaultPath: `${project.name || 'envs'}.zip`,
+        defaultPath: `${safeName}.zip`,
         filters: [{ name: 'ZIP archive', extensions: ['zip'] }],
       })
       if (!path) {
@@ -112,8 +116,8 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
 
       await invoke('write_bytes_to_path', { path, data: Array.from(bytes) })
       onSaveComplete()
-    } catch {
-      // Silent
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save ZIP. Check write permissions.')
     } finally {
       setIsSaving(false)
     }
@@ -277,7 +281,7 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
             minHeight: 80,
           }}
         >
-          {previewContent || '(no variables to export)'}
+          {previewContent || 'No variables to export'}
         </pre>
       </div>
 
@@ -290,6 +294,23 @@ export default function ExportPanel({ project, onClose, onSaveComplete }: Export
         flexDirection: 'column',
         gap: 8,
       }}>
+        {saveError && (
+          <p
+            role="alert"
+            style={{
+              fontSize: '0.75rem',
+              color: 'var(--color-danger)',
+              background: 'var(--color-danger-bg)',
+              border: '1px solid rgba(229,72,77,0.2)',
+              borderRadius: 'var(--radius-md)',
+              padding: '6px 10px',
+              margin: 0,
+              wordBreak: 'break-word',
+            }}
+          >
+            {saveError}
+          </p>
+        )}
         <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: 0 }}>
           Saved files contain real values regardless of preview masking.
         </p>

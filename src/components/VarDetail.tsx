@@ -44,11 +44,13 @@ interface VarDetailProps {
 
 function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: string; clearAfterSecs?: number }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      setFailed(false);
       setTimeout(() => setCopied(false), 1800);
       if (clearAfterSecs > 0) {
         setTimeout(() => {
@@ -56,7 +58,8 @@ function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: 
         }, clearAfterSecs * 1000);
       }
     } catch {
-      /* clipboard unavailable */
+      setFailed(true);
+      setTimeout(() => setFailed(false), 2500);
     }
   };
 
@@ -65,7 +68,8 @@ function CopyButton({ text, label, clearAfterSecs = 0 }: { text: string; label: 
       className={`icon-btn${copied ? " icon-btn--copied" : ""}`}
       onClick={handleCopy}
       aria-label={label}
-      title={copied ? "Copied!" : "Copy"}
+      title={failed ? "Copy failed — try selecting manually" : copied ? "Copied!" : "Copy"}
+      style={failed ? { color: 'var(--color-danger)' } : undefined}
     >
       {copied ? <Check size={13} /> : <Copy size={13} />}
     </button>
@@ -390,7 +394,7 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
         </div>
         {!v.key.trim() && (
           <span className="detail-warn" role="alert">
-            Add a key name — this variable won't be saved without one
+            Enter a key name to save this variable
           </span>
         )}
         {v.key.trim() && duplicateReport.affectedIds.has(v.id) && (
@@ -426,6 +430,7 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             autoComplete="off"
             data-revealed={v.revealed}
             aria-label={`Value for ${v.key || "variable"}`}
+            maxLength={65536}
           />
           <div className="detail-actions">
             <button
@@ -458,11 +463,18 @@ function SelectedVarFields({ v, clipboardClearSeconds = 0, onUpdate, onDelete, o
             className="detail-input detail-input--note"
             value={v.comment ?? ''}
             placeholder="Add a note — purpose, expiry, rotation link…"
-            onChange={(e) => onUpdate(v.id, 'comment', e.target.value)}
-            rows={1}
+            onChange={(e) => {
+              onUpdate(v.id, 'comment', e.target.value);
+              // Auto-grow
+              const el = e.target;
+              el.style.height = 'auto';
+              el.style.height = `${el.scrollHeight}px`;
+            }}
+            rows={2}
             spellCheck={false}
             aria-label="Note"
-            maxLength={500}
+            maxLength={1000}
+            style={{ resize: 'vertical', minHeight: '2.5rem', overflow: 'hidden' }}
           />
         </div>
       </div>

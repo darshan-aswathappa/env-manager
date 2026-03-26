@@ -11,6 +11,10 @@ import {
   FormatParseError,
 } from '../../lib/envFormats'
 
+// ── Constants ─────────────────────────────────────────────────────────────
+
+const MAX_IMPORT_BYTES = 1 * 1024 * 1024 // 1 MB
+
 // ── Props ─────────────────────────────────────────────────────────────────
 
 export interface ImportDialogProps {
@@ -83,16 +87,38 @@ export default function ImportDialog({ project, onImportComplete, onClose }: Imp
 
   // ── File selection handler ───────────────────────────────────────────────
   const handleChooseFile = useCallback(async () => {
-    const path = await open({
-      multiple: false,
-      filters: [
-        { name: 'Env files', extensions: ['env', 'json', 'yaml', 'yml', 'csv', 'sh'] },
-      ],
-    })
-    if (!path || Array.isArray(path)) return
+    let path: string | null = null
+    try {
+      const result = await open({
+        multiple: false,
+        filters: [
+          { name: 'Env files', extensions: ['env', 'json', 'yaml', 'yml', 'csv', 'sh'] },
+        ],
+      })
+      if (!result || Array.isArray(result)) return
+      path = result as string
+    } catch {
+      return // user cancelled or dialog error
+    }
 
-    const fname = (path as string).split('/').pop() ?? ''
-    const content = await readFileContent(path as string)
+    let content: string
+    try {
+      content = await readFileContent(path)
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : 'Could not read file. Check that it exists and is readable.')
+      setParseResult(null)
+      setStep('preview')
+      return
+    }
+
+    if (content.length > MAX_IMPORT_BYTES) {
+      setParseError(`File is too large to import (${(content.length / 1024).toFixed(0)} KB). Maximum is 1 MB.`)
+      setParseResult(null)
+      setStep('preview')
+      return
+    }
+
+    const fname = path.split('/').pop() ?? ''
     const fmt = detectFormat(fname, content)
 
     setFilename(fname)
@@ -117,6 +143,12 @@ export default function ImportDialog({ project, onImportComplete, onClose }: Imp
 
   // ── Paste handler ────────────────────────────────────────────────────────
   const handlePreviewPaste = useCallback(() => {
+    if (pasteText.length > MAX_IMPORT_BYTES) {
+      setParseError(`Pasted content is too large (${(pasteText.length / 1024).toFixed(0)} KB). Maximum is 1 MB.`)
+      setParseResult(null)
+      setStep('preview')
+      return
+    }
     const fmt = detectFormat('', pasteText)
     setRawContent(pasteText)
     setDetectedFormat(fmt)
