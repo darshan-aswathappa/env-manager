@@ -8,6 +8,9 @@ import {
   FolderTree,
   Terminal as TerminalIcon,
   ShieldCheck,
+  ArrowLeftRight,
+  FileDown,
+  Copy,
 } from "lucide-react";
 import ShellIntegration from "./ShellIntegration";
 import { checkShellIntegration } from "../lib/envFile";
@@ -46,6 +49,18 @@ const FEATURES = [
   {
     icon: ShieldCheck,
     text: "Values stay local — nothing leaves your machine",
+  },
+  {
+    icon: ArrowLeftRight,
+    text: "Compare environments side-by-side and push individual vars between them",
+  },
+  {
+    icon: FileDown,
+    text: "Export secrets as ENV, JSON, YAML, CSV, or Shell — import from any file with conflict resolution",
+  },
+  {
+    icon: Copy,
+    text: "Duplicate variables instantly and rename keys with automatic propagation across environments",
   },
 ] as const;
 

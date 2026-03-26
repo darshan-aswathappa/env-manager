@@ -1,1585 +1,2788 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>.envVault — Environment Variable Manager for macOS</title>
-  <meta name="description" content="A local-first tool for managing .env files across projects. Secrets live outside your project tree — invisible to git and AI agents." />
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content=".envVault — Environment Variable Manager for macOS" />
-  <meta property="og:description" content="Secrets stored outside your project tree — safe from git, safe from AI, always available in your shell." />
-  <meta property="og:image" content="og-image.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content=".envVault — Environment Variable Manager for macOS" />
-  <meta name="twitter:description" content="Secrets stored outside your project tree — safe from git, safe from AI, always available in your shell." />
-  <meta name="twitter:image" content="og-image.png" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --bg-base: #161618;
-      --bg-sidebar: #1e1e20;
-      --bg-row-rest: #1e1e20;
-      --bg-row-hover: rgba(255,255,255,0.04);
-      --border-subtle: rgba(255,255,255,0.08);
-      --border-moderate: rgba(255,255,255,0.10);
-      --border-active: rgba(255,255,255,0.18);
-      --accent: #3063b8;
-      --accent-hover: #3a72cc;
-      --accent-press: #254e96;
-      --accent-dim: rgba(48,99,184,0.10);
-      --accent-text: #7aa3d4;
-      --text-primary: #f0f0f0;
-      --text-secondary: #8e8e93;
-      --text-tertiary: #48484a;
-      --color-success: #30d158;
-      --color-warning: #f5a524;
-      --color-danger: #e5484d;
-      --font-ui: "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-      --radius-sm: 2px;
-      --radius-md: 3px;
-      --radius-lg: 4px;
-      --t-normal: 200ms cubic-bezier(0.16, 1, 0.3, 1);
-      --t-entrance: 260ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg-base);
-      color: var(--text-primary);
-      font-family: var(--font-ui);
-      font-size: 15px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* ── Navbar ── */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--bg-base);
-      border-bottom: 1px solid var(--border-subtle);
-      height: 52px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .navbar.is-scrolled { border-bottom-color: rgba(255,255,255,0.13); }
-
-    .navbar-inner {
-      width: 100%;
-      max-width: 1080px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .navbar-brand { display: flex; align-items: center; gap: 10px; }
-
-    .wordmark {
-      font-family: var(--font-ui);
-      font-weight: 500;
-      font-size: 0.9375rem;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
-      text-decoration: none;
-    }
-
-    .version-badge {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      background: var(--bg-row-rest);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 1px 6px;
-      letter-spacing: 0.02em;
-    }
-
-    .navbar-actions { display: flex; align-items: center; gap: 10px; }
-
-    /* ── Buttons ── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-ui);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      line-height: 1;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      border-radius: var(--radius-md);
-      transition: background var(--t-normal), color var(--t-normal), border-color var(--t-normal), transform 130ms cubic-bezier(0.16, 1, 0.3, 1);
-      white-space: nowrap;
-    }
-
-    .btn:hover { transform: translateY(-1px); }
-    .btn:active { transform: scale(0.97) translateY(0); transition-duration: 80ms; }
-
-    .btn-primary { background: var(--accent); color: #fff; padding: 7px 14px; height: 32px; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-primary:active { background: var(--accent-press); }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-secondary);
-      padding: 7px 12px;
-      height: 32px;
-      border: 1px solid var(--border-subtle);
-    }
-    .btn-ghost:hover { color: var(--text-primary); border-color: var(--border-moderate); background: var(--bg-row-hover); }
-
-    .btn-large { font-size: 0.875rem; padding: 10px 20px; height: 40px; }
-
-    /* ── Hero ── */
-    .hero {
-      padding: 96px 24px 80px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      background-image: radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 24px 24px;
-    }
-
-    .hero-inner { max-width: 680px; margin: 0 auto; position: relative; }
-
-    .hero-label {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-
-    .hero-title {
-      font-size: 3.5rem;
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      color: var(--text-primary);
-      line-height: 1.1;
-      margin-bottom: 20px;
-    }
-
-    .hero-sub {
-      font-size: 1.1rem;
-      color: var(--text-secondary);
-      line-height: 1.65;
-      max-width: 560px;
-      margin: 0 auto 32px;
-    }
-
-    .hero-sub strong {
-      color: var(--text-primary);
-      font-weight: 500;
-    }
-
-    .hero-ctas {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-    }
-
-    .hero-pills {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      flex-wrap: wrap;
-      margin-bottom: 56px;
-    }
-
-    .hero-pill { font-size: 0.75rem; color: var(--text-tertiary); padding: 0 10px; position: relative; }
-    .hero-pill + .hero-pill::before { content: "·"; position: absolute; left: 0; transform: translateX(-50%); }
-
-    /* ── Interactive App Demo ── */
-    .app-mockup {
-      width: 100%;
-      max-width: 780px;
-      margin: 0 auto;
-      background: #1e1e20;
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      overflow: hidden;
-      user-select: none;
-    }
-
-    .mockup-titlebar {
-      height: 36px;
-      background: #191919;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      padding: 0 14px;
-      gap: 7px;
-    }
-
-    .titlebar-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red   { background: #e5484d; }
-    .dot-yellow { background: #f5a524; }
-    .dot-green  { background: #30d158; }
-
-    .titlebar-label {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      margin-left: 10px;
-    }
-
-    .mockup-body {
-      display: grid;
-      grid-template-columns: 160px 1fr 220px;
-      min-height: 280px;
-    }
-
-    .mock-sidebar { border-right: 1px solid var(--border-subtle); padding: 10px 0; display: flex; flex-direction: column; }
-    .mock-sidebar-label { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px 8px; }
-
-    .mock-project {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: background var(--t-normal), color var(--t-normal);
-    }
-    .mock-project:hover { background: var(--bg-row-hover); }
-    .mock-project.active { background: var(--accent-dim); color: var(--accent-text); }
-
-    .mock-project-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: var(--text-tertiary);
-      flex-shrink: 0;
-      transition: background var(--t-normal);
-    }
-    .mock-project.active .mock-project-dot { background: var(--accent-text); }
-    .mock-project-indent { padding-left: 28px; }
-
-    .mock-vars { padding: 10px 0; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; min-width: 0; }
-    .mock-vars-header { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 14px 8px; display: flex; align-items: center; justify-content: space-between; }
-
-    .mock-var-row { display: flex; align-items: center; padding: 6px 14px; gap: 8px; cursor: pointer; transition: background var(--t-normal); }
-    .mock-var-row:hover { background: var(--bg-row-hover); }
-    .mock-var-row.active { background: var(--bg-row-hover); }
-
-    .mock-var-key { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--accent-text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mock-var-preview { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mock-var-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-tertiary); flex-shrink: 0; transition: background var(--t-normal); }
-    .mock-var-row.active .mock-var-dot { background: var(--color-success); }
-
-    .mock-detail { padding: 12px; display: flex; flex-direction: column; gap: 0; }
-    .mock-detail-label { font-family: var(--font-mono); font-size: 0.625rem; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
-    .mock-detail-key { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-text); margin-bottom: 10px; }
-    .mock-detail-value { background: #161618; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 6px 10px; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-tertiary); letter-spacing: 0.08em; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .mock-detail-value-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .mock-reveal-btn { background: none; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-tertiary); font-family: var(--font-mono); font-size: 0.5625rem; padding: 2px 6px; cursor: pointer; transition: color var(--t-normal), border-color var(--t-normal); white-space: nowrap; flex-shrink: 0; }
-    .mock-reveal-btn:hover { color: var(--text-secondary); border-color: var(--border-moderate); }
-
-    .mock-detail-badge { display: inline-block; font-family: var(--font-mono); font-size: 0.5625rem; color: var(--color-success); background: rgba(48,209,88,0.08); border: 1px solid rgba(48,209,88,0.15); border-radius: var(--radius-sm); padding: 2px 6px; }
-    .mock-detail-badge.revealed { color: var(--color-warning); background: rgba(245,165,36,0.08); border-color: rgba(245,165,36,0.15); }
-
-    .mock-detail-empty { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.6875rem; color: var(--text-tertiary); text-align: center; padding: 20px 12px; line-height: 1.5; }
-
-    .mock-env-select { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--text-tertiary); background: #161618; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 2px 4px; cursor: pointer; outline: none; transition: border-color var(--t-normal); -webkit-appearance: none; appearance: none; }
-    .mock-env-select:hover, .mock-env-select:focus { border-color: var(--border-moderate); }
-    .mock-env-select option { background: #1e1e20; color: var(--text-secondary); }
-
-    .mock-detail-divider { height: 1px; background: var(--border-subtle); margin: 8px 0; }
-    .mock-detail-field-label { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
-    .mock-hint { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--text-tertiary); text-align: center; padding: 8px 14px 4px; margin-top: auto; opacity: 0.6; }
-
-    /* ── Section wrapper ── */
-    .section { padding: 80px 24px; }
-    .section-inner { max-width: 1080px; margin: 0 auto; }
-    .section-header { margin-bottom: 40px; }
-    .section-title { font-size: 1.5rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 6px; }
-    .section-sub { font-size: 0.9375rem; color: var(--text-secondary); }
-
-    /* ── Metrics Bar ── */
-    .metrics-section {
-      padding: 0 24px;
-      border-top: 1px solid var(--border-subtle);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .metrics-inner {
-      max-width: 1080px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-    }
-
-    .metric-cell {
-      padding: 32px 24px;
-      text-align: center;
-      position: relative;
-    }
-
-    .metric-cell + .metric-cell::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 20%;
-      height: 60%;
-      width: 1px;
-      background: var(--border-subtle);
-    }
-
-    .metric-value {
-      font-family: var(--font-mono);
-      font-size: 2.25rem;
-      font-weight: 500;
-      color: var(--accent-text);
-      letter-spacing: -0.02em;
-      line-height: 1;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .metric-label {
-      font-size: 0.75rem;
-      color: var(--text-tertiary);
-      line-height: 1.4;
-    }
-
-    /* ── Features Grid ── */
-    .features-section {
-      padding: 80px 24px;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border-subtle);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .feature-card {
-      background: var(--bg-row-rest);
-      padding: 24px 22px;
-      position: relative;
-      transition: background var(--t-normal);
-    }
-
-    .feature-card:hover { background: rgba(255,255,255,0.02); }
-
-    .feature-icon {
-      display: block;
-      margin-bottom: 14px;
-      color: var(--text-tertiary);
-      transition: color var(--t-normal);
-    }
-
-    .feature-card:hover .feature-icon { color: var(--accent-text); }
-
-    .feature-num { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-tertiary); margin-bottom: 14px; display: block; }
-    .feature-title { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.01em; }
-    .feature-desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.6; }
-
-    .feature-accent-bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 2px;
-      height: 100%;
-      background: var(--accent);
-      opacity: 0.12;
-      transition: opacity var(--t-normal);
-    }
-
-    .feature-card:hover .feature-accent-bar { opacity: 1; }
-
-    /* ── How It Works ── */
-    .how-section {
-      padding: 80px 24px;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .how-steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      margin-top: 48px;
-      position: relative;
-    }
-
-    .how-steps::before {
-      content: '';
-      position: absolute;
-      top: 28px;
-      left: calc(16.67% + 20px);
-      right: calc(16.67% + 20px);
-      height: 1px;
-      border-top: 1px dashed var(--border-moderate);
-      pointer-events: none;
-    }
-
-    .how-step {
-      padding: 0 28px;
-      position: relative;
-    }
-
-    .how-step-num-wrap {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .how-step-circle {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--bg-row-rest);
-      border: 1px solid var(--border-moderate);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
-    }
-
-    .how-step-circle-num {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--accent-text);
-    }
-
-    .how-step-title {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
-      margin-bottom: 10px;
-    }
-
-    .how-step-desc {
-      font-size: 0.8125rem;
-      color: var(--text-secondary);
-      line-height: 1.65;
-    }
-
-    .how-step-icon {
-      margin-bottom: 6px;
-      color: var(--text-tertiary);
-    }
-
-    /* ── Mid-page CTA ── */
-    .midcta-section {
-      padding: 40px 24px;
-    }
-
-    .midcta-inner {
-      max-width: 1080px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      background: var(--bg-row-rest);
-      padding: 28px 32px;
-    }
-
-    .midcta-text {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-      margin-right: 4px;
-    }
-
-    /* ── Use-Case Cards ── */
-    .usecases-section {
-      padding: 80px 24px;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .usecases-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border-subtle);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      margin-top: 40px;
-    }
-
-    .usecase-card {
-      background: var(--bg-row-rest);
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      transition: background var(--t-normal);
-    }
-
-    .usecase-card:hover { background: rgba(255,255,255,0.02); }
-
-    .usecase-quote {
-      font-size: 0.875rem;
-      color: var(--text-primary);
-      line-height: 1.65;
-      font-style: italic;
-    }
-
-    .usecase-quote::before { content: '\201C'; color: var(--accent-text); font-style: normal; font-size: 1.1em; }
-    .usecase-quote::after  { content: '\201D'; color: var(--accent-text); font-style: normal; font-size: 1.1em; }
-
-    .usecase-attr {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      margin-top: auto;
-    }
-
-    .usecase-tag {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      color: var(--accent-text);
-      background: var(--accent-dim);
-      border: 1px solid rgba(48,99,184,0.18);
-      border-radius: var(--radius-sm);
-      padding: 2px 7px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      width: fit-content;
-    }
-
-    /* ── FAQ ── */
-    .faq-section {
-      padding: 80px 24px;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .faq-list {
-      margin-top: 40px;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .faq-item {
-      background: var(--bg-row-rest);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .faq-item:last-child { border-bottom: none; }
-
-    .faq-question {
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      cursor: pointer;
-      text-align: left;
-      font-family: var(--font-ui);
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: var(--text-primary);
-      transition: color var(--t-normal);
-    }
-
-    .faq-question:hover { color: var(--text-primary); }
-
-    .faq-icon {
-      flex-shrink: 0;
-      width: 16px;
-      height: 16px;
-      color: var(--text-tertiary);
-      transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), color var(--t-normal);
-    }
-
-    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent-text); }
-
-    .faq-answer {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 220ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .faq-item.open .faq-answer { max-height: 200px; }
-
-    .faq-answer-inner {
-      padding: 0 24px 20px;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      line-height: 1.7;
-    }
-
-    /* ── Changelog ── */
-    .changelog-section {
-      padding: 80px 24px;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .changelog-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
-
-    .release-entry { background: var(--bg-row-rest); padding: 28px 28px; transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1); }
-    .release-entry:hover { background: rgba(255,255,255,0.015); }
-    .release-entry + .release-entry { border-top: 1px solid var(--border-subtle); }
-
-    .release-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-    .release-version { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 500; color: var(--text-primary); background: var(--bg-row-rest); border: 1px solid var(--border-moderate); border-radius: var(--radius-sm); padding: 3px 10px; }
-    .release-badge { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; border-radius: var(--radius-sm); padding: 2px 8px; }
-    .release-badge.latest { color: var(--color-success); background: rgba(48,209,88,0.08); border: 1px solid rgba(48,209,88,0.15); }
-    .release-badge.beta { color: var(--color-warning); background: rgba(245,165,36,0.08); border: 1px solid rgba(245,165,36,0.15); }
-    .release-badge.alpha { color: var(--text-tertiary); background: rgba(72,72,74,0.20); border: 1px solid var(--border-subtle); }
-    .release-date { font-size: 0.8125rem; color: var(--text-tertiary); margin-left: auto; font-variant-numeric: tabular-nums; }
-
-    .release-notes { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-    .release-notes li { font-size: 0.8125rem; color: var(--text-secondary); display: flex; align-items: baseline; gap: 10px; line-height: 1.5; }
-    .release-notes li::before { content: "—"; color: var(--text-tertiary); flex-shrink: 0; font-family: var(--font-mono); font-size: 0.75rem; }
-
-    /* ── Download CTA (split layout) ── */
-    .download-section {
-      padding: 80px 24px;
-      background: var(--bg-row-rest);
-      border-top: 1px solid var(--border-subtle);
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .download-inner {
-      max-width: 1080px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 48px;
-      align-items: center;
-    }
-
-    .download-left {}
-
-    .download-title {
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      letter-spacing: -0.025em;
-      margin-bottom: 10px;
-    }
-
-    .download-sub {
-      font-size: 0.9375rem;
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-    }
-
-    .download-facts {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .download-facts li {
-      font-size: 0.8125rem;
-      color: var(--text-tertiary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .download-facts li::before {
-      content: '';
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--color-success);
-      flex-shrink: 0;
-    }
-
-    .download-right {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .download-meta {
-      font-size: 0.6875rem;
-      color: var(--text-tertiary);
-      font-family: var(--font-mono);
-      text-align: center;
-    }
-
-    /* ── Footer ── */
-    .footer {
-      background: var(--bg-base);
-      border-top: 1px solid rgba(255,255,255,0.06);
-      height: 56px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-    }
-
-    .footer-inner {
-      width: 100%;
-      max-width: 1080px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .footer-left { display: flex; align-items: center; gap: 8px; }
-    .footer-copy { font-size: 0.75rem; color: var(--text-tertiary); }
-    .footer-links { display: flex; align-items: center; gap: 18px; }
-    .footer-link { font-size: 0.75rem; color: var(--text-tertiary); text-decoration: none; transition: color var(--t-normal); }
-    .footer-link:hover { color: var(--text-secondary); }
-
-    /* ── Scroll reveal ── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity var(--t-entrance), transform var(--t-entrance);
-    }
-
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* ── Scroll progress bar ── */
-    .scroll-progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: var(--accent);
-      transform-origin: left center;
-      transform: scaleX(0);
-      z-index: 300;
-      pointer-events: none;
-      transition: transform 60ms linear;
-    }
-
-    /* ── App Logo ── */
-    .nav-logo { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
-    .hero-app-icon { width: 80px; height: 80px; border-radius: 18px; object-fit: cover; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto; }
-    .footer-logo { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
-
-    /* ── prefers-reduced-motion ── */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        transition-delay: 0ms !important;
-      }
-      .reveal { opacity: 1 !important; transform: none !important; }
-      .mock-var-row { opacity: 1 !important; transform: none !important; }
-      .scroll-progress { display: none; }
-      .btn:hover, .btn:active { transform: none !important; }
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 900px) {
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
-      .mockup-body { grid-template-columns: 140px 1fr; }
-      .mock-detail { display: none; }
-      .usecases-grid { grid-template-columns: 1fr; }
-      .metrics-inner { grid-template-columns: repeat(2, 1fr); }
-      .how-steps { grid-template-columns: 1fr; }
-      .how-steps::before { display: none; }
-      .how-step { padding: 0 0 32px; }
-      .download-inner { grid-template-columns: 1fr; text-align: center; }
-      .download-right { align-items: center; }
-      .download-facts { align-items: center; }
-    }
-
-    @media (max-width: 768px) {
-      .hero-title { font-size: 2.5rem; }
-      .hero-sub { font-size: 1rem; }
-      .hero { padding: 64px 20px 56px; }
-      .navbar { padding: 0 16px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .mockup-body { grid-template-columns: 1fr; }
-      .mock-sidebar { display: none; }
-      .section, .features-section { padding: 56px 20px; }
-      .release-header { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .release-date { margin-left: 0; }
-      .download-title { font-size: 1.4rem; }
-      .hero-pills { flex-direction: column; gap: 4px; }
-      .hero-pill::before { display: none; }
-      .navbar-actions .btn-ghost { display: none; }
-      .metrics-inner { grid-template-columns: repeat(2, 1fr); }
-      .metric-cell { padding: 24px 16px; }
-      .metric-value { font-size: 1.75rem; }
-      .midcta-inner { flex-direction: column; text-align: center; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="scroll-progress" role="progressbar" aria-hidden="true"></div>
-
-  <!-- Navbar -->
-  <nav class="navbar" role="banner">
-    <div class="navbar-inner">
-      <div class="navbar-brand">
-        <img src="appstore.png" class="nav-logo" alt=".envVault" aria-hidden="true" />
-        <a href="/" class="wordmark">.envVault</a>
-        <span class="version-badge">v1.0.1</span>
-      </div>
-      <div class="navbar-actions">
-        <a href="releases.html" class="btn btn-ghost">Release notes</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary">Download free for macOS</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-inner">
-      <img src="appstore.png" class="hero-app-icon reveal" alt=".envVault app icon" />
-      <span class="hero-label reveal">Environment Variable Manager</span>
-      <h1 class="hero-title reveal">.envVault</h1>
-      <p class="hero-sub reveal">
-        Your secrets, <strong>outside the reach of git and AI.</strong><br />
-        Shell-loaded. Masked by default. Local forever.
-      </p>
-      <div class="hero-ctas reveal">
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download free for macOS</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost btn-large" target="_blank" rel="noopener">View on GitHub</a>
-      </div>
-      <div class="hero-pills reveal">
-        <span class="hero-pill">macOS 13+</span>
-        <span class="hero-pill">Apple Silicon &amp; Intel</span>
-        <span class="hero-pill">Open source</span>
-        <span class="hero-pill">~6 MB</span>
-      </div>
-
-      <!-- Interactive App Demo -->
-      <div class="app-mockup reveal" id="app-demo" role="application" aria-label="Interactive demo of .envVault — click projects, variables, and toggle environments">
-        <div class="mockup-titlebar">
-          <span class="titlebar-dot dot-red" aria-hidden="true"></span>
-          <span class="titlebar-dot dot-yellow" aria-hidden="true"></span>
-          <span class="titlebar-dot dot-green" aria-hidden="true"></span>
-          <span class="titlebar-label">.envVault</span>
-        </div>
-        <div class="mockup-body">
-          <div class="mock-sidebar" id="demo-sidebar">
-            <div class="mock-sidebar-label">Projects</div>
-          </div>
-          <div class="mock-vars" id="demo-vars">
-            <div class="mock-vars-header">
-              <span id="demo-vars-title">Variables</span>
-              <select class="mock-env-select" id="demo-env-select" aria-label="Switch environment"></select>
-            </div>
-            <div id="demo-var-list"></div>
-          </div>
-          <div class="mock-detail" id="demo-detail">
-            <div class="mock-detail-empty">Select a variable<br/>to view details</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Security Metrics Bar -->
-  <section class="metrics-section" aria-label="Security impact metrics">
-    <div class="metrics-inner">
-      <div class="metric-cell reveal">
-        <span class="metric-value" data-counter="0" data-suffix="">0</span>
-        <span class="metric-label">secrets committed<br/>to git</span>
-      </div>
-      <div class="metric-cell reveal">
-        <span class="metric-value" data-counter="0" data-suffix="">0</span>
-        <span class="metric-label">AI agents with<br/>access to your keys</span>
-      </div>
-      <div class="metric-cell reveal">
-        <span class="metric-value" data-counter="6" data-suffix="">6</span>
-        <span class="metric-label">environments<br/>per project</span>
-      </div>
-      <div class="metric-cell reveal">
-        <span class="metric-value" data-counter="100" data-suffix="%">100%</span>
-        <span class="metric-label">stored outside<br/>your project</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features -->
-  <section class="features-section" aria-labelledby="features-heading">
-    <div class="section-inner">
-      <div class="section-header reveal">
-        <h2 class="section-title" id="features-heading">The problems it actually solves</h2>
-        <p class="section-sub">Four things that keep happening to developers. .envVault stops all of them.</p>
-      </div>
-      <div class="features-grid">
-
-        <!-- 01 -->
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <!-- Lock body -->
-            <rect x="4" y="9" width="12" height="9" rx="1.5" />
-            <!-- Shackle -->
-            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
-            <!-- Keyhole -->
-            <circle cx="10" cy="13.5" r="1" />
-            <line x1="10" y1="14.5" x2="10" y2="16" />
-          </svg>
-          <span class="feature-num">01</span>
-          <h3 class="feature-title">No more accidental git leaks</h3>
-          <p class="feature-desc">Secrets are stored in the app's data directory — outside your project tree entirely. There's no <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code> file to accidentally commit, no gitignore rule to forget, no late-night key rotation.</p>
-        </div>
-
-        <!-- 02 -->
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <!-- Eye outline -->
-            <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" />
-            <circle cx="10" cy="10" r="2" />
-            <!-- Slash -->
-            <line x1="3" y1="3" x2="17" y2="17" class="eye-slash" style="stroke-dasharray:20;stroke-dashoffset:0;transition:stroke-dashoffset 180ms cubic-bezier(0.16,1,0.3,1);" />
-          </svg>
-          <span class="feature-num">02</span>
-          <h3 class="feature-title">Invisible to AI agents</h3>
-          <p class="feature-desc">Copilot, Claude, Cursor — they all index your file tree. Because your keys aren't in files, they're never in context. Agents work on your code without ever seeing a secret.</p>
-        </div>
-
-        <!-- 03 -->
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="13" width="16" height="4" rx="1" />
-            <rect x="2" y="8"  width="16" height="4" rx="1" />
-            <rect x="2" y="3"  width="16" height="4" rx="1" />
-          </svg>
-          <span class="feature-num">03</span>
-          <h3 class="feature-title">Multi-environment support</h3>
-          <p class="feature-desc">Switch between <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.local</code>, <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env.production</code>, staging, and more — per project. No more juggling files or copy-pasting between configs.</p>
-        </div>
-
-        <!-- 04 -->
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="10" cy="10" r="2" />
-            <circle cx="10" cy="3"  r="1.5" />
-            <circle cx="10" cy="17" r="1.5" />
-            <circle cx="3"  cy="10" r="1.5" />
-            <circle cx="17" cy="10" r="1.5" />
-            <line x1="10" y1="5"  x2="10" y2="8" />
-            <line x1="10" y1="12" x2="10" y2="15" />
-            <line x1="5"  y1="10" x2="8"  y2="10" />
-            <line x1="12" y1="10" x2="15" y2="10" />
-          </svg>
-          <span class="feature-num">04</span>
-          <h3 class="feature-title">Microservices without the mess</h3>
-          <p class="feature-desc">Manage env across dozens of services in one place. Sub-projects inherit from parents — shared infra vars live once, services override only what differs. No copy-paste drift.</p>
-        </div>
-
-        <!-- 05 -->
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="4" width="16" height="12" rx="2" />
-            <path d="M6 10 l3 3 l5-5" style="stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;" />
-          </svg>
-          <span class="feature-num">05</span>
-          <h3 class="feature-title">Shell auto-load</h3>
-          <p class="feature-desc">A one-time hook in your shell config auto-injects the right vars when you <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">cd</code> into a project. No manual sourcing, no forgotten exports, no wrong environment.</p>
-        </div>
-
-        <!-- 06 -->
-        <div class="feature-card reveal">
-          <div class="feature-accent-bar" aria-hidden="true"></div>
-          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="5"  cy="8"  r="1.5" />
-            <circle cx="10" cy="8"  r="1.5" />
-            <circle cx="15" cy="8"  r="1.5" />
-            <circle cx="5"  cy="13" r="1.5" />
-            <circle cx="10" cy="13" r="1.5" />
-            <circle cx="15" cy="13" r="1.5" />
-          </svg>
-          <span class="feature-num">06</span>
-          <h3 class="feature-title">Masked by default</h3>
-          <p class="feature-desc">Values are hidden at rest, revealed individually on demand. Configurable inactivity timeout re-masks after a period of no interaction. Safe for screen sharing.</p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works -->
-  <section class="how-section" aria-labelledby="how-heading">
-    <div class="section-inner">
-      <div class="section-header reveal">
-        <h2 class="section-title" id="how-heading">How it works</h2>
-        <p class="section-sub">Three steps. One shell hook. Zero leaks — from that moment on.</p>
-      </div>
-      <div class="how-steps">
-
-        <div class="how-step reveal" style="transition-delay:0ms">
-          <div class="how-step-num-wrap">
-            <div class="how-step-circle">
-              <span class="how-step-circle-num">01</span>
-            </div>
-          </div>
-          <svg class="how-step-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 7l9-4 9 4v10l-9 4-9-4V7z" />
-            <line x1="12" y1="3" x2="12" y2="21" />
-            <line x1="3" y1="7" x2="21" y2="7" />
-          </svg>
-          <h3 class="how-step-title">Add your project</h3>
-          <p class="how-step-desc">Point .envVault at a directory. It scans for existing <code style="font-family:var(--font-mono);font-size:0.8em;color:var(--accent-text)">.env</code> files and imports them automatically. Secrets move to the vault — your project folder has nothing to commit.</p>
-        </div>
-
-        <div class="how-step reveal" style="transition-delay:80ms">
-          <div class="how-step-num-wrap">
-            <div class="how-step-circle">
-              <span class="how-step-circle-num">02</span>
-            </div>
-          </div>
-          <svg class="how-step-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="11" width="18" height="11" rx="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            <circle cx="12" cy="16" r="1.5" />
-          </svg>
-          <h3 class="how-step-title">Manage your secrets</h3>
-          <p class="how-step-desc">Edit variables in the app. Switch environments with a dropdown. Values are masked at rest and revealed individually on demand — safe for screen sharing and pair programming.</p>
-        </div>
-
-        <div class="how-step reveal" style="transition-delay:160ms">
-          <div class="how-step-num-wrap">
-            <div class="how-step-circle">
-              <span class="how-step-circle-num">03</span>
-            </div>
-          </div>
-          <svg class="how-step-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="2" y="4" width="20" height="16" rx="2" />
-            <path d="M8 12l3 3 5-5" />
-          </svg>
-          <h3 class="how-step-title">cd and code</h3>
-          <p class="how-step-desc">The shell hook detects when you change directory and injects the right vars. No manual sourcing. The correct environment is always active — in every terminal window.</p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Mid-page CTA -->
-  <section class="midcta-section" aria-label="Download prompt">
-    <div class="midcta-inner reveal">
-      <span class="midcta-text">Ready to stop leaking secrets?</span>
-      <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download free for macOS</a>
-      <a href="https://github.com/darshan-aswathappa/env-manager" class="btn btn-ghost btn-large" target="_blank" rel="noopener">View source →</a>
-    </div>
-  </section>
-
-  <!-- Use-Case Cards -->
-  <section class="usecases-section" aria-labelledby="usecases-heading">
-    <div class="section-inner">
-      <div class="section-header reveal">
-        <h2 class="section-title" id="usecases-heading">Built for developers who've been burned</h2>
-        <p class="section-sub">Representative scenarios from developers who needed a better answer to the .env problem.</p>
-      </div>
-      <div class="usecases-grid">
-
-        <div class="usecase-card reveal">
-          <span class="usecase-tag">git leak</span>
-          <p class="usecase-quote">I stopped rotating leaked keys after the third time it happened. Now the folder simply doesn't have the file.</p>
-          <span class="usecase-attr">Microservices developer · 4+ projects managed</span>
-        </div>
-
-        <div class="usecase-card reveal">
-          <span class="usecase-tag">AI workflow</span>
-          <p class="usecase-quote">I use Cursor and Claude daily. Knowing my API keys are never in context is a baseline requirement now.</p>
-          <span class="usecase-attr">Full-stack developer · AI-native workflow</span>
-        </div>
-
-        <div class="usecase-card reveal">
-          <span class="usecase-tag">team onboarding</span>
-          <p class="usecase-quote">Shell hook setup takes 30 seconds. New machines are up and running before the Homebrew install finishes.</p>
-          <span class="usecase-attr">Engineering lead · Distributed team</span>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="faq-section" aria-labelledby="faq-heading">
-    <div class="section-inner">
-      <div class="section-header reveal">
-        <h2 class="section-title" id="faq-heading">Questions &amp; answers</h2>
-        <p class="section-sub">The short answers to the things you're already wondering.</p>
-      </div>
-      <div class="faq-list reveal" role="list">
-
-        <div class="faq-item" role="listitem">
-          <button class="faq-question" aria-expanded="false">
-            <span>Why macOS only?</span>
-            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          </button>
-          <div class="faq-answer">
-            <p class="faq-answer-inner">The app is built with Tauri and ships as a native macOS binary. The shell hook works with zsh and bash. Linux and Windows support are on the roadmap — the core architecture is platform-agnostic.</p>
-          </div>
-        </div>
-
-        <div class="faq-item" role="listitem">
-          <button class="faq-question" aria-expanded="false">
-            <span>Where are my secrets actually stored?</span>
-            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          </button>
-          <div class="faq-answer">
-            <p class="faq-answer-inner">In the macOS app data directory — the same location apps like 1Password use for local data. Not in your project folder, not in iCloud, not on any server. The path is the Tauri app data directory, which is sandboxed to the app.</p>
-          </div>
-        </div>
-
-        <div class="faq-item" role="listitem">
-          <button class="faq-question" aria-expanded="false">
-            <span>Does it work with existing .env files?</span>
-            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          </button>
-          <div class="faq-answer">
-            <p class="faq-answer-inner">Yes. When you add a project, .envVault scans the directory and imports any existing .env, .env.local, .env.production, and other suffixed files automatically. Nothing is deleted from your project until you explicitly remove it.</p>
-          </div>
-        </div>
-
-        <div class="faq-item" role="listitem">
-          <button class="faq-question" aria-expanded="false">
-            <span>What happens to my data if I uninstall?</span>
-            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          </button>
-          <div class="faq-answer">
-            <p class="faq-answer-inner">Your secrets remain in the app data directory until you delete them. The app does not auto-delete on uninstall. You can export at any time from within the app before uninstalling.</p>
-          </div>
-        </div>
-
-        <div class="faq-item" role="listitem">
-          <button class="faq-question" aria-expanded="false">
-            <span>Is there a cloud sync or account required?</span>
-            <svg class="faq-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          </button>
-          <div class="faq-answer">
-            <p class="faq-answer-inner">No. Everything is local. There is no account, no cloud, no telemetry. The app data never leaves your machine unless you explicitly copy or export it.</p>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Download CTA (split layout) -->
-  <section class="download-section" id="download" aria-labelledby="download-heading">
-    <div class="download-inner">
-      <div class="download-left reveal">
-        <h2 class="download-title" id="download-heading">Your .env files belong in a vault.</h2>
-        <p class="download-sub">Free. Local. Open source. No account required.</p>
-        <ul class="download-facts">
-          <li>~6 MB install — no background services</li>
-          <li>No account, no cloud, no telemetry</li>
-          <li>macOS 13+ · Apple Silicon &amp; Intel</li>
-          <li>MIT licensed — read every line on GitHub</li>
-        </ul>
-      </div>
-      <div class="download-right reveal">
-        <a href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg" class="btn btn-primary btn-large">Download .envVault — v1.0.1</a>
-        <p class="download-meta">macOS 13+ &nbsp;·&nbsp; Free forever</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer" role="contentinfo">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <img src="appstore.png" class="footer-logo" alt="" aria-hidden="true" />
-        <span class="wordmark">.envVault</span>
-        <span class="footer-copy">© 2026</span>
-      </div>
-      <nav class="footer-links" aria-label="Footer navigation">
-        <a href="releases.html" class="footer-link">Release notes</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager" class="footer-link" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://github.com/darshan-aswathappa/env-manager/issues" class="footer-link" target="_blank" rel="noopener">Issues</a>
-      </nav>
-    </div>
-  </footer>
-
-  <script>
-    (function () {
-      'use strict';
-
-      var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (!prefersReduced) {
-        document.documentElement.classList.add('js-motion');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>.envVault — Environment Variable Manager for macOS</title>
+    <meta
+      name="description"
+      content="A local-first tool for managing .env files across projects. Secrets live outside your project tree — invisible to git and AI agents."
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content=".envVault — Environment Variable Manager for macOS"
+    />
+    <meta
+      property="og:description"
+      content="Secrets stored outside your project tree — safe from git, safe from AI, always available in your shell."
+    />
+    <meta property="og:image" content="og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content=".envVault — Environment Variable Manager for macOS"
+    />
+    <meta
+      name="twitter:description"
+      content="Secrets stored outside your project tree — safe from git, safe from AI, always available in your shell."
+    />
+    <meta name="twitter:image" content="og-image.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
-      /* ── Scroll progress ── */
-      var progressBar = document.querySelector('.scroll-progress');
-      function updateProgress() {
-        if (!progressBar || prefersReduced) return;
-        var scrollTop = window.scrollY;
-        var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        var pct = docHeight > 0 ? scrollTop / docHeight : 0;
-        progressBar.style.transform = 'scaleX(' + pct + ')';
+      :root {
+        --bg-base: #161618;
+        --bg-sidebar: #1e1e20;
+        --bg-row-rest: #1e1e20;
+        --bg-row-hover: rgba(255, 255, 255, 0.04);
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-moderate: rgba(255, 255, 255, 0.1);
+        --border-active: rgba(255, 255, 255, 0.18);
+        --accent: #3063b8;
+        --accent-hover: #3a72cc;
+        --accent-press: #254e96;
+        --accent-dim: rgba(48, 99, 184, 0.1);
+        --accent-text: #7aa3d4;
+        --text-primary: #f0f0f0;
+        --text-secondary: #8e8e93;
+        --text-tertiary: #48484a;
+        --color-success: #30d158;
+        --color-warning: #f5a524;
+        --color-danger: #e5484d;
+        --font-ui:
+          "Geist", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+        --radius-sm: 2px;
+        --radius-md: 3px;
+        --radius-lg: 4px;
+        --t-normal: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+        --t-entrance: 260ms cubic-bezier(0.16, 1, 0.3, 1);
       }
-      window.addEventListener('scroll', updateProgress, { passive: true });
 
-      /* ── Navbar scroll state ── */
-      var navbarEl = document.querySelector('.navbar');
-      function updateNavbar() {
-        if (!navbarEl) return;
-        navbarEl.classList.toggle('is-scrolled', window.scrollY > 8);
+      html {
+        scroll-behavior: smooth;
       }
-      window.addEventListener('scroll', updateNavbar, { passive: true });
 
-      /* ── Metrics counter animation ── */
-      function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+      body {
+        background: var(--bg-base);
+        color: var(--text-primary);
+        font-family: var(--font-ui);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
 
-      function animateCounter(el) {
-        var target = parseInt(el.getAttribute('data-counter'), 10);
-        var suffix = el.getAttribute('data-suffix') || '';
-        if (prefersReduced || target === 0) return;
-        var start = null;
-        var duration = 800;
-        function step(timestamp) {
-          if (!start) start = timestamp;
-          var elapsed = timestamp - start;
-          var progress = Math.min(elapsed / duration, 1);
-          var value = Math.round(easeOutExpo(progress) * target);
-          el.textContent = value + suffix;
-          if (progress < 1) requestAnimationFrame(step);
-          else el.textContent = target + suffix;
-        }
-        requestAnimationFrame(step);
+      /* ── Navbar ── */
+      .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-subtle);
+        height: 52px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .navbar.is-scrolled {
+        border-bottom-color: rgba(255, 255, 255, 0.13);
+      }
+
+      .navbar-inner {
+        width: 100%;
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .wordmark {
+        font-family: var(--font-ui);
+        font-weight: 500;
+        font-size: 0.9375rem;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+        text-decoration: none;
+      }
+
+      .version-badge {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        background: var(--bg-row-rest);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 1px 6px;
+        letter-spacing: 0.02em;
+      }
+
+      .navbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* ── Buttons ── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-ui);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        border-radius: var(--radius-md);
+        transition:
+          background var(--t-normal),
+          color var(--t-normal),
+          border-color var(--t-normal),
+          transform 130ms cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: scale(0.97) translateY(0);
+        transition-duration: 80ms;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        padding: 7px 14px;
+        height: 32px;
+      }
+      .btn-primary:hover {
+        background: var(--accent-hover);
+      }
+      .btn-primary:active {
+        background: var(--accent-press);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text-secondary);
+        padding: 7px 12px;
+        height: 32px;
+        border: 1px solid var(--border-subtle);
+      }
+      .btn-ghost:hover {
+        color: var(--text-primary);
+        border-color: var(--border-moderate);
+        background: var(--bg-row-hover);
+      }
+
+      .btn-large {
+        font-size: 0.875rem;
+        padding: 10px 20px;
+        height: 40px;
+      }
+
+      /* ── Hero ── */
+      .hero {
+        padding: 96px 24px 80px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background-image: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.025) 1px,
+          transparent 1px
+        );
+        background-size: 24px 24px;
+      }
+
+      .hero-inner {
+        max-width: 680px;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .hero-label {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--text-tertiary);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+
+      .hero-title {
+        font-size: 3.5rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        color: var(--text-primary);
+        line-height: 1.1;
+        margin-bottom: 20px;
+      }
+
+      .hero-sub {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        max-width: 560px;
+        margin: 0 auto 32px;
+      }
+
+      .hero-sub strong {
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+
+      .hero-ctas {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+
+      .hero-pills {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        flex-wrap: wrap;
+        margin-bottom: 56px;
+      }
+
+      .hero-pill {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+        padding: 0 10px;
+        position: relative;
+      }
+      .hero-pill + .hero-pill::before {
+        content: "·";
+        position: absolute;
+        left: 0;
+        transform: translateX(-50%);
+      }
+
+      /* ── Interactive App Demo ── */
+      .app-mockup {
+        width: 100%;
+        max-width: 780px;
+        margin: 0 auto;
+        background: #1e1e20;
+        border: 1px solid var(--border-subtle);
+        border-radius: 6px;
+        overflow: hidden;
+        user-select: none;
+      }
+
+      .mockup-titlebar {
+        height: 36px;
+        background: #191919;
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        gap: 7px;
+      }
+
+      .titlebar-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .dot-red {
+        background: #e5484d;
+      }
+      .dot-yellow {
+        background: #f5a524;
+      }
+      .dot-green {
+        background: #30d158;
+      }
+
+      .titlebar-label {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        margin-left: 10px;
+      }
+
+      .mockup-body {
+        display: grid;
+        grid-template-columns: 160px 1fr 220px;
+        min-height: 280px;
+      }
+
+      .mock-sidebar {
+        border-right: 1px solid var(--border-subtle);
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .mock-sidebar-label {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        color: var(--text-tertiary);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 14px 8px;
+      }
+
+      .mock-project {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition:
+          background var(--t-normal),
+          color var(--t-normal);
+      }
+      .mock-project:hover {
+        background: var(--bg-row-hover);
+      }
+      .mock-project.active {
+        background: var(--accent-dim);
+        color: var(--accent-text);
+      }
+
+      .mock-project-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--text-tertiary);
+        flex-shrink: 0;
+        transition: background var(--t-normal);
+      }
+      .mock-project.active .mock-project-dot {
+        background: var(--accent-text);
+      }
+      .mock-project-indent {
+        padding-left: 28px;
+      }
+
+      .mock-vars {
+        padding: 10px 0;
+        border-right: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .mock-vars-header {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        color: var(--text-tertiary);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 14px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .mock-var-row {
+        display: flex;
+        align-items: center;
+        padding: 6px 14px;
+        gap: 8px;
+        cursor: pointer;
+        transition: background var(--t-normal);
+      }
+      .mock-var-row:hover {
+        background: var(--bg-row-hover);
+      }
+      .mock-var-row.active {
+        background: var(--bg-row-hover);
+      }
+
+      .mock-var-key {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--accent-text);
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .mock-var-preview {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        color: var(--text-tertiary);
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .mock-var-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--text-tertiary);
+        flex-shrink: 0;
+        transition: background var(--t-normal);
+      }
+      .mock-var-row.active .mock-var-dot {
+        background: var(--color-success);
+      }
+
+      .mock-detail {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .mock-detail-label {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        color: var(--text-tertiary);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .mock-detail-key {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--accent-text);
+        margin-bottom: 10px;
+      }
+      .mock-detail-value {
+        background: #161618;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 6px 10px;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .mock-detail-value-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mock-reveal-btn {
+        background: none;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-tertiary);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        padding: 2px 6px;
+        cursor: pointer;
+        transition:
+          color var(--t-normal),
+          border-color var(--t-normal);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .mock-reveal-btn:hover {
+        color: var(--text-secondary);
+        border-color: var(--border-moderate);
+      }
+
+      .mock-detail-badge {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        color: var(--color-success);
+        background: rgba(48, 209, 88, 0.08);
+        border: 1px solid rgba(48, 209, 88, 0.15);
+        border-radius: var(--radius-sm);
+        padding: 2px 6px;
+      }
+      .mock-detail-badge.revealed {
+        color: var(--color-warning);
+        background: rgba(245, 165, 36, 0.08);
+        border-color: rgba(245, 165, 36, 0.15);
+      }
+
+      .mock-detail-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        text-align: center;
+        padding: 20px 12px;
+        line-height: 1.5;
+      }
+
+      .mock-env-select {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        color: var(--text-tertiary);
+        background: #161618;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 2px 4px;
+        cursor: pointer;
+        outline: none;
+        transition: border-color var(--t-normal);
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .mock-env-select:hover,
+      .mock-env-select:focus {
+        border-color: var(--border-moderate);
+      }
+      .mock-env-select option {
+        background: #1e1e20;
+        color: var(--text-secondary);
+      }
+
+      .mock-detail-divider {
+        height: 1px;
+        background: var(--border-subtle);
+        margin: 8px 0;
+      }
+      .mock-detail-field-label {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        color: var(--text-tertiary);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .mock-hint {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        color: var(--text-tertiary);
+        text-align: center;
+        padding: 8px 14px 4px;
+        margin-top: auto;
+        opacity: 0.6;
+      }
+
+      /* ── Section wrapper ── */
+      .section {
+        padding: 80px 24px;
+      }
+      .section-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+      }
+      .section-header {
+        margin-bottom: 40px;
+      }
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+      }
+      .section-sub {
+        font-size: 0.9375rem;
+        color: var(--text-secondary);
+      }
+
+      /* ── Metrics Bar ── */
+      .metrics-section {
+        padding: 0 24px;
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .metrics-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .metric-cell {
+        padding: 32px 24px;
+        text-align: center;
+        position: relative;
+      }
+
+      .metric-cell + .metric-cell::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 20%;
+        height: 60%;
+        width: 1px;
+        background: var(--border-subtle);
+      }
+
+      .metric-value {
+        font-family: var(--font-mono);
+        font-size: 2.25rem;
+        font-weight: 500;
+        color: var(--accent-text);
+        letter-spacing: -0.02em;
+        line-height: 1;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      .metric-label {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+        line-height: 1.4;
+      }
+
+      /* ── Features Grid ── */
+      .features-section {
+        padding: 80px 24px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--border-subtle);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .feature-card {
+        background: var(--bg-row-rest);
+        padding: 24px 22px;
+        position: relative;
+        transition: background var(--t-normal);
+      }
+
+      .feature-card:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .feature-icon {
+        display: block;
+        margin-bottom: 14px;
+        color: var(--text-tertiary);
+        transition: color var(--t-normal);
+      }
+
+      .feature-card:hover .feature-icon {
+        color: var(--accent-text);
+      }
+
+      .feature-num {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        margin-bottom: 14px;
+        display: block;
+      }
+      .feature-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+      .feature-desc {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+
+      .feature-accent-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 2px;
+        height: 100%;
+        background: var(--accent);
+        opacity: 0.12;
+        transition: opacity var(--t-normal);
+      }
+
+      .feature-card:hover .feature-accent-bar {
+        opacity: 1;
+      }
+
+      /* ── How It Works ── */
+      .how-section {
+        padding: 80px 24px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .how-steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        margin-top: 48px;
+        position: relative;
+      }
+
+      .how-steps::before {
+        content: "";
+        position: absolute;
+        top: 28px;
+        left: calc(16.67% + 20px);
+        right: calc(16.67% + 20px);
+        height: 1px;
+        border-top: 1px dashed var(--border-moderate);
+        pointer-events: none;
+      }
+
+      .how-step {
+        padding: 0 28px;
+        position: relative;
+      }
+
+      .how-step-num-wrap {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .how-step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-row-rest);
+        border: 1px solid var(--border-moderate);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .how-step-circle-num {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--accent-text);
+      }
+
+      .how-step-title {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+      }
+
+      .how-step-desc {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+      }
+
+      .how-step-icon {
+        margin-bottom: 6px;
+        color: var(--text-tertiary);
+      }
+
+      /* ── Mid-page CTA ── */
+      .midcta-section {
+        padding: 40px 24px;
+      }
+
+      .midcta-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        background: var(--bg-row-rest);
+        padding: 28px 32px;
+      }
+
+      .midcta-text {
+        font-size: 0.9375rem;
+        color: var(--text-secondary);
+        margin-right: 4px;
+      }
+
+      /* ── Use-Case Cards ── */
+      .usecases-section {
+        padding: 80px 24px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .usecases-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--border-subtle);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-top: 40px;
+      }
+
+      .usecase-card {
+        background: var(--bg-row-rest);
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        transition: background var(--t-normal);
+      }
+
+      .usecase-card:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .usecase-quote {
+        font-size: 0.875rem;
+        color: var(--text-primary);
+        line-height: 1.65;
+        font-style: italic;
+      }
+
+      .usecase-quote::before {
+        content: "\201C";
+        color: var(--accent-text);
+        font-style: normal;
+        font-size: 1.1em;
+      }
+      .usecase-quote::after {
+        content: "\201D";
+        color: var(--accent-text);
+        font-style: normal;
+        font-size: 1.1em;
+      }
+
+      .usecase-attr {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        margin-top: auto;
+      }
+
+      .usecase-tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        color: var(--accent-text);
+        background: var(--accent-dim);
+        border: 1px solid rgba(48, 99, 184, 0.18);
+        border-radius: var(--radius-sm);
+        padding: 2px 7px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        width: fit-content;
+      }
+
+      /* ── FAQ ── */
+      .faq-section {
+        padding: 80px 24px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .faq-list {
+        margin-top: 40px;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .faq-item {
+        background: var(--bg-row-rest);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .faq-item:last-child {
+        border-bottom: none;
+      }
+
+      .faq-question {
+        width: 100%;
+        background: none;
+        border: none;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        cursor: pointer;
+        text-align: left;
+        font-family: var(--font-ui);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: color var(--t-normal);
+      }
+
+      .faq-question:hover {
+        color: var(--text-primary);
+      }
+
+      .faq-icon {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        color: var(--text-tertiary);
+        transition:
+          transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+          color var(--t-normal);
+      }
+
+      .faq-item.open .faq-icon {
+        transform: rotate(45deg);
+        color: var(--accent-text);
+      }
+
+      .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 220ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .faq-item.open .faq-answer {
+        max-height: 200px;
+      }
+
+      .faq-answer-inner {
+        padding: 0 24px 20px;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      /* ── Changelog ── */
+      .changelog-section {
+        padding: 80px 24px;
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .changelog-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .release-entry {
+        background: var(--bg-row-rest);
+        padding: 28px 28px;
+        transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .release-entry:hover {
+        background: rgba(255, 255, 255, 0.015);
+      }
+      .release-entry + .release-entry {
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .release-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .release-version {
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        background: var(--bg-row-rest);
+        border: 1px solid var(--border-moderate);
+        border-radius: var(--radius-sm);
+        padding: 3px 10px;
+      }
+      .release-badge {
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border-radius: var(--radius-sm);
+        padding: 2px 8px;
+      }
+      .release-badge.latest {
+        color: var(--color-success);
+        background: rgba(48, 209, 88, 0.08);
+        border: 1px solid rgba(48, 209, 88, 0.15);
+      }
+      .release-badge.beta {
+        color: var(--color-warning);
+        background: rgba(245, 165, 36, 0.08);
+        border: 1px solid rgba(245, 165, 36, 0.15);
+      }
+      .release-badge.alpha {
+        color: var(--text-tertiary);
+        background: rgba(72, 72, 74, 0.2);
+        border: 1px solid var(--border-subtle);
+      }
+      .release-date {
+        font-size: 0.8125rem;
+        color: var(--text-tertiary);
+        margin-left: auto;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .release-notes {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .release-notes li {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        line-height: 1.5;
+      }
+      .release-notes li::before {
+        content: "—";
+        color: var(--text-tertiary);
+        flex-shrink: 0;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+      }
+
+      /* ── Download CTA (split layout) ── */
+      .download-section {
+        padding: 80px 24px;
+        background: var(--bg-row-rest);
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .download-inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 48px;
+        align-items: center;
+      }
+
+      .download-left {
+      }
+
+      .download-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.025em;
+        margin-bottom: 10px;
+      }
+
+      .download-sub {
+        font-size: 0.9375rem;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+      }
+
+      .download-facts {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .download-facts li {
+        font-size: 0.8125rem;
+        color: var(--text-tertiary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .download-facts li::before {
+        content: "";
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--color-success);
+        flex-shrink: 0;
+      }
+
+      .download-right {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .download-meta {
+        font-size: 0.6875rem;
+        color: var(--text-tertiary);
+        font-family: var(--font-mono);
+        text-align: center;
+      }
+
+      /* ── Footer ── */
+      .footer {
+        background: var(--bg-base);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        height: 56px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+      }
+
+      .footer-inner {
+        width: 100%;
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .footer-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .footer-copy {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+      }
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .footer-link {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+        text-decoration: none;
+        transition: color var(--t-normal);
+      }
+      .footer-link:hover {
+        color: var(--text-secondary);
       }
 
       /* ── Scroll reveal ── */
-      var metricsAnimated = false;
-
-      var revealObserver = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            revealObserver.unobserve(entry.target);
-            /* trigger counter if this is a metric value */
-            var counter = entry.target.querySelector('[data-counter]');
-            if (counter && !metricsAnimated) {
-              var allCounters = document.querySelectorAll('[data-counter]');
-              allCounters.forEach(animateCounter);
-              metricsAnimated = true;
-            }
-          }
-        });
-      }, { threshold: 0.08, rootMargin: '0px 0px -32px 0px' });
-
-      /* ── FAQ accordion ── */
-      document.querySelectorAll('.faq-question').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var item = btn.closest('.faq-item');
-          var isOpen = item.classList.contains('open');
-          /* close all */
-          document.querySelectorAll('.faq-item.open').forEach(function (openItem) {
-            openItem.classList.remove('open');
-            openItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
-          });
-          /* open clicked if it wasn't open */
-          if (!isOpen) {
-            item.classList.add('open');
-            btn.setAttribute('aria-expanded', 'true');
-          }
-        });
-      });
-
-      /* ── Interactive Demo Data ── */
-      var DEMO_DATA = {
-        'api-service': {
-          name: 'api-service', indent: false,
-          envs: {
-            '.env':            [{ key: 'PORT',         val: '3001' },
-                                { key: 'DATABASE_URL', val: 'postgres://localhost:5432/api' },
-                                { key: 'JWT_SECRET',   val: 'sk_jwt_a8f2c9e1d4b7' },
-                                { key: 'REDIS_URL',    val: 'redis://localhost:6379' }],
-            '.env.production': [{ key: 'PORT',         val: '443' },
-                                { key: 'DATABASE_URL', val: 'postgres://prod-rds.aws:5432/api' },
-                                { key: 'JWT_SECRET',   val: 'sk_jwt_prod_7x9m2k' },
-                                { key: 'REDIS_URL',    val: 'redis://prod-cache.aws:6379' }],
-            '.env.staging':    [{ key: 'PORT',         val: '3001' },
-                                { key: 'DATABASE_URL', val: 'postgres://staging-rds:5432/api' },
-                                { key: 'JWT_SECRET',   val: 'sk_jwt_stg_demo' },
-                                { key: 'REDIS_URL',    val: 'redis://staging-cache:6379' }]
-          }
-        },
-        'web-app': {
-          name: 'web-app', indent: false,
-          envs: {
-            '.env':            [{ key: 'API_KEY',         val: 'sk_live_a1b2c3d4e5f6' },
-                                { key: 'DATABASE_URL',    val: 'postgres://localhost:5432/webapp' },
-                                { key: 'NODE_ENV',        val: 'development' },
-                                { key: 'NEXT_PUBLIC_URL', val: 'http://localhost:3000' },
-                                { key: 'STRIPE_SECRET',   val: 'sk_test_51HxYz' }],
-            '.env.local':      [{ key: 'API_KEY',         val: 'sk_test_local_debug' },
-                                { key: 'DATABASE_URL',    val: 'postgres://localhost:5432/webapp_dev' },
-                                { key: 'NODE_ENV',        val: 'development' },
-                                { key: 'NEXT_PUBLIC_URL', val: 'http://localhost:3000' },
-                                { key: 'STRIPE_SECRET',   val: 'sk_test_local_51H' },
-                                { key: 'DEBUG',           val: 'true' }],
-            '.env.production': [{ key: 'API_KEY',         val: 'sk_live_prod_x9y8z7' },
-                                { key: 'DATABASE_URL',    val: 'postgres://prod-rds.aws:5432/webapp' },
-                                { key: 'NODE_ENV',        val: 'production' },
-                                { key: 'NEXT_PUBLIC_URL', val: 'https://myapp.com' },
-                                { key: 'STRIPE_SECRET',   val: 'sk_live_51HxYz' }]
-          }
-        },
-        'staging': {
-          name: 'staging', indent: true,
-          envs: {
-            '.env':            [{ key: 'API_KEY',         val: 'sk_test_staging_abc' },
-                                { key: 'DATABASE_URL',    val: 'postgres://staging:5432/webapp' },
-                                { key: 'NODE_ENV',        val: 'staging' },
-                                { key: 'NEXT_PUBLIC_URL', val: 'https://staging.myapp.com' }]
-          }
-        },
-        'mobile': {
-          name: 'mobile', indent: false,
-          envs: {
-            '.env':            [{ key: 'API_BASE_URL', val: 'http://localhost:3001' },
-                                { key: 'PUSH_KEY',     val: 'pk_mobile_f7g8h9' },
-                                { key: 'SENTRY_DSN',   val: 'https://abc@sentry.io/123' }],
-            '.env.production': [{ key: 'API_BASE_URL', val: 'https://api.myapp.com' },
-                                { key: 'PUSH_KEY',     val: 'pk_mobile_prod_a1b2' },
-                                { key: 'SENTRY_DSN',   val: 'https://xyz@sentry.io/456' }]
-          }
-        }
-      };
-
-      var PROJECT_ORDER = ['api-service', 'web-app', 'staging', 'mobile'];
-
-      var demoState = { project: 'web-app', env: '.env', varIdx: null, revealed: {} };
-
-      function el(tag, attrs, children) {
-        var node = document.createElement(tag);
-        if (attrs) Object.keys(attrs).forEach(function (k) {
-          if (k === 'textContent') { node.textContent = attrs[k]; }
-          else if (k === 'className') { node.className = attrs[k]; }
-          else if (k.indexOf('on') === 0) { node.addEventListener(k.slice(2).toLowerCase(), attrs[k]); }
-          else { node.setAttribute(k, attrs[k]); }
-        });
-        if (children) children.forEach(function (c) { if (c) node.appendChild(c); });
-        return node;
+      .reveal {
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity var(--t-entrance),
+          transform var(--t-entrance);
       }
 
-      function renderSidebar() {
-        var container = document.getElementById('demo-sidebar');
-        if (!container) return;
-        container.textContent = '';
-        container.appendChild(el('div', { className: 'mock-sidebar-label', textContent: 'Projects' }));
-        PROJECT_ORDER.forEach(function (id) {
-          var p = DEMO_DATA[id];
-          var cls = 'mock-project' + (demoState.project === id ? ' active' : '') + (p.indent ? ' mock-project-indent' : '');
-          var row = el('div', { className: cls, onClick: function () {
-            if (id === demoState.project) return;
-            demoState.project = id;
-            var envs = Object.keys(DEMO_DATA[id].envs);
-            demoState.env = envs[0];
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* ── Scroll progress bar ── */
+      .scroll-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent);
+        transform-origin: left center;
+        transform: scaleX(0);
+        z-index: 300;
+        pointer-events: none;
+        transition: transform 60ms linear;
+      }
+
+      /* ── App Logo ── */
+      .nav-logo {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .hero-app-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 18px;
+        object-fit: cover;
+        margin-bottom: 24px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .footer-logo {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+
+      /* ── prefers-reduced-motion ── */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          transition-delay: 0ms !important;
+        }
+        .reveal {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .mock-var-row {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .scroll-progress {
+          display: none;
+        }
+        .btn:hover,
+        .btn:active {
+          transform: none !important;
+        }
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 900px) {
+        .features-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .mockup-body {
+          grid-template-columns: 140px 1fr;
+        }
+        .mock-detail {
+          display: none;
+        }
+        .usecases-grid {
+          grid-template-columns: 1fr;
+        }
+        .metrics-inner {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .how-steps {
+          grid-template-columns: 1fr;
+        }
+        .how-steps::before {
+          display: none;
+        }
+        .how-step {
+          padding: 0 0 32px;
+        }
+        .download-inner {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+        .download-right {
+          align-items: center;
+        }
+        .download-facts {
+          align-items: center;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .hero-title {
+          font-size: 2.5rem;
+        }
+        .hero-sub {
+          font-size: 1rem;
+        }
+        .hero {
+          padding: 64px 20px 56px;
+        }
+        .navbar {
+          padding: 0 16px;
+        }
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+        .mockup-body {
+          grid-template-columns: 1fr;
+        }
+        .mock-sidebar {
+          display: none;
+        }
+        .section,
+        .features-section {
+          padding: 56px 20px;
+        }
+        .release-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .release-date {
+          margin-left: 0;
+        }
+        .download-title {
+          font-size: 1.4rem;
+        }
+        .hero-pills {
+          flex-direction: column;
+          gap: 4px;
+        }
+        .hero-pill::before {
+          display: none;
+        }
+        .navbar-actions .btn-ghost {
+          display: none;
+        }
+        .metrics-inner {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .metric-cell {
+          padding: 24px 16px;
+        }
+        .metric-value {
+          font-size: 1.75rem;
+        }
+        .midcta-inner {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scroll-progress" role="progressbar" aria-hidden="true"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar" role="banner">
+      <div class="navbar-inner">
+        <div class="navbar-brand">
+          <img
+            src="appstore.png"
+            class="nav-logo"
+            alt=".envVault"
+            aria-hidden="true"
+          />
+          <a href="/" class="wordmark">.envVault</a>
+          <span class="version-badge">v1.2.0</span>
+        </div>
+        <div class="navbar-actions">
+          <a href="releases.html" class="btn btn-ghost">Release notes</a>
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager"
+            class="btn btn-ghost"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg"
+            class="btn btn-primary"
+            >Download free for macOS</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-inner">
+        <img
+          src="appstore.png"
+          class="hero-app-icon reveal"
+          alt=".envVault app icon"
+        />
+        <span class="hero-label reveal">Environment Variable Manager</span>
+        <h1 class="hero-title reveal">.envVault</h1>
+        <p class="hero-sub reveal">
+          Your secrets, <strong>outside the reach of git and AI.</strong><br />
+          Shell-loaded. Masked by default. Local forever.
+        </p>
+        <div class="hero-ctas reveal">
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg"
+            class="btn btn-primary btn-large"
+            >Download free for macOS</a
+          >
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager"
+            class="btn btn-ghost btn-large"
+            target="_blank"
+            rel="noopener"
+            >View on GitHub</a
+          >
+        </div>
+        <div class="hero-pills reveal">
+          <span class="hero-pill">macOS 13+</span>
+          <span class="hero-pill">Apple Silicon &amp; Intel</span>
+          <span class="hero-pill">Open source</span>
+          <span class="hero-pill">~6 MB</span>
+        </div>
+
+        <!-- Interactive App Demo -->
+        <div
+          class="app-mockup reveal"
+          id="app-demo"
+          role="application"
+          aria-label="Interactive demo of .envVault — click projects, variables, and toggle environments"
+        >
+          <div class="mockup-titlebar">
+            <span class="titlebar-dot dot-red" aria-hidden="true"></span>
+            <span class="titlebar-dot dot-yellow" aria-hidden="true"></span>
+            <span class="titlebar-dot dot-green" aria-hidden="true"></span>
+            <span class="titlebar-label">.envVault</span>
+          </div>
+          <div class="mockup-body">
+            <div class="mock-sidebar" id="demo-sidebar">
+              <div class="mock-sidebar-label">Projects</div>
+            </div>
+            <div class="mock-vars" id="demo-vars">
+              <div class="mock-vars-header">
+                <span id="demo-vars-title">Variables</span>
+                <select
+                  class="mock-env-select"
+                  id="demo-env-select"
+                  aria-label="Switch environment"
+                ></select>
+              </div>
+              <div id="demo-var-list"></div>
+            </div>
+            <div class="mock-detail" id="demo-detail">
+              <div class="mock-detail-empty">
+                Select a variable<br />to view details
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security Metrics Bar -->
+    <section class="metrics-section" aria-label="Security impact metrics">
+      <div class="metrics-inner">
+        <div class="metric-cell reveal">
+          <span class="metric-value" data-counter="0" data-suffix="">0</span>
+          <span class="metric-label">secrets committed<br />to git</span>
+        </div>
+        <div class="metric-cell reveal">
+          <span class="metric-value" data-counter="0" data-suffix="">0</span>
+          <span class="metric-label"
+            >AI agents with<br />access to your keys</span
+          >
+        </div>
+        <div class="metric-cell reveal">
+          <span class="metric-value" data-counter="6" data-suffix="">6</span>
+          <span class="metric-label">environments<br />per project</span>
+        </div>
+        <div class="metric-cell reveal">
+          <span class="metric-value" data-counter="100" data-suffix="%"
+            >100%</span
+          >
+          <span class="metric-label">stored outside<br />your project</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" aria-labelledby="features-heading">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <h2 class="section-title" id="features-heading">
+            The problems it actually solves
+          </h2>
+          <p class="section-sub">
+            Eight problems that keep happening to developers. .envVault handles
+            all of them.
+          </p>
+        </div>
+        <div class="features-grid">
+          <!-- 01 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <!-- Lock body -->
+              <rect x="4" y="9" width="12" height="9" rx="1.5" />
+              <!-- Shackle -->
+              <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
+              <!-- Keyhole -->
+              <circle cx="10" cy="13.5" r="1" />
+              <line x1="10" y1="14.5" x2="10" y2="16" />
+            </svg>
+            <span class="feature-num">01</span>
+            <h3 class="feature-title">No more accidental git leaks</h3>
+            <p class="feature-desc">
+              Secrets are stored in the app's data directory — outside your
+              project tree entirely. There's no
+              <code
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 0.8em;
+                  color: var(--accent-text);
+                "
+                >.env</code
+              >
+              file to accidentally commit, no gitignore rule to forget, no
+              late-night key rotation.
+            </p>
+          </div>
+
+          <!-- 02 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <!-- Eye outline -->
+              <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" />
+              <circle cx="10" cy="10" r="2" />
+              <!-- Slash -->
+              <line
+                x1="3"
+                y1="3"
+                x2="17"
+                y2="17"
+                class="eye-slash"
+                style="
+                  stroke-dasharray: 20;
+                  stroke-dashoffset: 0;
+                  transition: stroke-dashoffset 180ms
+                    cubic-bezier(0.16, 1, 0.3, 1);
+                "
+              />
+            </svg>
+            <span class="feature-num">02</span>
+            <h3 class="feature-title">Invisible to AI agents</h3>
+            <p class="feature-desc">
+              Copilot, Claude, Cursor — they all index your file tree. Because
+              your keys aren't in files, they're never in context. Agents work
+              on your code without ever seeing a secret.
+            </p>
+          </div>
+
+          <!-- 03 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="2" y="13" width="16" height="4" rx="1" />
+              <rect x="2" y="8" width="16" height="4" rx="1" />
+              <rect x="2" y="3" width="16" height="4" rx="1" />
+            </svg>
+            <span class="feature-num">03</span>
+            <h3 class="feature-title">Multi-environment support</h3>
+            <p class="feature-desc">
+              Switch between
+              <code
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 0.8em;
+                  color: var(--accent-text);
+                "
+                >.env</code
+              >,
+              <code
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 0.8em;
+                  color: var(--accent-text);
+                "
+                >.env.local</code
+              >,
+              <code
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 0.8em;
+                  color: var(--accent-text);
+                "
+                >.env.production</code
+              >, staging, and more — per project. No more juggling files or
+              copy-pasting between configs.
+            </p>
+          </div>
+
+          <!-- 04 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="10" cy="10" r="2" />
+              <circle cx="10" cy="3" r="1.5" />
+              <circle cx="10" cy="17" r="1.5" />
+              <circle cx="3" cy="10" r="1.5" />
+              <circle cx="17" cy="10" r="1.5" />
+              <line x1="10" y1="5" x2="10" y2="8" />
+              <line x1="10" y1="12" x2="10" y2="15" />
+              <line x1="5" y1="10" x2="8" y2="10" />
+              <line x1="12" y1="10" x2="15" y2="10" />
+            </svg>
+            <span class="feature-num">04</span>
+            <h3 class="feature-title">Microservices without the mess</h3>
+            <p class="feature-desc">
+              Manage env across dozens of services in one place. Sub-projects
+              inherit from parents — shared infra vars live once, services
+              override only what differs. No copy-paste drift.
+            </p>
+          </div>
+
+          <!-- 05 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="2" y="4" width="16" height="12" rx="2" />
+              <path
+                d="M6 10 l3 3 l5-5"
+                style="
+                  stroke: currentColor;
+                  stroke-linecap: round;
+                  stroke-linejoin: round;
+                "
+              />
+            </svg>
+            <span class="feature-num">05</span>
+            <h3 class="feature-title">Shell auto-load</h3>
+            <p class="feature-desc">
+              A one-time hook in your shell config auto-injects the right vars
+              when you
+              <code
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 0.8em;
+                  color: var(--accent-text);
+                "
+                >cd</code
+              >
+              into a project. No manual sourcing, no forgotten exports, no wrong
+              environment.
+            </p>
+          </div>
+
+          <!-- 06 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="5" cy="8" r="1.5" />
+              <circle cx="10" cy="8" r="1.5" />
+              <circle cx="15" cy="8" r="1.5" />
+              <circle cx="5" cy="13" r="1.5" />
+              <circle cx="10" cy="13" r="1.5" />
+              <circle cx="15" cy="13" r="1.5" />
+            </svg>
+            <span class="feature-num">06</span>
+            <h3 class="feature-title">Masked by default</h3>
+            <p class="feature-desc">
+              Values are hidden at rest, revealed individually on demand.
+              Configurable inactivity timeout re-masks after a period of no
+              interaction. Safe for screen sharing.
+            </p>
+          </div>
+
+          <!-- 07 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="2" y="4" width="7" height="12" rx="1" />
+              <rect x="11" y="4" width="7" height="12" rx="1" />
+              <path d="M9 8 L11 10 L9 12M11 10H7" />
+            </svg>
+            <span class="feature-num">07</span>
+            <h3 class="feature-title">Compare environments</h3>
+            <p class="feature-desc">
+              Side-by-side diff of any two environments. See what's added,
+              removed, or changed. Push individual vars across envs with one
+              click.
+            </p>
+          </div>
+
+          <!-- 08 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 15h14M10 3v9M6 8l4-4 4 4" />
+              <path d="M3 15v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
+            </svg>
+            <span class="feature-num">08</span>
+            <h3 class="feature-title">Import &amp; export secrets</h3>
+            <p class="feature-desc">
+              Export to ENV, JSON, YAML, CSV, or shell script. Import from any
+              format with conflict resolution — keep existing, overwrite, or
+              skip per-key.
+            </p>
+          </div>
+
+          <!-- 09 -->
+          <div class="feature-card reveal">
+            <div class="feature-accent-bar" aria-hidden="true"></div>
+            <svg
+              class="feature-icon"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="5" y="2" width="11" height="14" rx="1" />
+              <rect x="2" y="5" width="11" height="14" rx="1" />
+            </svg>
+            <span class="feature-num">09</span>
+            <h3 class="feature-title">Duplicate variables</h3>
+            <p class="feature-desc">
+              One-click variable duplication. Rename a key and it propagates
+              automatically across all environments — no manual
+              find-and-replace.
+            </p>
+          </div>
+
+          <!-- 10 -->
+          <!-- <div class="feature-card reveal">
+          <div class="feature-accent-bar" aria-hidden="true"></div>
+          <svg class="feature-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" y1="6" x2="16" y2="6"/>
+            <line x1="4" y1="10" x2="10" y2="10"/>
+            <circle cx="14" cy="13" r="3"/>
+            <line x1="14" y1="10" x2="14" y2="16"/>
+            <line x1="11" y1="13" x2="17" y2="13"/>
+          </svg>
+          <span class="feature-num">10</span>
+          <h3 class="feature-title">Project quick actions</h3>
+          <p class="feature-desc">Right-click any project for instant actions: rename, delete, add sub-project. Manage your project tree without leaving the keyboard.</p>
+        </div> -->
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-section" aria-labelledby="how-heading">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <h2 class="section-title" id="how-heading">How it works</h2>
+          <p class="section-sub">
+            Three steps. One shell hook. Zero leaks — from that moment on.
+          </p>
+        </div>
+        <div class="how-steps">
+          <div class="how-step reveal" style="transition-delay: 0ms">
+            <div class="how-step-num-wrap">
+              <div class="how-step-circle">
+                <span class="how-step-circle-num">01</span>
+              </div>
+            </div>
+            <svg
+              class="how-step-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 7l9-4 9 4v10l-9 4-9-4V7z" />
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <line x1="3" y1="7" x2="21" y2="7" />
+            </svg>
+            <h3 class="how-step-title">Add your project</h3>
+            <p class="how-step-desc">
+              Point .envVault at a directory. It scans for existing
+              <code
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 0.8em;
+                  color: var(--accent-text);
+                "
+                >.env</code
+              >
+              files and imports them automatically. Secrets move to the vault —
+              your project folder has nothing to commit.
+            </p>
+          </div>
+
+          <div class="how-step reveal" style="transition-delay: 80ms">
+            <div class="how-step-num-wrap">
+              <div class="how-step-circle">
+                <span class="how-step-circle-num">02</span>
+              </div>
+            </div>
+            <svg
+              class="how-step-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              <circle cx="12" cy="16" r="1.5" />
+            </svg>
+            <h3 class="how-step-title">Manage your secrets</h3>
+            <p class="how-step-desc">
+              Edit variables in the app. Switch environments with a dropdown.
+              Values are masked at rest and revealed individually on demand —
+              safe for screen sharing and pair programming.
+            </p>
+          </div>
+
+          <div class="how-step reveal" style="transition-delay: 160ms">
+            <div class="how-step-num-wrap">
+              <div class="how-step-circle">
+                <span class="how-step-circle-num">03</span>
+              </div>
+            </div>
+            <svg
+              class="how-step-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M8 12l3 3 5-5" />
+            </svg>
+            <h3 class="how-step-title">cd and code</h3>
+            <p class="how-step-desc">
+              The shell hook detects when you change directory and injects the
+              right vars. No manual sourcing. The correct environment is always
+              active — in every terminal window.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mid-page CTA -->
+    <section class="midcta-section" aria-label="Download prompt">
+      <div class="midcta-inner reveal">
+        <span class="midcta-text">Ready to stop leaking secrets?</span>
+        <a
+          href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg"
+          class="btn btn-primary btn-large"
+          >Download free for macOS</a
+        >
+        <a
+          href="https://github.com/darshan-aswathappa/env-manager"
+          class="btn btn-ghost btn-large"
+          target="_blank"
+          rel="noopener"
+          >View source →</a
+        >
+      </div>
+    </section>
+
+    <!-- Use-Case Cards -->
+    <section class="usecases-section" aria-labelledby="usecases-heading">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <h2 class="section-title" id="usecases-heading">
+            Built for developers who've been burned
+          </h2>
+          <p class="section-sub">
+            Representative scenarios from developers who needed a better answer
+            to the .env problem.
+          </p>
+        </div>
+        <div class="usecases-grid">
+          <div class="usecase-card reveal">
+            <span class="usecase-tag">git leak</span>
+            <p class="usecase-quote">
+              I stopped rotating leaked keys after the third time it happened.
+              Now the folder simply doesn't have the file.
+            </p>
+            <span class="usecase-attr"
+              >Microservices developer · 4+ projects managed</span
+            >
+          </div>
+
+          <div class="usecase-card reveal">
+            <span class="usecase-tag">AI workflow</span>
+            <p class="usecase-quote">
+              I use Cursor and Claude daily. Knowing my API keys are never in
+              context is a baseline requirement now.
+            </p>
+            <span class="usecase-attr"
+              >Full-stack developer · AI-native workflow</span
+            >
+          </div>
+
+          <div class="usecase-card reveal">
+            <span class="usecase-tag">team onboarding</span>
+            <p class="usecase-quote">
+              Shell hook setup takes 30 seconds. New machines are up and running
+              before the Homebrew install finishes.
+            </p>
+            <span class="usecase-attr"
+              >Engineering lead · Distributed team</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section" aria-labelledby="faq-heading">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <h2 class="section-title" id="faq-heading">
+            Questions &amp; answers
+          </h2>
+          <p class="section-sub">
+            The short answers to the things you're already wondering.
+          </p>
+        </div>
+        <div class="faq-list reveal" role="list">
+          <div class="faq-item" role="listitem">
+            <button class="faq-question" aria-expanded="false">
+              <span>Why macOS only?</span>
+              <svg
+                class="faq-icon"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <line x1="8" y1="2" x2="8" y2="14" />
+                <line x1="2" y1="8" x2="14" y2="8" />
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p class="faq-answer-inner">
+                The app is built with Tauri and ships as a native macOS binary.
+                The shell hook works with zsh and bash. Linux and Windows
+                support are on the roadmap — the core architecture is
+                platform-agnostic.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-question" aria-expanded="false">
+              <span>Where are my secrets actually stored?</span>
+              <svg
+                class="faq-icon"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <line x1="8" y1="2" x2="8" y2="14" />
+                <line x1="2" y1="8" x2="14" y2="8" />
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p class="faq-answer-inner">
+                In the macOS app data directory — the same location apps like
+                1Password use for local data. Not in your project folder, not in
+                iCloud, not on any server. The path is the Tauri app data
+                directory, which is sandboxed to the app.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-question" aria-expanded="false">
+              <span>Does it work with existing .env files?</span>
+              <svg
+                class="faq-icon"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <line x1="8" y1="2" x2="8" y2="14" />
+                <line x1="2" y1="8" x2="14" y2="8" />
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p class="faq-answer-inner">
+                Yes. When you add a project, .envVault scans the directory and
+                imports any existing .env, .env.local, .env.production, and
+                other suffixed files automatically. Nothing is deleted from your
+                project until you explicitly remove it.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-question" aria-expanded="false">
+              <span>What happens to my data if I uninstall?</span>
+              <svg
+                class="faq-icon"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <line x1="8" y1="2" x2="8" y2="14" />
+                <line x1="2" y1="8" x2="14" y2="8" />
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p class="faq-answer-inner">
+                Your secrets remain in the app data directory until you delete
+                them. The app does not auto-delete on uninstall. You can export
+                at any time from within the app before uninstalling.
+              </p>
+            </div>
+          </div>
+
+          <div class="faq-item" role="listitem">
+            <button class="faq-question" aria-expanded="false">
+              <span>Is there a cloud sync or account required?</span>
+              <svg
+                class="faq-icon"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <line x1="8" y1="2" x2="8" y2="14" />
+                <line x1="2" y1="8" x2="14" y2="8" />
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <p class="faq-answer-inner">
+                No. Everything is local. There is no account, no cloud, no
+                telemetry. The app data never leaves your machine unless you
+                explicitly copy or export it.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Changelog -->
+    <section class="changelog-section" aria-labelledby="changelog-heading">
+      <div class="section-inner">
+        <div class="section-header reveal">
+          <h2 class="section-title" id="changelog-heading">What's new</h2>
+          <p class="section-sub">Recent additions to .envVault.</p>
+        </div>
+        <div class="changelog-list reveal">
+          <div class="release-entry">
+            <div class="release-header">
+              <span class="release-version">v1.2.0</span>
+              <span class="release-badge latest">latest</span>
+              <span class="release-date">Mar 2026</span>
+            </div>
+            <ul class="release-notes">
+              <li>
+                Environment diff viewer — compare any two envs side-by-side,
+                push individual vars across
+              </li>
+              <li>
+                Import &amp; export — 5 formats supported (ENV, JSON, YAML, CSV,
+                Shell) with conflict resolution
+              </li>
+              <li>Variable duplication — clone any var with one click</li>
+              <li>
+                Rename propagation — renaming a key updates it across all
+                environments automatically
+              </li>
+              <li>
+                Project context menu — right-click actions for rename, delete,
+                sub-project creation
+              </li>
+            </ul>
+          </div>
+
+          <div class="release-entry">
+            <div class="release-header">
+              <span class="release-version">v1.0.1</span>
+              <span class="release-badge alpha">alpha</span>
+              <span class="release-date">Feb 2026</span>
+            </div>
+            <ul class="release-notes">
+              <li>
+                Initial release — multi-project env management with shell hook
+              </li>
+              <li>
+                6 environments per project (.env, .env.local, .env.development,
+                .env.production, .env.testing, .env.staging)
+              </li>
+              <li>
+                Push-to-stage for copying vars across environments with conflict
+                resolution
+              </li>
+              <li>Project hierarchy with parent/child inheritance</li>
+              <li>Masked-by-default values with inactivity auto-mask</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download CTA (split layout) -->
+    <section
+      class="download-section"
+      id="download"
+      aria-labelledby="download-heading"
+    >
+      <div class="download-inner">
+        <div class="download-left reveal">
+          <h2 class="download-title" id="download-heading">
+            Your .env files belong in a vault.
+          </h2>
+          <p class="download-sub">
+            Free. Local. Open source. No account required.
+          </p>
+          <ul class="download-facts">
+            <li>~6 MB install — no background services</li>
+            <li>No account, no cloud, no telemetry</li>
+            <li>macOS 13+ · Apple Silicon &amp; Intel</li>
+            <li>MIT licensed — read every line on GitHub</li>
+          </ul>
+        </div>
+        <div class="download-right reveal">
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager/releases/download/v1.0.1/envVault_1.0.1_aarch64.dmg"
+            class="btn btn-primary btn-large"
+            >Download .envVault — v1.0.1</a
+          >
+          <p class="download-meta">macOS 13+ &nbsp;·&nbsp; Free forever</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <img
+            src="appstore.png"
+            class="footer-logo"
+            alt=""
+            aria-hidden="true"
+          />
+          <span class="wordmark">.envVault</span>
+          <span class="footer-copy">© 2026</span>
+        </div>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="releases.html" class="footer-link">Release notes</a>
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager"
+            class="footer-link"
+            target="_blank"
+            rel="noopener"
+            >GitHub</a
+          >
+          <a
+            href="https://github.com/darshan-aswathappa/env-manager/issues"
+            class="footer-link"
+            target="_blank"
+            rel="noopener"
+            >Issues</a
+          >
+        </nav>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var prefersReduced = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        if (!prefersReduced) {
+          document.documentElement.classList.add("js-motion");
+        }
+
+        /* ── Scroll progress ── */
+        var progressBar = document.querySelector(".scroll-progress");
+        function updateProgress() {
+          if (!progressBar || prefersReduced) return;
+          var scrollTop = window.scrollY;
+          var docHeight =
+            document.documentElement.scrollHeight - window.innerHeight;
+          var pct = docHeight > 0 ? scrollTop / docHeight : 0;
+          progressBar.style.transform = "scaleX(" + pct + ")";
+        }
+        window.addEventListener("scroll", updateProgress, { passive: true });
+
+        /* ── Navbar scroll state ── */
+        var navbarEl = document.querySelector(".navbar");
+        function updateNavbar() {
+          if (!navbarEl) return;
+          navbarEl.classList.toggle("is-scrolled", window.scrollY > 8);
+        }
+        window.addEventListener("scroll", updateNavbar, { passive: true });
+
+        /* ── Metrics counter animation ── */
+        function easeOutExpo(t) {
+          return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+        }
+
+        function animateCounter(el) {
+          var target = parseInt(el.getAttribute("data-counter"), 10);
+          var suffix = el.getAttribute("data-suffix") || "";
+          if (prefersReduced || target === 0) return;
+          var start = null;
+          var duration = 800;
+          function step(timestamp) {
+            if (!start) start = timestamp;
+            var elapsed = timestamp - start;
+            var progress = Math.min(elapsed / duration, 1);
+            var value = Math.round(easeOutExpo(progress) * target);
+            el.textContent = value + suffix;
+            if (progress < 1) requestAnimationFrame(step);
+            else el.textContent = target + suffix;
+          }
+          requestAnimationFrame(step);
+        }
+
+        /* ── Scroll reveal ── */
+        var metricsAnimated = false;
+
+        var revealObserver = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+                revealObserver.unobserve(entry.target);
+                /* trigger counter if this is a metric value */
+                var counter = entry.target.querySelector("[data-counter]");
+                if (counter && !metricsAnimated) {
+                  var allCounters = document.querySelectorAll("[data-counter]");
+                  allCounters.forEach(animateCounter);
+                  metricsAnimated = true;
+                }
+              }
+            });
+          },
+          { threshold: 0.08, rootMargin: "0px 0px -32px 0px" },
+        );
+
+        /* ── FAQ accordion ── */
+        document.querySelectorAll(".faq-question").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var item = btn.closest(".faq-item");
+            var isOpen = item.classList.contains("open");
+            /* close all */
+            document
+              .querySelectorAll(".faq-item.open")
+              .forEach(function (openItem) {
+                openItem.classList.remove("open");
+                openItem
+                  .querySelector(".faq-question")
+                  .setAttribute("aria-expanded", "false");
+              });
+            /* open clicked if it wasn't open */
+            if (!isOpen) {
+              item.classList.add("open");
+              btn.setAttribute("aria-expanded", "true");
+            }
+          });
+        });
+
+        /* ── Interactive Demo Data ── */
+        var DEMO_DATA = {
+          "api-service": {
+            name: "api-service",
+            indent: false,
+            envs: {
+              ".env": [
+                { key: "PORT", val: "3001" },
+                { key: "DATABASE_URL", val: "postgres://localhost:5432/api" },
+                { key: "JWT_SECRET", val: "sk_jwt_a8f2c9e1d4b7" },
+                { key: "REDIS_URL", val: "redis://localhost:6379" },
+              ],
+              ".env.production": [
+                { key: "PORT", val: "443" },
+                {
+                  key: "DATABASE_URL",
+                  val: "postgres://prod-rds.aws:5432/api",
+                },
+                { key: "JWT_SECRET", val: "sk_jwt_prod_7x9m2k" },
+                { key: "REDIS_URL", val: "redis://prod-cache.aws:6379" },
+              ],
+              ".env.staging": [
+                { key: "PORT", val: "3001" },
+                { key: "DATABASE_URL", val: "postgres://staging-rds:5432/api" },
+                { key: "JWT_SECRET", val: "sk_jwt_stg_demo" },
+                { key: "REDIS_URL", val: "redis://staging-cache:6379" },
+              ],
+            },
+          },
+          "web-app": {
+            name: "web-app",
+            indent: false,
+            envs: {
+              ".env": [
+                { key: "API_KEY", val: "sk_live_a1b2c3d4e5f6" },
+                {
+                  key: "DATABASE_URL",
+                  val: "postgres://localhost:5432/webapp",
+                },
+                { key: "NODE_ENV", val: "development" },
+                { key: "NEXT_PUBLIC_URL", val: "http://localhost:3000" },
+                { key: "STRIPE_SECRET", val: "sk_test_51HxYz" },
+              ],
+              ".env.local": [
+                { key: "API_KEY", val: "sk_test_local_debug" },
+                {
+                  key: "DATABASE_URL",
+                  val: "postgres://localhost:5432/webapp_dev",
+                },
+                { key: "NODE_ENV", val: "development" },
+                { key: "NEXT_PUBLIC_URL", val: "http://localhost:3000" },
+                { key: "STRIPE_SECRET", val: "sk_test_local_51H" },
+                { key: "DEBUG", val: "true" },
+              ],
+              ".env.production": [
+                { key: "API_KEY", val: "sk_live_prod_x9y8z7" },
+                {
+                  key: "DATABASE_URL",
+                  val: "postgres://prod-rds.aws:5432/webapp",
+                },
+                { key: "NODE_ENV", val: "production" },
+                { key: "NEXT_PUBLIC_URL", val: "https://myapp.com" },
+                { key: "STRIPE_SECRET", val: "sk_live_51HxYz" },
+              ],
+            },
+          },
+          staging: {
+            name: "staging",
+            indent: true,
+            envs: {
+              ".env": [
+                { key: "API_KEY", val: "sk_test_staging_abc" },
+                { key: "DATABASE_URL", val: "postgres://staging:5432/webapp" },
+                { key: "NODE_ENV", val: "staging" },
+                { key: "NEXT_PUBLIC_URL", val: "https://staging.myapp.com" },
+              ],
+            },
+          },
+          mobile: {
+            name: "mobile",
+            indent: false,
+            envs: {
+              ".env": [
+                { key: "API_BASE_URL", val: "http://localhost:3001" },
+                { key: "PUSH_KEY", val: "pk_mobile_f7g8h9" },
+                { key: "SENTRY_DSN", val: "https://abc@sentry.io/123" },
+              ],
+              ".env.production": [
+                { key: "API_BASE_URL", val: "https://api.myapp.com" },
+                { key: "PUSH_KEY", val: "pk_mobile_prod_a1b2" },
+                { key: "SENTRY_DSN", val: "https://xyz@sentry.io/456" },
+              ],
+            },
+          },
+        };
+
+        var PROJECT_ORDER = ["api-service", "web-app", "staging", "mobile"];
+
+        var demoState = {
+          project: "web-app",
+          env: ".env",
+          varIdx: null,
+          revealed: {},
+        };
+
+        function el(tag, attrs, children) {
+          var node = document.createElement(tag);
+          if (attrs)
+            Object.keys(attrs).forEach(function (k) {
+              if (k === "textContent") {
+                node.textContent = attrs[k];
+              } else if (k === "className") {
+                node.className = attrs[k];
+              } else if (k.indexOf("on") === 0) {
+                node.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+              } else {
+                node.setAttribute(k, attrs[k]);
+              }
+            });
+          if (children)
+            children.forEach(function (c) {
+              if (c) node.appendChild(c);
+            });
+          return node;
+        }
+
+        function renderSidebar() {
+          var container = document.getElementById("demo-sidebar");
+          if (!container) return;
+          container.textContent = "";
+          container.appendChild(
+            el("div", {
+              className: "mock-sidebar-label",
+              textContent: "Projects",
+            }),
+          );
+          PROJECT_ORDER.forEach(function (id) {
+            var p = DEMO_DATA[id];
+            var cls =
+              "mock-project" +
+              (demoState.project === id ? " active" : "") +
+              (p.indent ? " mock-project-indent" : "");
+            var row = el(
+              "div",
+              {
+                className: cls,
+                onClick: function () {
+                  if (id === demoState.project) return;
+                  demoState.project = id;
+                  var envs = Object.keys(DEMO_DATA[id].envs);
+                  demoState.env = envs[0];
+                  demoState.varIdx = null;
+                  demoState.revealed = {};
+                  renderAll();
+                },
+              },
+              [
+                el("span", { className: "mock-project-dot" }),
+                document.createTextNode(p.name),
+              ],
+            );
+            container.appendChild(row);
+          });
+        }
+
+        function renderEnvSelect() {
+          var select = document.getElementById("demo-env-select");
+          var title = document.getElementById("demo-vars-title");
+          if (!select) return;
+          var project = DEMO_DATA[demoState.project];
+          var envs = Object.keys(project.envs);
+          select.textContent = "";
+          envs.forEach(function (env) {
+            var opt = el("option", { value: env, textContent: env });
+            if (env === demoState.env) opt.selected = true;
+            select.appendChild(opt);
+          });
+          if (title)
+            title.textContent = project.name + " \u2014 " + demoState.env;
+          select.onchange = function () {
+            demoState.env = select.value;
             demoState.varIdx = null;
             demoState.revealed = {};
-            renderAll();
-          }}, [
-            el('span', { className: 'mock-project-dot' }),
-            document.createTextNode(p.name)
-          ]);
-          container.appendChild(row);
-        });
-      }
+            renderVarList();
+            renderDetail();
+            if (title)
+              title.textContent = project.name + " \u2014 " + demoState.env;
+          };
+        }
 
-      function renderEnvSelect() {
-        var select = document.getElementById('demo-env-select');
-        var title = document.getElementById('demo-vars-title');
-        if (!select) return;
-        var project = DEMO_DATA[demoState.project];
-        var envs = Object.keys(project.envs);
-        select.textContent = '';
-        envs.forEach(function (env) {
-          var opt = el('option', { value: env, textContent: env });
-          if (env === demoState.env) opt.selected = true;
-          select.appendChild(opt);
-        });
-        if (title) title.textContent = project.name + ' \u2014 ' + demoState.env;
-        select.onchange = function () {
-          demoState.env = select.value;
-          demoState.varIdx = null;
-          demoState.revealed = {};
+        function renderVarList() {
+          var list = document.getElementById("demo-var-list");
+          if (!list) return;
+          list.textContent = "";
+          var project = DEMO_DATA[demoState.project];
+          var vars = project.envs[demoState.env] || [];
+          vars.forEach(function (v, i) {
+            var isActive = demoState.varIdx === i;
+            var cls = "mock-var-row entered" + (isActive ? " active" : "");
+            var preview = demoState.revealed[i]
+              ? v.val.slice(0, 12)
+              : "\u2022\u2022\u2022\u2022\u2022\u2022";
+            var row = el(
+              "div",
+              {
+                className: cls,
+                onClick: function () {
+                  demoState.varIdx = i;
+                  renderVarList();
+                  renderDetail();
+                },
+              },
+              [
+                el("span", { className: "mock-var-key", textContent: v.key }),
+                el("span", {
+                  className: "mock-var-preview",
+                  textContent: preview,
+                }),
+                el("span", { className: "mock-var-dot" }),
+              ],
+            );
+            list.appendChild(row);
+          });
+        }
+
+        function renderDetail() {
+          var detail = document.getElementById("demo-detail");
+          if (!detail) return;
+          detail.textContent = "";
+          if (demoState.varIdx === null) {
+            detail.appendChild(
+              el("div", {
+                className: "mock-detail-empty",
+                textContent: "Select a variable to view details",
+              }),
+            );
+            return;
+          }
+          var project = DEMO_DATA[demoState.project];
+          var vars = project.envs[demoState.env] || [];
+          var v = vars[demoState.varIdx];
+          if (!v) {
+            detail.appendChild(
+              el("div", {
+                className: "mock-detail-empty",
+                textContent: "Select a variable to view details",
+              }),
+            );
+            return;
+          }
+
+          var isRevealed = !!demoState.revealed[demoState.varIdx];
+          var displayVal = isRevealed
+            ? v.val
+            : "\u25CF \u25CF \u25CF \u25CF \u25CF \u25CF \u25CF \u25CF";
+
+          detail.appendChild(
+            el("div", {
+              className: "mock-detail-field-label",
+              textContent: "Key",
+            }),
+          );
+          detail.appendChild(
+            el("div", { className: "mock-detail-key", textContent: v.key }),
+          );
+          detail.appendChild(el("div", { className: "mock-detail-divider" }));
+          detail.appendChild(
+            el("div", {
+              className: "mock-detail-field-label",
+              textContent: "Value",
+            }),
+          );
+          detail.appendChild(
+            el("div", { className: "mock-detail-value" }, [
+              el("span", {
+                className: "mock-detail-value-text",
+                textContent: displayVal,
+              }),
+              el("button", {
+                className: "mock-reveal-btn",
+                textContent: isRevealed ? "hide" : "reveal",
+                onClick: function () {
+                  demoState.revealed[demoState.varIdx] =
+                    !demoState.revealed[demoState.varIdx];
+                  renderVarList();
+                  renderDetail();
+                },
+              }),
+            ]),
+          );
+          detail.appendChild(
+            el("span", {
+              className: "mock-detail-badge" + (isRevealed ? " revealed" : ""),
+              textContent: isRevealed ? "revealed" : "masked",
+            }),
+          );
+        }
+
+        function renderAll() {
+          renderSidebar();
+          renderEnvSelect();
           renderVarList();
           renderDetail();
-          if (title) title.textContent = project.name + ' \u2014 ' + demoState.env;
-        };
-      }
-
-      function renderVarList() {
-        var list = document.getElementById('demo-var-list');
-        if (!list) return;
-        list.textContent = '';
-        var project = DEMO_DATA[demoState.project];
-        var vars = project.envs[demoState.env] || [];
-        vars.forEach(function (v, i) {
-          var isActive = demoState.varIdx === i;
-          var cls = 'mock-var-row entered' + (isActive ? ' active' : '');
-          var preview = demoState.revealed[i] ? v.val.slice(0, 12) : '\u2022\u2022\u2022\u2022\u2022\u2022';
-          var row = el('div', { className: cls, onClick: function () {
-            demoState.varIdx = i;
-            renderVarList();
-            renderDetail();
-          }}, [
-            el('span', { className: 'mock-var-key', textContent: v.key }),
-            el('span', { className: 'mock-var-preview', textContent: preview }),
-            el('span', { className: 'mock-var-dot' })
-          ]);
-          list.appendChild(row);
-        });
-      }
-
-      function renderDetail() {
-        var detail = document.getElementById('demo-detail');
-        if (!detail) return;
-        detail.textContent = '';
-        if (demoState.varIdx === null) {
-          detail.appendChild(el('div', { className: 'mock-detail-empty', textContent: 'Select a variable to view details' }));
-          return;
         }
-        var project = DEMO_DATA[demoState.project];
-        var vars = project.envs[demoState.env] || [];
-        var v = vars[demoState.varIdx];
-        if (!v) { detail.appendChild(el('div', { className: 'mock-detail-empty', textContent: 'Select a variable to view details' })); return; }
 
-        var isRevealed = !!demoState.revealed[demoState.varIdx];
-        var displayVal = isRevealed ? v.val : '\u25CF \u25CF \u25CF \u25CF \u25CF \u25CF \u25CF \u25CF';
-
-        detail.appendChild(el('div', { className: 'mock-detail-field-label', textContent: 'Key' }));
-        detail.appendChild(el('div', { className: 'mock-detail-key', textContent: v.key }));
-        detail.appendChild(el('div', { className: 'mock-detail-divider' }));
-        detail.appendChild(el('div', { className: 'mock-detail-field-label', textContent: 'Value' }));
-        detail.appendChild(el('div', { className: 'mock-detail-value' }, [
-          el('span', { className: 'mock-detail-value-text', textContent: displayVal }),
-          el('button', { className: 'mock-reveal-btn', textContent: isRevealed ? 'hide' : 'reveal', onClick: function () {
-            demoState.revealed[demoState.varIdx] = !demoState.revealed[demoState.varIdx];
-            renderVarList();
-            renderDetail();
-          }})
-        ]));
-        detail.appendChild(el('span', {
-          className: 'mock-detail-badge' + (isRevealed ? ' revealed' : ''),
-          textContent: isRevealed ? 'revealed' : 'masked'
-        }));
-      }
-
-      function renderAll() {
-        renderSidebar();
-        renderEnvSelect();
-        renderVarList();
-        renderDetail();
-      }
-
-      /* ── Init ── */
-      function init() {
-        var heroEls = Array.from(document.querySelectorAll('.hero .reveal'));
-        heroEls.forEach(function (el, i) { el.style.transitionDelay = (i * 75) + 'ms'; });
-        requestAnimationFrame(function () {
+        /* ── Init ── */
+        function init() {
+          var heroEls = Array.from(document.querySelectorAll(".hero .reveal"));
+          heroEls.forEach(function (el, i) {
+            el.style.transitionDelay = i * 75 + "ms";
+          });
           requestAnimationFrame(function () {
-            heroEls.forEach(function (el) { el.classList.add('visible'); });
+            requestAnimationFrame(function () {
+              heroEls.forEach(function (el) {
+                el.classList.add("visible");
+              });
+            });
           });
-        });
 
-        var grid = document.querySelector('.features-grid');
-        if (grid) {
-          Array.from(grid.querySelectorAll('.reveal')).forEach(function (card, i) {
-            card.style.transitionDelay = (i * 48) + 'ms';
-          });
-        }
-
-        var usecasesGrid = document.querySelector('.usecases-grid');
-        if (usecasesGrid) {
-          Array.from(usecasesGrid.querySelectorAll('.reveal')).forEach(function (card, i) {
-            card.style.transitionDelay = (i * 48) + 'ms';
-          });
-        }
-
-        document.querySelectorAll('.reveal').forEach(function (el) {
-          revealObserver.observe(el);
-        });
-
-        renderAll();
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-
-      document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
-        anchor.addEventListener('click', function (e) {
-          var id = anchor.getAttribute('href').slice(1);
-          if (!id) return;
-          var target = document.getElementById(id);
-          if (target) {
-            e.preventDefault();
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          var grid = document.querySelector(".features-grid");
+          if (grid) {
+            Array.from(grid.querySelectorAll(".reveal")).forEach(
+              function (card, i) {
+                card.style.transitionDelay = i * 48 + "ms";
+              },
+            );
           }
+
+          var usecasesGrid = document.querySelector(".usecases-grid");
+          if (usecasesGrid) {
+            Array.from(usecasesGrid.querySelectorAll(".reveal")).forEach(
+              function (card, i) {
+                card.style.transitionDelay = i * 48 + "ms";
+              },
+            );
+          }
+
+          document.querySelectorAll(".reveal").forEach(function (el) {
+            revealObserver.observe(el);
+          });
+
+          renderAll();
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+          anchor.addEventListener("click", function (e) {
+            var id = anchor.getAttribute("href").slice(1);
+            if (!id) return;
+            var target = document.getElementById(id);
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          });
         });
-      });
-
-    })();
-  </script>
-
-</body>
+      })();
+    </script>
+  </body>
 </html>
