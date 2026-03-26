@@ -21,14 +21,6 @@ export interface ImportDialogProps {
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-const FORMAT_LABELS: Record<ExportFormat, string> = {
-  env: 'ENV',
-  json: 'JSON',
-  yaml: 'YAML',
-  csv: 'CSV',
-  shell: 'Shell',
-}
-
 function StatusBadge({ status }: { status: 'new' | 'same' | 'conflict' }) {
   const styles: Record<string, React.CSSProperties> = {
     new:      { background: 'rgba(34,197,94,0.15)',  color: 'var(--color-success)',  border: '1px solid rgba(34,197,94,0.25)'  },
@@ -55,7 +47,7 @@ function StatusBadge({ status }: { status: 'new' | 'same' | 'conflict' }) {
 export default function ImportDialog({ project, onImportComplete, onClose }: ImportDialogProps) {
   const [step, setStep] = useState<ImportStep>('pick')
   const [rawContent, setRawContent] = useState('')
-  const [filename, setFilename] = useState('')
+  const [_filename, setFilename] = useState('')
   const [detectedFormat, setDetectedFormat] = useState<ExportFormat>('env')
   const [overrideFormat, setOverrideFormat] = useState<ExportFormat | null>(null)
   const [parseResult, setParseResult] = useState<{ vars: EnvVar[]; warnings: string[] } | null>(null)

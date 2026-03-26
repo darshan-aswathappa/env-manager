@@ -180,7 +180,7 @@ describe('SettingsPanel', () => {
   it('renders version info in About section', async () => {
     await act(async () => { renderSettings() })
     expect(screen.getByText('.envVault')).toBeInTheDocument()
-    expect(screen.getByText('v1.0.1')).toBeInTheDocument()
+    expect(screen.getByText('v1.2.0')).toBeInTheDocument()
   })
 
   // Auto-mask clamps to 0 for negative values

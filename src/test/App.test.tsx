@@ -1511,7 +1511,7 @@ describe('App – .env.example import prompt', () => {
     // ensure check_env_example is NOT called a second time when project is re-added.
     mockOpen.mockResolvedValue('/dismissed/project')
     let checkCallCount = 0
-    mockInvoke.mockImplementation((cmd: string, args: any) => {
+    mockInvoke.mockImplementation((cmd: string, _args: any) => {
       if (cmd === 'register_project') return Promise.resolve(undefined)
       if (cmd === 'import_all_envs_from_project') return Promise.resolve([])
       if (cmd === 'check_env_example') {
@@ -1624,8 +1624,6 @@ describe('App – .env.example import prompt', () => {
     const addBtns = screen.getAllByRole('button', { name: /Add project folder/i })
     await act(async () => { addBtns[0].click() })
     await waitFor(() => {
-      // App should not crash; the project name (derived from path) should appear
-      const projectInSidebar = screen.queryByText('error') ?? screen.queryByText(/error\/project/i)
       // At minimum App should still be rendering (not crashed)
       expect(document.body).toBeTruthy()
     })

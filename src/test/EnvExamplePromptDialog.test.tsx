@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { Mock } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import type { Project } from '../types'
+import type { Project, EnvVar } from '../types'
 import type { EnvExampleFile } from '../types'
 import EnvExamplePromptDialog from '../components/EnvExample/EnvExamplePromptDialog'
 
@@ -56,14 +57,14 @@ function makeExampleFileWithDetails(
 // ── Phase 3: Prompt Step ───────────────────────────────────────────────────
 
 describe('EnvExamplePromptDialog – prompt step', () => {
-  let onImportComplete: ReturnType<typeof vi.fn>
-  let onDismiss: ReturnType<typeof vi.fn>
-  let onClose: ReturnType<typeof vi.fn>
+  let onImportComplete: Mock<(targetSuffix: string, mergedVars: EnvVar[]) => void>
+  let onDismiss: Mock<(projectId: string) => void>
+  let onClose: Mock<() => void>
 
   beforeEach(() => {
-    onImportComplete = vi.fn()
-    onDismiss = vi.fn()
-    onClose = vi.fn()
+    onImportComplete = vi.fn<(targetSuffix: string, mergedVars: EnvVar[]) => void>()
+    onDismiss = vi.fn<(projectId: string) => void>()
+    onClose = vi.fn<() => void>()
   })
 
   it('3.1: renders prompt step by default showing .env.example text', () => {
@@ -282,14 +283,14 @@ describe('EnvExamplePromptDialog – prompt step', () => {
 // ── Phase 4: Preview Key List ─────────────────────────────────────────────
 
 describe('EnvExamplePromptDialog – preview key list', () => {
-  let onImportComplete: ReturnType<typeof vi.fn>
-  let onDismiss: ReturnType<typeof vi.fn>
-  let onClose: ReturnType<typeof vi.fn>
+  let onImportComplete: Mock<(targetSuffix: string, mergedVars: EnvVar[]) => void>
+  let onDismiss: Mock<(projectId: string) => void>
+  let onClose: Mock<() => void>
 
   beforeEach(() => {
-    onImportComplete = vi.fn()
-    onDismiss = vi.fn()
-    onClose = vi.fn()
+    onImportComplete = vi.fn<(targetSuffix: string, mergedVars: EnvVar[]) => void>()
+    onDismiss = vi.fn<(projectId: string) => void>()
+    onClose = vi.fn<() => void>()
   })
 
   async function renderInPreview(
@@ -461,14 +462,14 @@ describe('EnvExamplePromptDialog – preview key list', () => {
 // ── Phase 6: Component Edge Cases ─────────────────────────────────────────
 
 describe('EnvExamplePromptDialog – edge cases (Phase 6)', () => {
-  let onImportComplete: ReturnType<typeof vi.fn>
-  let onDismiss: ReturnType<typeof vi.fn>
-  let onClose: ReturnType<typeof vi.fn>
+  let onImportComplete: Mock<(targetSuffix: string, mergedVars: EnvVar[]) => void>
+  let onDismiss: Mock<(projectId: string) => void>
+  let onClose: Mock<() => void>
 
   beforeEach(() => {
-    onImportComplete = vi.fn()
-    onDismiss = vi.fn()
-    onClose = vi.fn()
+    onImportComplete = vi.fn<(targetSuffix: string, mergedVars: EnvVar[]) => void>()
+    onDismiss = vi.fn<(projectId: string) => void>()
+    onClose = vi.fn<() => void>()
   })
 
   it('6.7: empty exampleFile (0 keys) renders without throw; primary button disabled', () => {

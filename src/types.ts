@@ -6,6 +6,7 @@ export interface EnvVar {
   val: string;
   revealed: boolean;
   sourceProjectId: string;
+  comment?: string;
 }
 
 export interface Environment {
@@ -162,3 +163,17 @@ export interface ExampleImportPlan {
 export type ExampleImportDecision = 'import' | 'skip'
 
 export type ExampleImportStep = 'prompt' | 'preview' | 'done'
+
+// ── Duplicate Key Types ────────────────────────────────────────────────────
+
+export interface DuplicateEntry {
+  key: string;
+  ids: string[];
+  firstSeenIndex: number;
+}
+
+export interface DuplicateReport {
+  hasDuplicates: boolean;
+  entries: DuplicateEntry[];
+  affectedIds: Set<string>;
+}
