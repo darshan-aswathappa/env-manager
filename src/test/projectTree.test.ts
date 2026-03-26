@@ -58,6 +58,23 @@ describe('buildProjectTree', () => {
     expect(buildProjectTree([])).toEqual([])
   })
 
+  it('sorts children by sortOrder ascending', () => {
+    const root = makeProject('root', '/root')
+    const child1 = { ...makeProject('child1', '/root/child1', 'root'), sortOrder: 2 }
+    const child2 = { ...makeProject('child2', '/root/child2', 'root'), sortOrder: 1 }
+    const tree = buildProjectTree([root, child1, child2])
+    expect(tree[0].children[0].project.id).toBe('child2')
+    expect(tree[0].children[1].project.id).toBe('child1')
+  })
+
+  it('sorts root projects by sortOrder ascending', () => {
+    const a = { ...makeProject('a', '/a'), sortOrder: 5 }
+    const b = { ...makeProject('b', '/b'), sortOrder: 1 }
+    const tree = buildProjectTree([a, b])
+    expect(tree[0].project.id).toBe('b')
+    expect(tree[1].project.id).toBe('a')
+  })
+
   it('treats orphaned projects as root when parent no longer exists', () => {
     const projects = [makeProject('orphan', '/orphan', 'nonexistent-parent')]
     const tree = buildProjectTree(projects)

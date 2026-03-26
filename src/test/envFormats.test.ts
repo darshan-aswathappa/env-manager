@@ -11,6 +11,8 @@ import {
   serializeYaml,
   serializeCsv,
   serializeShellExport,
+  serializeByFormat,
+  parseByFormat,
   buildImportConflictReport,
   mergeVarsForImport,
   FormatParseError,
@@ -292,6 +294,22 @@ describe('serializeShellExport', () => {
       vars.map(v => ({ key: v.key, val: v.val }))
     )
   })
+  it('skips keys that are not valid shell identifiers and adds a warning', () => {
+    const vars = [makeVar('VALID_KEY', 'ok'), makeVar('123invalid', 'skip'), makeVar('has-dash', 'skip')]
+    const { content, warnings } = serializeShellExport(vars)
+    expect(content).toContain('VALID_KEY')
+    expect(content).not.toContain('123invalid')
+    expect(content).not.toContain('has-dash')
+    expect(warnings).toHaveLength(2)
+    expect(warnings[0]).toMatch(/123invalid/)
+    expect(warnings[1]).toMatch(/has-dash/)
+  })
+  it('skips vars with blank keys', () => {
+    const vars = [makeVar('', 'ignored'), makeVar('KEY', 'kept')]
+    const { content } = serializeShellExport(vars)
+    expect(content).not.toContain('ignored')
+    expect(content).toContain('KEY')
+  })
 })
 
 // ── serializeDotenv ────────────────────────────────────────────────────────
@@ -383,5 +401,60 @@ describe('mergeVarsForImport', () => {
     const result = mergeVarsForImport(incoming, existing, new Map(), 'test')
     expect(result.find(v => v.key === 'KEY')?.val).toBe('same')
     expect(result).toHaveLength(1)
+  })
+})
+
+// ── serializeByFormat ─────────────────────────────────────────────────────
+
+describe('serializeByFormat', () => {
+  const vars = [makeVar('KEY', 'value'), makeVar('PORT', '3000')]
+
+  it('dispatches to serializeShellExport for shell format', () => {
+    const { content } = serializeByFormat(vars, 'shell')
+    expect(content).toMatch(/export KEY=/)
+  })
+  it('dispatches to serializeDotenv for env format (default)', () => {
+    const { content } = serializeByFormat(vars, 'env')
+    expect(content).toMatch(/KEY=/)
+    expect(content).not.toMatch(/^export/)
+  })
+  it('dispatches to serializeJson for json format', () => {
+    const { content } = serializeByFormat(vars, 'json')
+    expect(() => JSON.parse(content)).not.toThrow()
+  })
+  it('dispatches to serializeYaml for yaml format', () => {
+    const { content } = serializeByFormat(vars, 'yaml')
+    expect(content).toMatch(/KEY:/)
+  })
+  it('dispatches to serializeCsv for csv format', () => {
+    const { content } = serializeByFormat(vars, 'csv')
+    expect(content.toLowerCase()).toMatch(/key.*value/)
+  })
+})
+
+// ── parseByFormat ─────────────────────────────────────────────────────────
+
+describe('parseByFormat', () => {
+  it('dispatches to parseShellExport for shell format', () => {
+    const { vars } = parseByFormat('export MY_VAR=hello', 'shell', 'proj')
+    expect(vars[0].key).toBe('MY_VAR')
+    expect(vars[0].val).toBe('hello')
+  })
+  it('dispatches to parseEnvFile for env format (default)', () => {
+    const { vars } = parseByFormat('MY_VAR=hello', 'env', 'proj')
+    expect(vars[0].key).toBe('MY_VAR')
+    expect(vars[0].val).toBe('hello')
+  })
+  it('dispatches to parseJson for json format', () => {
+    const { vars } = parseByFormat('{"MY_VAR":"hello"}', 'json', 'proj')
+    expect(vars[0].key).toBe('MY_VAR')
+  })
+  it('dispatches to parseYaml for yaml format', () => {
+    const { vars } = parseByFormat('MY_VAR: hello', 'yaml', 'proj')
+    expect(vars[0].key).toBe('MY_VAR')
+  })
+  it('dispatches to parseCsv for csv format', () => {
+    const { vars } = parseByFormat('key,value\nMY_VAR,hello', 'csv', 'proj')
+    expect(vars[0].key).toBe('MY_VAR')
   })
 })
