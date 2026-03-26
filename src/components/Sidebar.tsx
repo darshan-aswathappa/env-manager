@@ -14,6 +14,7 @@ interface SidebarProps {
   onOpenShellIntegration: () => void;
   onOpenSettings: () => void;
   onImportFromExample: (project: Project) => void;
+  onGenerateExample: (project: Project) => void;
 }
 
 function ProjectNodeItem({
@@ -26,6 +27,7 @@ function ProjectNodeItem({
   onCancelDelete,
   onAddSubProject,
   onImportFromExample,
+  onGenerateExample,
 }: {
   node: ProjectTreeNode;
   selectedId: string | null;
@@ -36,6 +38,7 @@ function ProjectNodeItem({
   onCancelDelete: () => void;
   onAddSubProject: (parentId: string) => void;
   onImportFromExample: (project: Project) => void;
+  onGenerateExample: (project: Project) => void;
 }) {
   const { project, depth, children } = node;
   const paddingLeft = Math.min(depth, 5) * 16;
@@ -182,6 +185,17 @@ function ProjectNodeItem({
                       <FileCode size={11} />
                       Import .env.example
                     </button>
+                    <button
+                      className="project-overflow-menu-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onGenerateExample(project);
+                      }}
+                    >
+                      <FileCode size={11} />
+                      Generate .env.example
+                    </button>
                     <div className="project-overflow-menu-divider" />
                     <button
                       className="project-overflow-menu-item project-overflow-menu-item--danger"
@@ -214,6 +228,7 @@ function ProjectNodeItem({
             onCancelDelete={onCancelDelete}
             onAddSubProject={onAddSubProject}
             onImportFromExample={onImportFromExample}
+            onGenerateExample={onGenerateExample}
           />
         ))}
     </>
@@ -230,6 +245,7 @@ export default function Sidebar({
   onOpenShellIntegration,
   onOpenSettings,
   onImportFromExample,
+  onGenerateExample,
 }: SidebarProps) {
   const totalProjects = countNodes(projectTree);
   const [collapsed, setCollapsed] = useState(false);
@@ -284,6 +300,7 @@ export default function Sidebar({
             onCancelDelete={() => setPendingDeleteId(null)}
             onAddSubProject={onAddSubProject}
             onImportFromExample={onImportFromExample}
+            onGenerateExample={onGenerateExample}
           />
         ))}
       </div>

@@ -451,3 +451,51 @@ export function applyExampleImport(
 
   return [...existingVars, ...newVars]
 }
+
+// ── .env.example Generator ────────────────────────────────────────────────
+
+export interface EnvExampleAnnotation {
+  placeholder: string
+  note: string
+  required?: boolean  // false → appends "optional" marker; defaults to true
+}
+
+/**
+ * Generates .env.example file content from existing EnvVars and per-key annotations.
+ * - val is never written (privacy); only annotation.placeholder is used.
+ * - annotation.note (or EnvVar.comment as fallback) becomes an inline comment.
+ * - required=false appends "(optional)" to the comment.
+ * - Vars with empty or whitespace-only keys are skipped.
+ * - Annotations for unknown keys are silently ignored.
+ * Pure function — no side effects.
+ */
+export function generateEnvExampleContent(
+  vars: EnvVar[],
+  annotations: Map<string, EnvExampleAnnotation>
+): string {
+  const lines: string[] = []
+
+  for (const v of vars) {
+    if (!v.key.trim()) continue
+
+    const annotation = annotations.get(v.key)
+    const placeholder = annotation?.placeholder ?? ''
+    const rawNote = annotation !== undefined ? annotation.note : (v.comment ?? '')
+    const note = rawNote.trim()
+    const required = annotation?.required ?? true
+
+    let line = `${v.key}=${placeholder}`
+
+    const commentParts: string[] = []
+    if (note) commentParts.push(note)
+    if (!required) commentParts.push('optional')
+
+    if (commentParts.length > 0) {
+      line += ` # ${commentParts.join(' — ')}`
+    }
+
+    lines.push(line)
+  }
+
+  return lines.join('\n')
+}

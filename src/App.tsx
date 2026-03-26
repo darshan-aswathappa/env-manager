@@ -18,6 +18,7 @@ import {
 } from "./lib/envFile";
 import { buildExampleImportPlan } from "./lib/envFormats";
 import EnvExamplePromptDialog from "./components/EnvExample/EnvExamplePromptDialog";
+import EnvExampleGeneratorPanel from "./components/EnvExample/EnvExampleGeneratorPanel";
 import type { ShellIntegrationStatus } from "./lib/envFile";
 import { buildProjectTree, getDescendantIds } from "./lib/projectTree";
 import type { Project, EnvVar, ProjectTreeNode, GitignoreStatus, AppSettings, Environment, EnvExampleFile } from "./types";
@@ -166,6 +167,7 @@ export default function App() {
   const [showDiffPanel, setShowDiffPanel] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const [showExampleGenerator, setShowExampleGenerator] = useState(false);
   const [_pushUndoSnapshot, setPushUndoSnapshot] = useState<{
     projectId: string;
     suffix: string;
@@ -288,11 +290,12 @@ export default function App() {
       if (e.key === 'Escape') {
         if (showImportDialog) setShowImportDialog(false);
         if (showExportPanel) setShowExportPanel(false);
+        if (showExampleGenerator) setShowExampleGenerator(false);
       }
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [projects, selectedId, showDiffPanel, showImportDialog, showExportPanel]);
+  }, [projects, selectedId, showDiffPanel, showImportDialog, showExportPanel, showExampleGenerator]);
 
   /* Load vars per project from app data on mount and when project list changes */
   useEffect(() => {
@@ -865,6 +868,7 @@ export default function App() {
         onOpenShellIntegration={() => setShowShellIntegration(true)}
         onOpenSettings={() => setShowSettings(true)}
         onImportFromExample={triggerExampleImport}
+        onGenerateExample={(project) => { setSelectedId(project.id); setShowExportPanel(false); setShowImportDialog(false); setShowExampleGenerator(true); }}
       />
 
       <VarList
@@ -875,8 +879,8 @@ export default function App() {
         onSelectVar={setSelectedVarId}
         onAddVar={addVar}
         onDeleteVar={deleteVar}
-        onOpenImport={selectedProject ? () => { setShowExportPanel(false); setShowImportDialog(true); } : undefined}
-        onOpenExport={selectedProject ? () => { setShowImportDialog(false); setShowExportPanel(true); } : undefined}
+        onOpenImport={selectedProject ? () => { setShowExportPanel(false); setShowImportDialog(true); setShowExampleGenerator(false); } : undefined}
+        onOpenExport={selectedProject ? () => { setShowImportDialog(false); setShowExportPanel(true); setShowExampleGenerator(false); } : undefined}
         onImportFromExample={selectedProject ? () => triggerExampleImport(selectedProject) : undefined}
       />
 
@@ -1081,6 +1085,26 @@ export default function App() {
               project={selectedProject}
               onClose={() => setShowExportPanel(false)}
               onSaveComplete={() => setShowExportPanel(false)}
+            />
+          </div>
+        </div>
+      )}
+      {showExampleGenerator && selectedProject && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            background: 'rgba(0,0,0,0.15)',
+            display: 'flex', justifyContent: 'flex-end',
+            animation: 'fadeIn var(--t-normal) both',
+          }}
+          onClick={() => setShowExampleGenerator(false)}
+          role="presentation"
+          data-testid="example-generator-backdrop"
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <EnvExampleGeneratorPanel
+              project={selectedProject}
+              onClose={() => setShowExampleGenerator(false)}
             />
           </div>
         </div>
